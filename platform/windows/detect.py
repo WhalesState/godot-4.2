@@ -425,11 +425,6 @@ def configure_msvc(env, vcvars_msvc_config):
     if env.debug_features:
         LIBS += ["psapi", "dbghelp"]
 
-    if env["vulkan"]:
-        env.AppendUnique(CPPDEFINES=["VULKAN_ENABLED"])
-        if not env["use_volk"]:
-            LIBS += ["vulkan"]
-
     if env["opengl3"]:
         env.AppendUnique(CPPDEFINES=["GLES3_ENABLED"])
         if env["angle_libs"] != "":
@@ -617,11 +612,6 @@ def configure_mingw(env):
 
     if env.debug_features:
         env.Append(LIBS=["psapi", "dbghelp"])
-
-    if env["vulkan"]:
-        env.Append(CPPDEFINES=["VULKAN_ENABLED"])
-        if not env["use_volk"]:
-            env.Append(LIBS=["vulkan"])
 
     if env["opengl3"]:
         env.Append(CPPDEFINES=["GLES3_ENABLED"])

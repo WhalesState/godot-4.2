@@ -69,9 +69,7 @@
 #include "core/math/a_star_grid_2d.h"
 #include "core/math/expression.h"
 #include "core/math/geometry_2d.h"
-#include "core/math/geometry_3d.h"
 #include "core/math/random_number_generator.h"
-#include "core/math/triangle_mesh.h"
 #include "core/object/class_db.h"
 #include "core/object/script_language_extension.h"
 #include "core/object/undo_redo.h"
@@ -104,7 +102,6 @@ static core_bind::EngineDebugger *_engine_debugger = nullptr;
 static IP *ip = nullptr;
 
 static core_bind::Geometry2D *_geometry_2d = nullptr;
-static core_bind::Geometry3D *_geometry_3d = nullptr;
 
 static WorkerThreadPool *worker_thread_pool = nullptr;
 
@@ -232,7 +229,6 @@ void register_core_types() {
 	GDREGISTER_CLASS(Translation);
 	GDREGISTER_CLASS(OptimizedTranslation);
 	GDREGISTER_CLASS(UndoRedo);
-	GDREGISTER_CLASS(TriangleMesh);
 
 	GDREGISTER_CLASS(ResourceFormatLoader);
 	GDREGISTER_CLASS(ResourceFormatSaver);
@@ -252,7 +248,6 @@ void register_core_types() {
 
 	GDREGISTER_CLASS(PackedDataContainer);
 	GDREGISTER_ABSTRACT_CLASS(PackedDataContainerRef);
-	GDREGISTER_CLASS(AStar3D);
 	GDREGISTER_CLASS(AStar2D);
 	GDREGISTER_CLASS(AStarGrid2D);
 	GDREGISTER_CLASS(EncodedObjectAsID);
@@ -280,7 +275,6 @@ void register_core_types() {
 	ip = IP::create();
 
 	_geometry_2d = memnew(core_bind::Geometry2D);
-	_geometry_3d = memnew(core_bind::Geometry3D);
 
 	_resource_loader = memnew(core_bind::ResourceLoader);
 	_resource_saver = memnew(core_bind::ResourceSaver);
@@ -314,7 +308,6 @@ void register_core_singletons() {
 	GDREGISTER_CLASS(ProjectSettings);
 	GDREGISTER_ABSTRACT_CLASS(IP);
 	GDREGISTER_CLASS(core_bind::Geometry2D);
-	GDREGISTER_CLASS(core_bind::Geometry3D);
 	GDREGISTER_CLASS(core_bind::ResourceLoader);
 	GDREGISTER_CLASS(core_bind::ResourceSaver);
 	GDREGISTER_CLASS(core_bind::OS);
@@ -331,7 +324,6 @@ void register_core_singletons() {
 	Engine::get_singleton()->add_singleton(Engine::Singleton("ProjectSettings", ProjectSettings::get_singleton()));
 	Engine::get_singleton()->add_singleton(Engine::Singleton("IP", IP::get_singleton(), "IP"));
 	Engine::get_singleton()->add_singleton(Engine::Singleton("Geometry2D", core_bind::Geometry2D::get_singleton()));
-	Engine::get_singleton()->add_singleton(Engine::Singleton("Geometry3D", core_bind::Geometry3D::get_singleton()));
 	Engine::get_singleton()->add_singleton(Engine::Singleton("ResourceLoader", core_bind::ResourceLoader::get_singleton()));
 	Engine::get_singleton()->add_singleton(Engine::Singleton("ResourceSaver", core_bind::ResourceSaver::get_singleton()));
 	Engine::get_singleton()->add_singleton(Engine::Singleton("OS", core_bind::OS::get_singleton()));
@@ -378,7 +370,6 @@ void unregister_core_types() {
 	memdelete(_resource_saver);
 	memdelete(_resource_loader);
 
-	memdelete(_geometry_3d);
 	memdelete(_geometry_2d);
 
 	memdelete(gdextension_manager);

@@ -84,7 +84,7 @@ String EditorRun::get_running_scene() const {
 	return running_scene;
 }
 
-Error EditorRun::run(const String &p_scene, const String &p_write_movie) {
+Error EditorRun::run(const String &p_scene) {
 	List<String> args;
 
 	for (const String &a : Main::get_forwardable_cli_arguments(Main::CLI_SCOPE_PROJECT)) {
@@ -106,40 +106,14 @@ Error EditorRun::run(const String &p_scene, const String &p_write_movie) {
 	args.push_back("--editor-pid");
 	args.push_back(itos(OS::get_singleton()->get_process_id()));
 
-	bool debug_collisions = EditorSettings::get_singleton()->get_project_metadata("debug_options", "run_debug_collisions", false);
 	bool debug_paths = EditorSettings::get_singleton()->get_project_metadata("debug_options", "run_debug_paths", false);
-	bool debug_navigation = EditorSettings::get_singleton()->get_project_metadata("debug_options", "run_debug_navigation", false);
-	bool debug_avoidance = EditorSettings::get_singleton()->get_project_metadata("debug_options", "run_debug_avoidance", false);
 	bool debug_canvas_redraw = EditorSettings::get_singleton()->get_project_metadata("debug_options", "run_debug_canvas_redraw", false);
-
-	if (debug_collisions) {
-		args.push_back("--debug-collisions");
-	}
 
 	if (debug_paths) {
 		args.push_back("--debug-paths");
 	}
-
-	if (debug_navigation) {
-		args.push_back("--debug-navigation");
-	}
-
-	if (debug_avoidance) {
-		args.push_back("--debug-avoidance");
-	}
-
 	if (debug_canvas_redraw) {
 		args.push_back("--debug-canvas-item-redraw");
-	}
-
-	if (p_write_movie != "") {
-		args.push_back("--write-movie");
-		args.push_back(p_write_movie);
-		args.push_back("--fixed-fps");
-		args.push_back(itos(GLOBAL_GET("editor/movie_writer/fps")));
-		if (bool(GLOBAL_GET("editor/movie_writer/disable_vsync"))) {
-			args.push_back("--disable-vsync");
-		}
 	}
 
 	int screen = EDITOR_GET("run/window_placement/screen");

@@ -31,7 +31,6 @@
 #ifndef BASIS_H
 #define BASIS_H
 
-#include "core/math/quaternion.h"
 #include "core/math/vector3.h"
 
 struct _NO_DISCARD_ Basis {
@@ -65,13 +64,9 @@ struct _NO_DISCARD_ Basis {
 	void rotate(const Vector3 &p_euler, EulerOrder p_order = EulerOrder::YXZ);
 	Basis rotated(const Vector3 &p_euler, EulerOrder p_order = EulerOrder::YXZ) const;
 
-	void rotate(const Quaternion &p_quaternion);
-	Basis rotated(const Quaternion &p_quaternion) const;
-
 	Vector3 get_euler_normalized(EulerOrder p_order = EulerOrder::YXZ) const;
 	void get_rotation_axis_angle(Vector3 &p_axis, real_t &p_angle) const;
 	void get_rotation_axis_angle_local(Vector3 &p_axis, real_t &p_angle) const;
-	Quaternion get_rotation_quaternion() const;
 
 	void rotate_to_align(Vector3 p_start_direction, Vector3 p_end_direction);
 
@@ -84,9 +79,6 @@ struct _NO_DISCARD_ Basis {
 		b.set_euler(p_euler, p_order);
 		return b;
 	}
-
-	Quaternion get_quaternion() const;
-	void set_quaternion(const Quaternion &p_quaternion);
 
 	void get_axis_angle(Vector3 &r_axis, real_t &r_angle) const;
 	void set_axis_angle(const Vector3 &p_axis, real_t p_angle);
@@ -107,7 +99,6 @@ struct _NO_DISCARD_ Basis {
 
 	void set_axis_angle_scale(const Vector3 &p_axis, real_t p_angle, const Vector3 &p_scale);
 	void set_euler_scale(const Vector3 &p_euler, const Vector3 &p_scale, EulerOrder p_order = EulerOrder::YXZ);
-	void set_quaternion_scale(const Quaternion &p_quaternion, const Vector3 &p_scale);
 
 	// transposed dot products
 	_FORCE_INLINE_ real_t tdotx(const Vector3 &v) const {
@@ -144,7 +135,6 @@ struct _NO_DISCARD_ Basis {
 
 	Basis lerp(const Basis &p_to, const real_t &p_weight) const;
 	Basis slerp(const Basis &p_to, const real_t &p_weight) const;
-	void rotate_sh(real_t *p_values);
 
 	operator String() const;
 
@@ -216,12 +206,7 @@ struct _NO_DISCARD_ Basis {
 #endif
 	Basis diagonalize();
 
-	operator Quaternion() const { return get_quaternion(); }
-
 	static Basis looking_at(const Vector3 &p_target, const Vector3 &p_up = Vector3(0, 1, 0), bool p_use_model_front = false);
-
-	Basis(const Quaternion &p_quaternion) { set_quaternion(p_quaternion); };
-	Basis(const Quaternion &p_quaternion, const Vector3 &p_scale) { set_quaternion_scale(p_quaternion, p_scale); }
 
 	Basis(const Vector3 &p_axis, real_t p_angle) { set_axis_angle(p_axis, p_angle); }
 	Basis(const Vector3 &p_axis, real_t p_angle, const Vector3 &p_scale) { set_axis_angle_scale(p_axis, p_angle, p_scale); }

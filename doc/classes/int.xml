@@ -15,17 +15,6 @@
 		var max_int = 9223372036854775807 # Biggest value an int can store
 		max_int += 1 # max_int is -9223372036854775808, because it wrapped around
 		[/gdscript]
-		[csharp]
-		int x = 1; // x is 1
-		x = (int)4.2; // x is 4, because 4.2 gets truncated
-		// We use long below, because GDScript's int is 64-bit while C#'s int is 32-bit.
-		long maxLong = 9223372036854775807; // Biggest value a long can store
-		maxLong++; // maxLong is now -9223372036854775808, because it wrapped around.
-
-		// Alternatively with C#'s 32-bit int type, which has a smaller maximum value.
-		int maxInt = 2147483647; // Biggest value an int can store
-		maxInt++; // maxInt is now -2147483648, because it wrapped around
-		[/csharp]
 		[/codeblocks]
 		You can use the [code]0b[/code] literal for binary representation, the [code]0x[/code] literal for hexadecimal representation, and the [code]_[/code] symbol to separate long numbers and improve readability.
 		[codeblocks]
@@ -34,11 +23,6 @@
 		var y = 0xF5 # y is 245
 		var z = 10_000_000 # z is 10000000
 		[/gdscript]
-		[csharp]
-		int x = 0b1001; // x is 9
-		int y = 0xF5; // y is 245
-		int z = 10_000_000; // z is 10000000
-		[/csharp]
 		[/codeblocks]
 	</description>
 	<tutorials>
@@ -128,13 +112,6 @@
 			<param index="0" name="right" type="Color" />
 			<description>
 				Multiplies each component of the [Color] by the [int].
-			</description>
-		</operator>
-		<operator name="operator *">
-			<return type="Quaternion" />
-			<param index="0" name="right" type="Quaternion" />
-			<description>
-				Multiplies each component of the [Quaternion] by the [int]. This operation is not meaningful on its own, but it can be used as a part of a larger expression.
 			</description>
 		</operator>
 		<operator name="operator *">

@@ -43,7 +43,6 @@ def _helper_module(name, path):
 
 
 _helper_module("gles3_builders", "gles3_builders.py")
-_helper_module("glsl_builders", "glsl_builders.py")
 _helper_module("methods", "methods.py")
 _helper_module("platform_methods", "platform_methods.py")
 _helper_module("version", "version.py")
@@ -53,7 +52,6 @@ _helper_module("modules.modules_builders", "modules/modules_builders.py")
 
 # Local
 import methods
-import glsl_builders
 import gles3_builders
 import scu_builders
 from platform_methods import architectures, architecture_aliases, generate_export_icons
@@ -110,12 +108,7 @@ custom_tools = ["default"]
 
 platform_arg = ARGUMENTS.get("platform", ARGUMENTS.get("p", False))
 
-if platform_arg == "android":
-    custom_tools = ["clang", "clang++", "as", "ar", "link"]
-elif platform_arg == "web":
-    # Use generic POSIX build toolchain for Emscripten.
-    custom_tools = ["cc", "c++", "ar", "link", "textfile", "zip"]
-elif os.name == "nt" and methods.get_cmdline_bool("use_mingw", False):
+if os.name == "nt" and methods.get_cmdline_bool("use_mingw", False):
     custom_tools = ["mingw"]
 
 # We let SCons build its default ENV as it includes OS-specific things which we don't
@@ -189,10 +182,7 @@ opts.Add(EnumVariable("precision", "Set the floating-point precision level", "si
 opts.Add(BoolVariable("minizip", "Enable ZIP archive support using minizip", True))
 opts.Add(BoolVariable("brotli", "Enable Brotli for decompresson and WOFF2 fonts support", True))
 opts.Add(BoolVariable("xaudio2", "Enable the XAudio2 audio driver", False))
-opts.Add(BoolVariable("vulkan", "Enable the vulkan rendering driver", True))
 opts.Add(BoolVariable("opengl3", "Enable the OpenGL/GLES3 rendering driver", True))
-opts.Add(BoolVariable("openxr", "Enable the OpenXR driver", True))
-opts.Add(BoolVariable("use_volk", "Use the volk library to load the Vulkan loader dynamically", True))
 opts.Add(BoolVariable("disable_exceptions", "Force disabling exception handling code", True))
 opts.Add("custom_modules", "A list of comma-separated directory paths containing custom modules to build.", "")
 opts.Add(BoolVariable("custom_modules_recursive", "Detect custom modules recursively for each specified path.", True))
@@ -210,7 +200,6 @@ opts.Add("extra_suffix", "Custom extra suffix added to the base filename of all 
 opts.Add("object_prefix", "Custom prefix added to the base filename of all generated object files", "")
 opts.Add(BoolVariable("vsproj", "Generate a Visual Studio solution", False))
 opts.Add("vsproj_name", "Name of the Visual Studio solution", "godot")
-opts.Add(BoolVariable("disable_3d", "Disable 3D nodes for a smaller executable", False))
 opts.Add(BoolVariable("disable_advanced_gui", "Disable advanced GUI nodes and behaviors", False))
 opts.Add("build_profile", "Path to a file containing a feature build profile", "")
 opts.Add(BoolVariable("modules_enabled_by_default", "If no, disable all modules except ones explicitly enabled", True))
@@ -227,12 +216,9 @@ opts.Add("scu_limit", "Max includes per SCU file when using scu_build (determine
 # Thirdparty libraries
 opts.Add(BoolVariable("builtin_brotli", "Use the built-in Brotli library", True))
 opts.Add(BoolVariable("builtin_certs", "Use the built-in SSL certificates bundles", True))
-opts.Add(BoolVariable("builtin_clipper2", "Use the built-in Clipper2 library", True))
-opts.Add(BoolVariable("builtin_embree", "Use the built-in Embree library", True))
 opts.Add(BoolVariable("builtin_enet", "Use the built-in ENet library", True))
 opts.Add(BoolVariable("builtin_freetype", "Use the built-in FreeType library", True))
 opts.Add(BoolVariable("builtin_msdfgen", "Use the built-in MSDFgen library", True))
-opts.Add(BoolVariable("builtin_glslang", "Use the built-in glslang library", True))
 opts.Add(BoolVariable("builtin_graphite", "Use the built-in Graphite library", True))
 opts.Add(BoolVariable("builtin_harfbuzz", "Use the built-in HarfBuzz library", True))
 opts.Add(BoolVariable("builtin_icu4c", "Use the built-in ICU library", True))
@@ -244,14 +230,9 @@ opts.Add(BoolVariable("builtin_libwebp", "Use the built-in libwebp library", Tru
 opts.Add(BoolVariable("builtin_wslay", "Use the built-in wslay library", True))
 opts.Add(BoolVariable("builtin_mbedtls", "Use the built-in mbedTLS library", True))
 opts.Add(BoolVariable("builtin_miniupnpc", "Use the built-in miniupnpc library", True))
-opts.Add(BoolVariable("builtin_openxr", "Use the built-in OpenXR library", True))
 opts.Add(BoolVariable("builtin_pcre2", "Use the built-in PCRE2 library", True))
 opts.Add(BoolVariable("builtin_pcre2_with_jit", "Use JIT compiler for the built-in PCRE2 library", True))
-opts.Add(BoolVariable("builtin_recastnavigation", "Use the built-in Recast navigation library", True))
-opts.Add(BoolVariable("builtin_rvo2_2d", "Use the built-in RVO2 2D library", True))
-opts.Add(BoolVariable("builtin_rvo2_3d", "Use the built-in RVO2 3D library", True))
 opts.Add(BoolVariable("builtin_squish", "Use the built-in squish library", True))
-opts.Add(BoolVariable("builtin_xatlas", "Use the built-in xatlas library", True))
 opts.Add(BoolVariable("builtin_zlib", "Use the built-in zlib library", True))
 opts.Add(BoolVariable("builtin_zstd", "Use the built-in Zstd library", True))
 
@@ -305,13 +286,6 @@ if selected_platform in ["macos", "osx"]:
         print('Platform "osx" has been renamed to "macos" in Godot 4. Building for platform "macos".')
     # Alias for convenience.
     selected_platform = "macos"
-
-if selected_platform in ["ios", "iphone"]:
-    if selected_platform == "iphone":
-        # Deprecated alias kept for compatibility.
-        print('Platform "iphone" has been renamed to "ios" in Godot 4. Building for platform "ios".')
-    # Alias for convenience.
-    selected_platform = "ios"
 
 if selected_platform in ["linux", "bsd", "x11"]:
     if selected_platform == "x11":
@@ -695,7 +669,7 @@ if selected_platform in platform_list:
             )
         # Apple LLVM versions differ from upstream LLVM version \o/, compare
         # in https://en.wikipedia.org/wiki/Xcode#Toolchain_versions
-        elif env["platform"] == "macos" or env["platform"] == "ios":
+        elif env["platform"] == "macos":
             vanilla = methods.is_vanilla_clang(env)
             if vanilla and cc_version_major < 6:
                 print(
@@ -898,12 +872,6 @@ if selected_platform in platform_list:
     env["OBJPREFIX"] = env["object_prefix"]
     env["SHOBJPREFIX"] = env["object_prefix"]
 
-    if env["disable_3d"]:
-        if env.editor_build:
-            print("Build option 'disable_3d=yes' cannot be used for editor builds, only for export template builds.")
-            Exit(255)
-        else:
-            env.Append(CPPDEFINES=["_3D_DISABLED"])
     if env["disable_advanced_gui"]:
         if env.editor_build:
             print(
@@ -922,16 +890,6 @@ if selected_platform in platform_list:
         methods.no_verbose(sys, env)
 
     GLSL_BUILDERS = {
-        "RD_GLSL": env.Builder(
-            action=env.Run(glsl_builders.build_rd_headers, 'Building RD_GLSL header: "$TARGET"'),
-            suffix="glsl.gen.h",
-            src_suffix=".glsl",
-        ),
-        "GLSL_HEADER": env.Builder(
-            action=env.Run(glsl_builders.build_raw_headers, 'Building GLSL header: "$TARGET"'),
-            suffix="glsl.gen.h",
-            src_suffix=".glsl",
-        ),
         "GLES3_GLSL": env.Builder(
             action=env.Run(gles3_builders.build_gles3_headers, 'Building GLES3 GLSL header: "$TARGET"'),
             suffix="glsl.gen.h",

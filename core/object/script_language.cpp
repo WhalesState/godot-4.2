@@ -198,21 +198,6 @@ Error ScriptServer::unregister_language(const ScriptLanguage *p_language) {
 void ScriptServer::init_languages() {
 	{ // Load global classes.
 		global_classes_clear();
-#ifndef DISABLE_DEPRECATED
-		if (ProjectSettings::get_singleton()->has_setting("_global_script_classes")) {
-			Array script_classes = GLOBAL_GET("_global_script_classes");
-
-			for (int i = 0; i < script_classes.size(); i++) {
-				Dictionary c = script_classes[i];
-				if (!c.has("class") || !c.has("language") || !c.has("path") || !c.has("base")) {
-					continue;
-				}
-				add_global_class(c["class"], c["base"], c["language"], c["path"]);
-			}
-			ProjectSettings::get_singleton()->clear("_global_script_classes");
-		}
-#endif
-
 		Array script_classes = ProjectSettings::get_singleton()->get_global_class_list();
 		for (int i = 0; i < script_classes.size(); i++) {
 			Dictionary c = script_classes[i];
@@ -448,7 +433,6 @@ void ScriptLanguage::get_core_type_words(List<String> *p_core_type_words) const 
 	p_core_type_words->push_back("Vector4");
 	p_core_type_words->push_back("Vector4i");
 	p_core_type_words->push_back("Plane");
-	p_core_type_words->push_back("Quaternion");
 	p_core_type_words->push_back("AABB");
 	p_core_type_words->push_back("Basis");
 	p_core_type_words->push_back("Transform3D");

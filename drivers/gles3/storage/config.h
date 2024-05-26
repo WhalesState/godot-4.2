@@ -40,10 +40,6 @@
 
 #include "platform_gl.h"
 
-#ifdef ANDROID_ENABLED
-typedef void (*PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)(GLenum, GLenum, GLuint, GLint, GLint, GLsizei);
-#endif
-
 namespace GLES3 {
 
 class Config {
@@ -80,11 +76,6 @@ public:
 
 	bool support_anisotropic_filter = false;
 	float anisotropic_level = 0.0f;
-
-	bool multiview_supported = false;
-#ifdef ANDROID_ENABLED
-	PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC eglFramebufferTextureMultiviewOVR = nullptr;
-#endif
 
 	static Config *get_singleton() { return singleton; };
 

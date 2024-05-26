@@ -156,6 +156,14 @@ float StyleBoxFlat::get_expand_margin(Side p_side) const {
 	return expand_margin[p_side];
 }
 
+Point2 StyleBoxFlat::get_expand_margin_begin() const {
+	return Point2(expand_margin[SIDE_LEFT], expand_margin[SIDE_TOP]);
+}
+
+Point2 StyleBoxFlat::get_expand_margin_end() const {
+	return Point2(expand_margin[SIDE_RIGHT], expand_margin[SIDE_BOTTOM]);
+}
+
 void StyleBoxFlat::set_draw_center(bool p_enabled) {
 	draw_center = p_enabled;
 	emit_changed();

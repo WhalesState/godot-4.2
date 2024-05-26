@@ -53,7 +53,6 @@ enum {
 	VARIANT_RECT2 = 11,
 	VARIANT_VECTOR3 = 12,
 	VARIANT_PLANE = 13,
-	VARIANT_QUATERNION = 14,
 	VARIANT_AABB = 15,
 	VARIANT_BASIS = 16,
 	VARIANT_TRANSFORM3D = 17,
@@ -265,15 +264,6 @@ Error ResourceLoaderBinary::parse_variant(Variant &r_v) {
 			v.normal.z = f->get_real();
 			v.d = f->get_real();
 			r_v = v;
-		} break;
-		case VARIANT_QUATERNION: {
-			Quaternion v;
-			v.x = f->get_real();
-			v.y = f->get_real();
-			v.z = f->get_real();
-			v.w = f->get_real();
-			r_v = v;
-
 		} break;
 		case VARIANT_AABB: {
 			AABB v;
@@ -1644,15 +1634,6 @@ void ResourceFormatSaverBinaryInstance::write_variant(Ref<FileAccess> f, const V
 			f->store_real(val.normal.y);
 			f->store_real(val.normal.z);
 			f->store_real(val.d);
-
-		} break;
-		case Variant::QUATERNION: {
-			f->store_32(VARIANT_QUATERNION);
-			Quaternion val = p_property;
-			f->store_real(val.x);
-			f->store_real(val.y);
-			f->store_real(val.z);
-			f->store_real(val.w);
 
 		} break;
 		case Variant::AABB: {

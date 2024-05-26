@@ -45,6 +45,7 @@
 #include "scene/gui/check_button.h"
 #include "scene/gui/item_list.h"
 #include "scene/gui/link_button.h"
+#include "scene/gui/margin_container.h"
 #include "scene/gui/menu_button.h"
 #include "scene/gui/option_button.h"
 #include "scene/gui/popup_menu.h"
@@ -1096,10 +1097,8 @@ void ProjectExportDialog::_export_project_to_path(const String &p_path) {
 }
 
 void ProjectExportDialog::_export_all_dialog() {
-#ifndef ANDROID_ENABLED
 	export_all_dialog->show();
 	export_all_dialog->popup_centered(Size2(300, 80));
-#endif
 }
 
 void ProjectExportDialog::_export_all_dialog_action(const String &p_str) {
@@ -1159,6 +1158,7 @@ void ProjectExportDialog::_bind_methods() {
 ProjectExportDialog::ProjectExportDialog() {
 	set_title(TTR("Export"));
 	set_clamp_to_embedder(true);
+	set_min_size(Vector2(640, 480));
 
 	VBoxContainer *main_vb = memnew(VBoxContainer);
 	add_child(main_vb);
@@ -1178,10 +1178,10 @@ ProjectExportDialog::ProjectExportDialog() {
 
 	HBoxContainer *preset_hb = memnew(HBoxContainer);
 	preset_hb->add_child(l);
-	preset_hb->add_spacer();
 	preset_vb->add_child(preset_hb);
 
 	add_preset = memnew(MenuButton);
+	add_preset->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
 	add_preset->set_text(TTR("Add..."));
 	add_preset->get_popup()->connect("index_pressed", callable_mp(this, &ProjectExportDialog::_add_preset));
 	preset_hb->add_child(add_preset);
@@ -1274,7 +1274,6 @@ ProjectExportDialog::ProjectExportDialog() {
 	server_strip_message = memnew(Label);
 	server_strip_message->set_visible(false);
 	server_strip_message->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
-	server_strip_message->set_custom_minimum_size(Size2(300 * EDSCALE, 1));
 	resources_vb->add_child(server_strip_message);
 
 	{
@@ -1394,12 +1393,7 @@ ProjectExportDialog::ProjectExportDialog() {
 	set_cancel_button_text(TTR("Close"));
 	set_ok_button_text(TTR("Export PCK/ZIP..."));
 	get_ok_button()->set_disabled(true);
-#ifdef ANDROID_ENABLED
-	export_button = memnew(Button);
-	export_button->hide();
-#else
 	export_button = add_button(TTR("Export Project..."), !DisplayServer::get_singleton()->get_swap_cancel_ok(), "export");
-#endif
 	export_button->connect("pressed", callable_mp(this, &ProjectExportDialog::_export_project));
 	// Disable initially before we select a valid preset
 	export_button->set_disabled(true);
@@ -1412,14 +1406,7 @@ ProjectExportDialog::ProjectExportDialog() {
 	export_all_dialog->add_button(TTR("Debug"), true, "debug");
 	export_all_dialog->add_button(TTR("Release"), true, "release");
 	export_all_dialog->connect("custom_action", callable_mp(this, &ProjectExportDialog::_export_all_dialog_action));
-#ifdef ANDROID_ENABLED
-	export_all_dialog->hide();
-
-	export_all_button = memnew(Button);
-	export_all_button->hide();
-#else
 	export_all_button = add_button(TTR("Export All..."), !DisplayServer::get_singleton()->get_swap_cancel_ok(), "export");
-#endif
 	export_all_button->connect("pressed", callable_mp(this, &ProjectExportDialog::_export_all_dialog));
 	export_all_button->set_disabled(true);
 

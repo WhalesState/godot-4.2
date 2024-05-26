@@ -2203,7 +2203,6 @@ GDScriptFunction *GDScriptCompiler::_parse_function(Error &r_error, GDScript *p_
 
 	StringName func_name;
 	bool is_static = false;
-	Variant rpc_config;
 	GDScriptDataType return_type;
 	return_type.has_type = true;
 	return_type.kind = GDScriptDataType::BUILTIN;
@@ -2216,7 +2215,6 @@ GDScriptFunction *GDScriptCompiler::_parse_function(Error &r_error, GDScript *p_
 			func_name = "<anonymous lambda>";
 		}
 		is_static = p_func->is_static;
-		rpc_config = p_func->rpc_config;
 		return_type = _gdtype_from_datatype(p_func->get_datatype(), p_script);
 	} else {
 		if (p_for_ready) {
@@ -2234,7 +2232,7 @@ GDScriptFunction *GDScriptCompiler::_parse_function(Error &r_error, GDScript *p_
 	if (is_static) {
 		method_info.flags |= METHOD_FLAG_STATIC;
 	}
-	codegen.generator->write_start(p_script, func_name, is_static, rpc_config, return_type);
+	codegen.generator->write_start(p_script, func_name, is_static, return_type);
 
 	int optional_parameters = 0;
 
@@ -2439,7 +2437,6 @@ GDScriptFunction *GDScriptCompiler::_make_static_initializer(Error &r_error, GDS
 
 	StringName func_name = SNAME("@static_initializer");
 	bool is_static = true;
-	Variant rpc_config;
 	GDScriptDataType return_type;
 	return_type.has_type = true;
 	return_type.kind = GDScriptDataType::BUILTIN;
@@ -2447,7 +2444,7 @@ GDScriptFunction *GDScriptCompiler::_make_static_initializer(Error &r_error, GDS
 
 	codegen.function_name = func_name;
 	codegen.is_static = is_static;
-	codegen.generator->write_start(p_script, func_name, is_static, rpc_config, return_type);
+	codegen.generator->write_start(p_script, func_name, is_static, return_type);
 
 	// The static initializer is always called on the same class where the static variables are defined,
 	// so the CLASS address (current class) can be used instead of `codegen.add_constant(p_script)`.
@@ -2635,7 +2632,6 @@ Error GDScriptCompiler::_prepare_compilation(GDScript *p_script, const GDScriptP
 	p_script->implicit_initializer = nullptr;
 	p_script->implicit_ready = nullptr;
 	p_script->static_initializer = nullptr;
-	p_script->rpc_config.clear();
 	p_script->lambda_info.clear();
 
 	p_script->clearing = false;
@@ -2701,12 +2697,6 @@ Error GDScriptCompiler::_prepare_compilation(GDScript *p_script, const GDScriptP
 			_set_error("Parser bug: invalid inheritance.", nullptr);
 			return ERR_BUG;
 		} break;
-	}
-
-	// Duplicate RPC information from base GDScript
-	// Base script isn't valid because it should not have been compiled yet, but the reference contains relevant info.
-	if (base_type.kind == GDScriptDataType::GDSCRIPT && p_script->base.is_valid()) {
-		p_script->rpc_config = p_script->base->rpc_config.duplicate();
 	}
 
 	for (int i = 0; i < p_class->members.size(); i++) {
@@ -2821,12 +2811,6 @@ Error GDScriptCompiler::_prepare_compilation(GDScript *p_script, const GDScriptP
 			} break;
 
 			case GDScriptParser::ClassNode::Member::FUNCTION: {
-				const GDScriptParser::FunctionNode *function_n = member.function;
-
-				Variant config = function_n->rpc_config;
-				if (config.get_type() != Variant::NIL) {
-					p_script->rpc_config[function_n->identifier->name] = config;
-				}
 			} break;
 			default:
 				break; // Nothing to do here.

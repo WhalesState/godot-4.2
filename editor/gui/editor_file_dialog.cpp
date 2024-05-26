@@ -63,8 +63,8 @@ void EditorFileDialog::popup_file_dialog() {
 void EditorFileDialog::_focus_file_text() {
 	int lp = file->get_text().rfind(".");
 	if (lp != -1) {
+		file->edit();
 		file->select(0, lp);
-		file->grab_focus();
 	}
 }
 
@@ -218,7 +218,7 @@ void EditorFileDialog::shortcut_input(const Ref<InputEvent> &p_event) {
 				handled = true;
 			}
 			if (ED_IS_SHORTCUT("file_dialog/focus_path", p_event)) {
-				dir->grab_focus();
+				dir->edit();
 				handled = true;
 			}
 			if (ED_IS_SHORTCUT("file_dialog/move_favorite_up", p_event)) {
@@ -312,7 +312,7 @@ void EditorFileDialog::_post_popup() {
 	set_current_dir(current);
 
 	if (mode == FILE_MODE_SAVE_FILE) {
-		file->grab_focus();
+		file->edit();
 	} else {
 		item_list->grab_focus();
 	}
@@ -642,7 +642,6 @@ void EditorFileDialog::_item_list_item_rmb_clicked(int p_item, const Vector2 &p_
 		item_menu->add_icon_item(theme_cache.action_delete, TTR("Delete"), ITEM_MENU_DELETE, Key::KEY_DELETE);
 	}
 
-#if !defined(ANDROID_ENABLED) && !defined(WEB_ENABLED)
 	// Opening the system file manager is not supported on the Android and web editors.
 	if (single_item_selected) {
 		item_menu->add_separator();
@@ -650,7 +649,6 @@ void EditorFileDialog::_item_list_item_rmb_clicked(int p_item, const Vector2 &p_
 		String item_text = item_meta["dir"] ? TTR("Open in File Manager") : TTR("Show in File Manager");
 		item_menu->add_icon_item(theme_cache.filesystem, item_text, ITEM_MENU_SHOW_IN_EXPLORER);
 	}
-#endif
 
 	if (item_menu->get_item_count() > 0) {
 		item_menu->set_position(item_list->get_screen_position() + p_pos);
@@ -680,11 +678,9 @@ void EditorFileDialog::_item_list_empty_clicked(const Vector2 &p_pos, MouseButto
 		item_menu->add_icon_item(theme_cache.folder, TTR("New Folder..."), ITEM_MENU_NEW_FOLDER, KeyModifierMask::CMD_OR_CTRL | Key::N);
 	}
 	item_menu->add_icon_item(theme_cache.reload, TTR("Refresh"), ITEM_MENU_REFRESH, Key::F5);
-#if !defined(ANDROID_ENABLED) && !defined(WEB_ENABLED)
 	// Opening the system file manager is not supported on the Android and web editors.
 	item_menu->add_separator();
 	item_menu->add_icon_item(theme_cache.filesystem, TTR("Open in File Manager"), ITEM_MENU_SHOW_IN_EXPLORER);
-#endif
 
 	item_menu->set_position(item_list->get_screen_position() + p_pos);
 	item_menu->reset_size();
@@ -1203,7 +1199,7 @@ void EditorFileDialog::_make_dir_confirm() {
 
 void EditorFileDialog::_make_dir() {
 	makedialog->popup_centered(Size2(250, 80) * EDSCALE);
-	makedirname->grab_focus();
+	makedirname->edit();
 }
 
 void EditorFileDialog::_delete_items() {
@@ -1868,8 +1864,8 @@ EditorFileDialog::EditorFileDialog() {
 	l->set_theme_type_variation("HeaderSmall");
 	fav_hb->add_child(l);
 
-	fav_hb->add_spacer();
 	fav_up = memnew(Button);
+	fav_up->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
 	fav_up->set_theme_type_variation("FlatButton");
 	fav_hb->add_child(fav_up);
 	fav_up->connect("pressed", callable_mp(this, &EditorFileDialog::_favorite_move_up));

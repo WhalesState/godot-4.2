@@ -899,14 +899,6 @@ def generate_vs_project(env, original_args, project_name="godot"):
 
         module_configs = ModuleConfigs()
 
-        if env.get("module_mono_enabled"):
-            mono_defines = [("GD_MONO_HOT_RELOAD",)] if env.editor_build else []
-            module_configs.add_mode(
-                "mono",
-                cli_args="module_mono_enabled=yes",
-                defines=mono_defines,
-            )
-
         scons_cmd = "scons"
 
         path_to_venv = os.getenv("VIRTUAL_ENV")
@@ -977,12 +969,6 @@ def detect_darwin_sdk_path(platform, env):
     if platform == "macos":
         sdk_name = "macosx"
         var_name = "MACOS_SDK_PATH"
-    elif platform == "ios":
-        sdk_name = "iphoneos"
-        var_name = "IOS_SDK_PATH"
-    elif platform == "iossimulator":
-        sdk_name = "iphonesimulator"
-        var_name = "IOS_SDK_PATH"
     else:
         raise Exception("Invalid platform argument passed to detect_darwin_sdk_path")
 

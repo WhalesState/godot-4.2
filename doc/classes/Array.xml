@@ -15,14 +15,6 @@
 		array[2] = "Three"
 		print(array[-2]) # Three.
 		[/gdscript]
-		[csharp]
-		var array = new Godot.Collections.Array{"One", 2, 3, "Four"};
-		GD.Print(array[0]); // One.
-		GD.Print(array[2]); // 3.
-		GD.Print(array[array.Count - 1]); // Four.
-		array[2] = "Three";
-		GD.Print(array[array.Count - 2]); // Three.
-		[/csharp]
 		[/codeblocks]
 		Arrays can be concatenated using the [code]+[/code] operator:
 		[codeblocks]
@@ -31,12 +23,6 @@
 		var array2 = [3, "Four"]
 		print(array1 + array2) # ["One", 2, 3, "Four"]
 		[/gdscript]
-		[csharp]
-		// Array concatenation is not possible with C# arrays, but is with Godot.Collections.Array.
-		var array1 = new Godot.Collections.Array{"One", 2};
-		var array2 = new Godot.Collections.Array{3, "Four"};
-		GD.Print(array1 + array2); // Prints [One, 2, 3, Four]
-		[/csharp]
 		[/codeblocks]
 		[b]Note:[/b] Arrays are always passed by reference. To get a copy of an array that can be modified independently of the original array, use [method duplicate].
 		[b]Note:[/b] Erasing elements while iterating over arrays is [b]not[/b] supported and will result in unpredictable behavior.
@@ -57,30 +43,7 @@
 			<param index="2" name="class_name" type="StringName" />
 			<param index="3" name="script" type="Variant" />
 			<description>
-				Creates a typed array from the [param base] array. All arguments are required.
-				- [param type] is the built-in type as a [enum Variant.Type] constant, for example [constant TYPE_INT].
-				- [param class_name] is the [b]native[/b] class name, for example [Node]. If [param type] is not [constant TYPE_OBJECT], must be an empty string.
-				- [param script] is the associated script. Must be a [Script] instance or [code]null[/code].
-				Examples:
-				[codeblock]
-				class_name MyNode
-				extends Node
-
-				class MyClass:
-				    pass
-
-				func _ready():
-				    var a = Array([], TYPE_INT, &amp;"", null) # Array[int]
-				    var b = Array([], TYPE_OBJECT, &amp;"Node", null) # Array[Node]
-				    var c = Array([], TYPE_OBJECT, &amp;"Node", MyNode) # Array[MyNode]
-				    var d = Array([], TYPE_OBJECT, &amp;"RefCounted", MyClass) # Array[MyClass]
-				[/codeblock]
-				[b]Note:[/b] This constructor can be useful if you want to create a typed array on the fly, but you are not required to use it. In GDScript you can use a temporary variable with the static type you need and then pass it:
-				[codeblock]
-				func _ready():
-				    var a: Array[int] = []
-				    some_func(a)
-				[/codeblock]
+				Creates a typed array from the [param base] array.
 			</description>
 		</constructor>
 		<constructor name="Array">
@@ -241,11 +204,6 @@
 			<param index="1" name="before" type="bool" default="true" />
 			<description>
 				Finds the index of an existing value (or the insertion index that maintains sorting order, if the value is not yet present in the array) using binary search. Optionally, a [param before] specifier can be passed. If [code]false[/code], the returned index comes after all existing entries of the value in the array.
-				[codeblock]
-				var array = ["a", "b", "c", "c", "d", "e"]
-				print(array.bsearch("c", true))  # Prints 2, at the first matching element.
-				print(array.bsearch("c", false)) # Prints 4, after the last matching element, pointing to "d".
-				[/codeblock]
 				[b]Note:[/b] Calling [method bsearch] on an unsorted array results in unexpected behavior.
 			</description>
 		</method>
@@ -256,7 +214,6 @@
 			<param index="2" name="before" type="bool" default="true" />
 			<description>
 				Finds the index of an existing value (or the insertion index that maintains sorting order, if the value is not yet present in the array) using binary search and a custom comparison method. Optionally, a [param before] specifier can be passed. If [code]false[/code], the returned index comes after all existing entries of the value in the array. The custom method receives two arguments (an element from the array and the value searched for) and must return [code]true[/code] if the first argument is less than the second, and return [code]false[/code] otherwise.
-				[b]Note:[/b] The custom method must accept the two arguments in any order, you cannot rely on that the first argument will always be from the array.
 				[b]Note:[/b] Calling [method bsearch_custom] on an unsorted array results in unexpected behavior.
 			</description>
 		</method>
@@ -302,11 +259,6 @@
 				array.resize(10)
 				array.fill(0) # Initialize the 10 elements to 0.
 				[/gdscript]
-				[csharp]
-				var array = new Godot.Collections.Array();
-				array.Resize(10);
-				array.Fill(0); // Initialize the 10 elements to 0.
-				[/csharp]
 				[/codeblocks]
 				[b]Note:[/b] If [param value] is of a reference type ([Object]-derived, [Array], [Dictionary], etc.) then the array is filled with the references to the same object, i.e. no duplicates are created.
 			</description>
@@ -346,19 +298,19 @@
 		<method name="get_typed_builtin" qualifiers="const">
 			<return type="int" />
 			<description>
-				Returns the built-in type of the typed array as a [enum Variant.Type] constant. If the array is not typed, returns [constant TYPE_NIL].
+				Returns the [enum Variant.Type] constant for a typed array. If the [Array] is not typed, returns [constant TYPE_NIL].
 			</description>
 		</method>
 		<method name="get_typed_class_name" qualifiers="const">
 			<return type="StringName" />
 			<description>
-				Returns the [b]native[/b] class name of the typed array if the built-in type is [constant TYPE_OBJECT]. Otherwise, this method returns an empty string.
+				Returns a class name of a typed [Array] of type [constant TYPE_OBJECT].
 			</description>
 		</method>
 		<method name="get_typed_script" qualifiers="const">
 			<return type="Variant" />
 			<description>
-				Returns the script associated with the typed array. This method returns a [Script] instance or [code]null[/code].
+				Returns the script associated with a typed array tied to a class name.
 			</description>
 		</method>
 		<method name="has" qualifiers="const">
@@ -373,14 +325,6 @@
 				print(["inside", 7].has(7)) # True
 				print(["inside", 7].has("7")) # False
 				[/gdscript]
-				[csharp]
-				var arr = new Godot.Collections.Array { "inside", 7 };
-				// has is renamed to Contains
-				GD.Print(arr.Contains("inside")); // True
-				GD.Print(arr.Contains("outside")); // False
-				GD.Print(arr.Contains(7)); // True
-				GD.Print(arr.Contains("7")); // False
-				[/csharp]
 				[/codeblocks]
 				[b]Note:[/b] This is equivalent to using the [code]in[/code] operator as follows:
 				[codeblocks]
@@ -389,14 +333,6 @@
 				if 2 in [2, 4, 6, 8]:
 				    print("Contains!")
 				[/gdscript]
-				[csharp]
-				// As there is no "in" keyword in C#, you have to use Contains
-				var array = new Godot.Collections.Array { 2, 4, 6, 8 };
-				if (array.Contains(2))
-				{
-				    GD.Print("Contains!");
-				}
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -497,10 +433,6 @@
 				var array: Array[int] = [1, 2, 3, 4]
 				print(array.pick_random())  # Prints either of the four numbers.
 				[/gdscript]
-				[csharp]
-				var array = new Godot.Collections.Array { 1, 2, 3, 4 };
-				GD.Print(array.PickRandom()); // Prints either of the four numbers.
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -630,11 +562,6 @@
 				strings.sort()
 				print(strings) # Prints [string1, string10, string11, string2]
 				[/gdscript]
-				[csharp]
-				var strings = new Godot.Collections.Array { "string1", "string2", "string10", "string11" };
-				strings.Sort();
-				GD.Print(strings); // Prints [string1, string10, string11, string2]
-				[/csharp]
 				[/codeblocks]
 				To perform natural order sorting, you can use [method sort_custom] with [method String.naturalnocasecmp_to] as follows:
 				[codeblock]
@@ -667,9 +594,6 @@
 				    my_items.sort_custom(func(a, b): return a[0] &gt; b[0])
 				    print(my_items) # Prints [[9, Rice], [5, Potato], [4, Tomato]].
 				[/gdscript]
-				[csharp]
-				// There is no custom sort support for Godot.Collections.Array
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>

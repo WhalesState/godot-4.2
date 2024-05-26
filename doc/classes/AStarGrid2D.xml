@@ -15,14 +15,6 @@
 		print(astar_grid.get_id_path(Vector2i(0, 0), Vector2i(3, 4))) # prints (0, 0), (1, 1), (2, 2), (3, 3), (3, 4)
 		print(astar_grid.get_point_path(Vector2i(0, 0), Vector2i(3, 4))) # prints (0, 0), (16, 16), (32, 32), (48, 48), (48, 64)
 		[/gdscript]
-		[csharp]
-		AStarGrid2D astarGrid = new AStarGrid2D();
-		astarGrid.Region = new Rect2I(0, 0, 32, 32);
-		astarGrid.CellSize = new Vector2I(16, 16);
-		astarGrid.Update();
-		GD.Print(astarGrid.GetIdPath(Vector2I.Zero, new Vector2I(3, 4))); // prints (0, 0), (1, 1), (2, 2), (3, 3), (3, 4)
-		GD.Print(astarGrid.GetPointPath(Vector2I.Zero, new Vector2I(3, 4))); // prints (0, 0), (16, 16), (32, 32), (48, 48), (48, 64)
-		[/csharp]
 		[/codeblocks]
 		To remove a point from the pathfinding grid, it must be set as "solid" with [method set_point_solid].
 	</description>
@@ -85,7 +77,7 @@
 			<param index="1" name="to_id" type="Vector2i" />
 			<description>
 				Returns an array with the points that are in the path found by [AStarGrid2D] between the given points. The array is ordered from the starting point to the ending point of the path.
-				[b]Note:[/b] This method is not thread-safe. If called from a [Thread], it will return an empty [PackedVector2Array] and will print an error message.
+				[b]Note:[/b] This method is not thread-safe. If called from a [Thread], it will return an empty [PackedVector3Array] and will print an error message.
 			</description>
 		</method>
 		<method name="get_point_position" qualifiers="const">
@@ -192,7 +184,6 @@
 			dy = abs(to_id.y - from_id.y)
 			result = sqrt(dx * dx + dy * dy)
 			[/codeblock]
-			[b]Note:[/b] This is also the internal heuristic used in [AStar3D] and [AStar2D] by default (with the inclusion of possible z-axis coordinate).
 		</constant>
 		<constant name="HEURISTIC_MANHATTAN" value="1" enum="Heuristic">
 			The [url=https://en.wikipedia.org/wiki/Taxicab_geometry]Manhattan heuristic[/url] to be used for the pathfinding using the following formula:

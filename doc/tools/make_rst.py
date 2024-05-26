@@ -101,37 +101,6 @@ EDITOR_CLASSES: List[str] = [
     "ScriptEditor",
     "ScriptEditorBase",
 ]
-# Sync with the types mentioned in https://docs.godotengine.org/en/stable/tutorials/scripting/c_sharp/c_sharp_differences.html
-CLASSES_WITH_CSHARP_DIFFERENCES: List[str] = [
-    "@GlobalScope",
-    "String",
-    "StringName",
-    "NodePath",
-    "Signal",
-    "Callable",
-    "RID",
-    "Basis",
-    "Transform2D",
-    "Transform3D",
-    "Rect2",
-    "Rect2i",
-    "AABB",
-    "Quaternion",
-    "Projection",
-    "Color",
-    "Array",
-    "Dictionary",
-    "PackedByteArray",
-    "PackedColorArray",
-    "PackedFloat32Array",
-    "PackedFloat64Array",
-    "PackedInt32Array",
-    "PackedInt64Array",
-    "PackedStringArray",
-    "PackedVector2Array",
-    "PackedVector3Array",
-    "Variant",
-]
 
 
 class State:
@@ -894,15 +863,6 @@ def make_rst_class(class_def: ClassDef, state: State, dry_run: bool, output_dir:
             + "\n\n"
         )
 
-    if class_def.name in CLASSES_WITH_CSHARP_DIFFERENCES:
-        f.write(".. note::\n\n\t")
-        f.write(
-            translate(
-                "There are notable differences when using this API with C#. See :ref:`doc_c_sharp_differences` for more information."
-            )
-            + "\n\n"
-        )
-
     # Online tutorials
     if len(class_def.tutorials) > 0:
         f.write(".. rst-class:: classref-introduction-group\n\n")
@@ -1581,7 +1541,7 @@ def make_rst_index(grouped_classes: Dict[str, List[str]], dry_run: bool, output_
 
 RESERVED_FORMATTING_TAGS = ["i", "b", "u", "code", "kbd", "center", "url", "br"]
 RESERVED_LAYOUT_TAGS = ["codeblocks"]
-RESERVED_CODEBLOCK_TAGS = ["codeblock", "gdscript", "csharp"]
+RESERVED_CODEBLOCK_TAGS = ["codeblock", "gdscript"]
 RESERVED_CROSSLINK_TAGS = [
     "method",
     "constructor",
@@ -1665,8 +1625,6 @@ def format_text_block(
             or post_text.startswith("[codeblock ")
             or post_text.startswith("[gdscript]")
             or post_text.startswith("[gdscript ")
-            or post_text.startswith("[csharp]")
-            or post_text.startswith("[csharp ")
         ):
             tag_text = post_text[1:].split("]", 1)[0]
             tag_state = get_tag_and_args(tag_text)
@@ -1778,13 +1736,6 @@ def format_text_block(
                             state,
                         )
                     tag_text = "\n .. code-tab:: gdscript\n"
-                elif tag_state.name == "csharp":
-                    if not inside_code_tabs:
-                        print_error(
-                            f"{state.current_class}.xml: C# code block is used outside of [codeblocks] in {context_name}.",
-                            state,
-                        )
-                    tag_text = "\n .. code-tab:: csharp\n"
                 else:
                     tag_text = "\n::\n"
 

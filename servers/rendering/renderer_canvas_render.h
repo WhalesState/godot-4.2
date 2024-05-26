@@ -127,7 +127,7 @@ public:
 	struct Item;
 
 	typedef uint64_t PolygonID;
-	virtual PolygonID request_polygon(const Vector<int> &p_indices, const Vector<Point2> &p_points, const Vector<Color> &p_colors, const Vector<Point2> &p_uvs = Vector<Point2>(), const Vector<int> &p_bones = Vector<int>(), const Vector<float> &p_weights = Vector<float>()) = 0;
+	virtual PolygonID request_polygon(const Vector<int> &p_indices, const Vector<Point2> &p_points, const Vector<Color> &p_colors, const Vector<Point2> &p_uvs = Vector<Point2>()) = 0;
 	virtual void free_polygon(PolygonID p_polygon) = 0;
 
 	//also easier to wrap to avoid mistakes
@@ -135,7 +135,7 @@ public:
 		PolygonID polygon_id;
 		Rect2 rect_cache;
 
-		_FORCE_INLINE_ void create(const Vector<int> &p_indices, const Vector<Point2> &p_points, const Vector<Color> &p_colors, const Vector<Point2> &p_uvs = Vector<Point2>(), const Vector<int> &p_bones = Vector<int>(), const Vector<float> &p_weights = Vector<float>()) {
+		_FORCE_INLINE_ void create(const Vector<int> &p_indices, const Vector<Point2> &p_points, const Vector<Color> &p_colors, const Vector<Point2> &p_uvs = Vector<Point2>()) {
 			ERR_FAIL_COND(polygon_id != 0);
 			{
 				uint32_t pc = p_points.size();
@@ -145,7 +145,7 @@ public:
 					rect_cache.expand_to(v2[i]);
 				}
 			}
-			polygon_id = singleton->request_polygon(p_indices, p_points, p_colors, p_uvs, p_bones, p_weights);
+			polygon_id = singleton->request_polygon(p_indices, p_points, p_colors, p_uvs);
 		}
 
 		_FORCE_INLINE_ Polygon() { polygon_id = 0; }
@@ -177,9 +177,6 @@ public:
 				TYPE_NINEPATCH,
 				TYPE_POLYGON,
 				TYPE_PRIMITIVE,
-				TYPE_MESH,
-				TYPE_MULTIMESH,
-				TYPE_PARTICLES,
 				TYPE_TRANSFORM,
 				TYPE_CLIP_IGNORE,
 				TYPE_ANIMATION_SLICE,
@@ -249,33 +246,6 @@ public:
 			}
 		};
 
-		struct CommandMesh : public Command {
-			RID mesh;
-			Transform2D transform;
-			Color modulate;
-			RID mesh_instance;
-
-			RID texture;
-
-			CommandMesh() { type = TYPE_MESH; }
-			~CommandMesh();
-		};
-
-		struct CommandMultiMesh : public Command {
-			RID multimesh;
-
-			RID texture;
-
-			CommandMultiMesh() { type = TYPE_MULTIMESH; }
-		};
-
-		struct CommandParticles : public Command {
-			RID particles;
-			RID texture;
-
-			CommandParticles() { type = TYPE_PARTICLES; }
-		};
-
 		struct CommandTransform : public Command {
 			Transform2D xform;
 			CommandTransform() { type = TYPE_TRANSFORM; }
@@ -329,7 +299,6 @@ public:
 		mutable bool rect_dirty;
 		mutable Rect2 rect;
 		RID material;
-		RID skeleton;
 
 		Item *next = nullptr;
 

@@ -31,7 +31,6 @@
 #include "resource_importer_texture_atlas.h"
 
 #include "atlas_import_failed.xpm"
-#include "core/config/project_settings.h"
 #include "core/io/file_access.h"
 #include "core/io/image_loader.h"
 #include "core/io/resource_saver.h"
@@ -39,8 +38,6 @@
 #include "editor/editor_atlas_packer.h"
 #include "scene/resources/atlas_texture.h"
 #include "scene/resources/image_texture.h"
-#include "scene/resources/mesh.h"
-#include "scene/resources/mesh_texture.h"
 
 String ResourceImporterTextureAtlas::get_importer_name() const {
 	return "texture_atlas";
@@ -82,7 +79,7 @@ String ResourceImporterTextureAtlas::get_preset_name(int p_idx) const {
 
 void ResourceImporterTextureAtlas::get_import_options(const String &p_path, List<ImportOption> *r_options, int p_preset) const {
 	r_options->push_back(ImportOption(PropertyInfo(Variant::STRING, "atlas_file", PROPERTY_HINT_SAVE_FILE, "*.png"), ""));
-	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "import_mode", PROPERTY_HINT_ENUM, "Region,Mesh2D", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_UPDATE_ALL_IF_MODIFIED), 0));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "import_mode", PROPERTY_HINT_ENUM, "Region", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_UPDATE_ALL_IF_MODIFIED), 0));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "crop_to_region"), false));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "trim_alpha_border_from_region"), true));
 }
@@ -216,7 +213,6 @@ Error ResourceImporterTextureAtlas::import_group_file(const String &p_group_file
 		int mode = options["import_mode"];
 
 		if (mode == IMPORT_MODE_REGION) {
-			pack_data.is_mesh = false;
 			pack_data.is_cropped = options["crop_to_region"];
 
 			EditorAtlasPacker::Chart chart;
@@ -245,47 +241,13 @@ Error ResourceImporterTextureAtlas::import_group_file(const String &p_group_file
 			pack_data.chart_vertices.push_back(chart.vertices);
 			pack_data.chart_pieces.push_back(charts.size());
 			charts.push_back(chart);
-
-		} else {
-			pack_data.is_mesh = true;
-
-			Ref<BitMap> bit_map;
-			bit_map.instantiate();
-			bit_map->create_from_image_alpha(image);
-			Vector<Vector<Vector2>> polygons = bit_map->clip_opaque_to_polygons(Rect2(Vector2(), image->get_size()));
-
-			for (int j = 0; j < polygons.size(); j++) {
-				EditorAtlasPacker::Chart chart;
-				chart.vertices = polygons[j];
-				chart.can_transpose = true;
-
-				Vector<int> poly = Geometry2D::triangulate_polygon(polygons[j]);
-				for (int i = 0; i < poly.size(); i += 3) {
-					EditorAtlasPacker::Chart::Face f;
-					f.vertex[0] = poly[i + 0];
-					f.vertex[1] = poly[i + 1];
-					f.vertex[2] = poly[i + 2];
-					chart.faces.push_back(f);
-				}
-
-				pack_data.chart_pieces.push_back(charts.size());
-				charts.push_back(chart);
-
-				pack_data.chart_vertices.push_back(polygons[j]);
-			}
 		}
 		idx++;
 	}
 
-	const int max_width = (int)GLOBAL_GET("editor/import/atlas_max_width");
-
 	//pack the charts
 	int atlas_width, atlas_height;
-	EditorAtlasPacker::chart_pack(charts, atlas_width, atlas_height, max_width);
-
-	if (atlas_height > max_width * 2) {
-		WARN_PRINT(vformat(TTR("%s: Atlas texture significantly larger on one axis (%d), consider changing the `editor/import/atlas_max_width` Project Setting to allow a wider texture, making the result more even in size."), p_group_file, atlas_height));
-	}
+	EditorAtlasPacker::chart_pack(charts, atlas_width, atlas_height);
 
 	//blit the atlas
 	Ref<Image> new_atlas = Image::create_empty(atlas_width, atlas_height, false, Image::FORMAT_RGBA8);
@@ -327,75 +289,19 @@ Error ResourceImporterTextureAtlas::import_group_file(const String &p_group_file
 
 		Ref<Texture2D> texture;
 
-		if (!pack_data.is_mesh) {
-			Vector2 offset = charts[pack_data.chart_pieces[0]].vertices[0] + charts[pack_data.chart_pieces[0]].final_offset;
+		Vector2 offset = charts[pack_data.chart_pieces[0]].vertices[0] + charts[pack_data.chart_pieces[0]].final_offset;
 
-			//region
-			Ref<AtlasTexture> atlas_texture;
-			atlas_texture.instantiate();
-			atlas_texture->set_atlas(cache);
-			atlas_texture->set_region(Rect2(offset, pack_data.region.size));
+		//region
+		Ref<AtlasTexture> atlas_texture;
+		atlas_texture.instantiate();
+		atlas_texture->set_atlas(cache);
+		atlas_texture->set_region(Rect2(offset, pack_data.region.size));
 
-			if (!pack_data.is_cropped) {
-				atlas_texture->set_margin(Rect2(pack_data.region.position, pack_data.image->get_size() - pack_data.region.size));
-			}
-
-			texture = atlas_texture;
-		} else {
-			Ref<ArrayMesh> mesh;
-			mesh.instantiate();
-
-			for (int i = 0; i < pack_data.chart_pieces.size(); i++) {
-				const EditorAtlasPacker::Chart &chart = charts[pack_data.chart_pieces[i]];
-				Vector<Vector2> vertices;
-				Vector<int> indices;
-				Vector<Vector2> uvs;
-				int vc = chart.vertices.size();
-				int fc = chart.faces.size();
-				vertices.resize(vc);
-				uvs.resize(vc);
-				indices.resize(fc * 3);
-
-				{
-					Vector2 *vw = vertices.ptrw();
-					int *iw = indices.ptrw();
-					Vector2 *uvw = uvs.ptrw();
-
-					for (int j = 0; j < vc; j++) {
-						vw[j] = chart.vertices[j];
-						Vector2 uv = chart.vertices[j];
-						if (chart.transposed) {
-							SWAP(uv.x, uv.y);
-						}
-						uv += chart.final_offset;
-						uv /= new_atlas->get_size(); //normalize uv to 0-1 range
-						uvw[j] = uv;
-					}
-
-					for (int j = 0; j < fc; j++) {
-						iw[j * 3 + 0] = chart.faces[j].vertex[0];
-						iw[j * 3 + 1] = chart.faces[j].vertex[1];
-						iw[j * 3 + 2] = chart.faces[j].vertex[2];
-					}
-				}
-
-				Array arrays;
-				arrays.resize(Mesh::ARRAY_MAX);
-				arrays[Mesh::ARRAY_VERTEX] = vertices;
-				arrays[Mesh::ARRAY_TEX_UV] = uvs;
-				arrays[Mesh::ARRAY_INDEX] = indices;
-
-				mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);
-			}
-
-			Ref<MeshTexture> mesh_texture;
-			mesh_texture.instantiate();
-			mesh_texture->set_base_texture(cache);
-			mesh_texture->set_image_size(pack_data.image->get_size());
-			mesh_texture->set_mesh(mesh);
-
-			texture = mesh_texture;
+		if (!pack_data.is_cropped) {
+			atlas_texture->set_margin(Rect2(pack_data.region.position, pack_data.image->get_size() - pack_data.region.size));
 		}
+
+		texture = atlas_texture;
 
 		String save_path = p_base_paths[E.key] + ".res";
 		ResourceSaver::save(texture, save_path);

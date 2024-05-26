@@ -76,8 +76,6 @@ const char *Image::format_names[Image::FORMAT_MAX] = {
 	"ETC2_RGB8",
 	"ETC2_RGBA8",
 	"ETC2_RGB8A1",
-	"ETC2_RA_AS_RG",
-	"FORMAT_DXT5_RA_AS_RG",
 	"ASTC_4x4",
 	"ASTC_4x4_HDR",
 	"ASTC_8x8",
@@ -173,10 +171,6 @@ int Image::get_format_pixel_size(Format p_format) {
 			return 1;
 		case FORMAT_ETC2_RGB8A1:
 			return 1;
-		case FORMAT_ETC2_RA_AS_RG:
-			return 1;
-		case FORMAT_DXT5_RA_AS_RG:
-			return 1;
 		case FORMAT_ASTC_4x4:
 			return 1;
 		case FORMAT_ASTC_4x4_HDR:
@@ -218,9 +212,7 @@ void Image::get_format_min_pixel_size(Format p_format, int &r_w, int &r_h) {
 		case FORMAT_ETC2_RG11S:
 		case FORMAT_ETC2_RGB8:
 		case FORMAT_ETC2_RGBA8:
-		case FORMAT_ETC2_RGB8A1:
-		case FORMAT_ETC2_RA_AS_RG:
-		case FORMAT_DXT5_RA_AS_RG: {
+		case FORMAT_ETC2_RGB8A1: {
 			r_w = 4;
 			r_h = 4;
 
@@ -279,8 +271,6 @@ int Image::get_format_block_size(Format p_format) {
 		case FORMAT_ETC2_RGB8:
 		case FORMAT_ETC2_RGBA8:
 		case FORMAT_ETC2_RGB8A1:
-		case FORMAT_ETC2_RA_AS_RG: //used to make basis universal happy
-		case FORMAT_DXT5_RA_AS_RG: //used to make basis universal happy
 
 		{
 			return 4;
@@ -363,82 +353,6 @@ void Image::get_mipmap_offset_size_and_dimensions(int p_mipmap, int &r_ofs, int 
 	_get_mipmap_offset_and_size(p_mipmap + 1, ofs2, w2, h2);
 	r_ofs = ofs;
 	r_size = ofs2 - ofs;
-}
-
-Image::Image3DValidateError Image::validate_3d_image(Image::Format p_format, int p_width, int p_height, int p_depth, bool p_mipmaps, const Vector<Ref<Image>> &p_images) {
-	int w = p_width;
-	int h = p_height;
-	int d = p_depth;
-
-	int arr_ofs = 0;
-
-	while (true) {
-		for (int i = 0; i < d; i++) {
-			int idx = i + arr_ofs;
-			if (idx >= p_images.size()) {
-				return VALIDATE_3D_ERR_MISSING_IMAGES;
-			}
-			if (p_images[idx].is_null() || p_images[idx]->is_empty()) {
-				return VALIDATE_3D_ERR_IMAGE_EMPTY;
-			}
-			if (p_images[idx]->get_format() != p_format) {
-				return VALIDATE_3D_ERR_IMAGE_FORMAT_MISMATCH;
-			}
-			if (p_images[idx]->get_width() != w || p_images[idx]->get_height() != h) {
-				return VALIDATE_3D_ERR_IMAGE_SIZE_MISMATCH;
-			}
-			if (p_images[idx]->has_mipmaps()) {
-				return VALIDATE_3D_ERR_IMAGE_HAS_MIPMAPS;
-			}
-		}
-
-		arr_ofs += d;
-
-		if (!p_mipmaps) {
-			break;
-		}
-
-		if (w == 1 && h == 1 && d == 1) {
-			break;
-		}
-
-		w = MAX(1, w >> 1);
-		h = MAX(1, h >> 1);
-		d = MAX(1, d >> 1);
-	}
-
-	if (arr_ofs != p_images.size()) {
-		return VALIDATE_3D_ERR_EXTRA_IMAGES;
-	}
-
-	return VALIDATE_3D_OK;
-}
-
-String Image::get_3d_image_validation_error_text(Image3DValidateError p_error) {
-	switch (p_error) {
-		case VALIDATE_3D_OK: {
-			return "Ok";
-		} break;
-		case VALIDATE_3D_ERR_IMAGE_EMPTY: {
-			return "Empty Image found";
-		} break;
-		case VALIDATE_3D_ERR_MISSING_IMAGES: {
-			return "Missing Images";
-		} break;
-		case VALIDATE_3D_ERR_EXTRA_IMAGES: {
-			return "Too many Images";
-		} break;
-		case VALIDATE_3D_ERR_IMAGE_SIZE_MISMATCH: {
-			return "Image size mismatch";
-		} break;
-		case VALIDATE_3D_ERR_IMAGE_FORMAT_MISMATCH: {
-			return "Image format mismatch";
-		} break;
-		case VALIDATE_3D_ERR_IMAGE_HAS_MIPMAPS: {
-			return "Image has included mipmaps";
-		} break;
-	}
-	return String();
 }
 
 int Image::get_width() const {
@@ -2620,13 +2534,13 @@ bool Image::is_compressed() const {
 }
 
 Error Image::decompress() {
-	if (((format >= FORMAT_DXT1 && format <= FORMAT_RGTC_RG) || (format == FORMAT_DXT5_RA_AS_RG)) && _image_decompress_bc) {
+	if ((format >= FORMAT_DXT1 && format <= FORMAT_RGTC_RG) && _image_decompress_bc) {
 		_image_decompress_bc(this);
 	} else if (format >= FORMAT_BPTC_RGBA && format <= FORMAT_BPTC_RGBFU && _image_decompress_bptc) {
 		_image_decompress_bptc(this);
 	} else if (format == FORMAT_ETC && _image_decompress_etc1) {
 		_image_decompress_etc1(this);
-	} else if (format >= FORMAT_ETC2_R11 && format <= FORMAT_ETC2_RA_AS_RG && _image_decompress_etc2) {
+	} else if (format >= FORMAT_ETC2_R11 && format <= FORMAT_ETC2_RGB8A1 && _image_decompress_etc2) {
 		_image_decompress_etc2(this);
 	} else if (format >= FORMAT_ASTC_4x4 && format <= FORMAT_ASTC_8x8_HDR && _image_decompress_astc) {
 		_image_decompress_astc(this);
@@ -3018,7 +2932,6 @@ ImageMemLoadFunc Image::_webp_mem_loader_func = nullptr;
 ImageMemLoadFunc Image::_tga_mem_loader_func = nullptr;
 ImageMemLoadFunc Image::_bmp_mem_loader_func = nullptr;
 ScalableImageMemLoadFunc Image::_svg_scalable_mem_loader_func = nullptr;
-ImageMemLoadFunc Image::_ktx_mem_loader_func = nullptr;
 
 void (*Image::_image_compress_bc_func)(Image *, Image::UsedChannels) = nullptr;
 void (*Image::_image_compress_bptc_func)(Image *, Image::UsedChannels) = nullptr;
@@ -3036,9 +2949,6 @@ Vector<uint8_t> (*Image::webp_lossless_packer)(const Ref<Image> &) = nullptr;
 Ref<Image> (*Image::webp_unpacker)(const Vector<uint8_t> &) = nullptr;
 Vector<uint8_t> (*Image::png_packer)(const Ref<Image> &) = nullptr;
 Ref<Image> (*Image::png_unpacker)(const Vector<uint8_t> &) = nullptr;
-Vector<uint8_t> (*Image::basis_universal_packer)(const Ref<Image> &, Image::UsedChannels) = nullptr;
-Ref<Image> (*Image::basis_universal_unpacker)(const Vector<uint8_t> &) = nullptr;
-Ref<Image> (*Image::basis_universal_unpacker_ptr)(const uint8_t *, int) = nullptr;
 
 void Image::_set_data(const Dictionary &p_data) {
 	ERR_FAIL_COND(!p_data.has("width"));
@@ -3073,10 +2983,6 @@ Dictionary Image::_get_data() const {
 	d["mipmaps"] = mipmaps;
 	d["data"] = data;
 	return d;
-}
-
-Color Image::get_pixelv(const Point2i &p_point) const {
-	return get_pixel(p_point.x, p_point.y);
 }
 
 Color Image::_get_color_at_ofs(const uint8_t *ptr, uint32_t ofs) const {
@@ -3275,6 +3181,32 @@ void Image::_set_color_at_ofs(uint8_t *ptr, uint32_t ofs, const Color &p_color) 
 	}
 }
 
+bool Image::point_inside_rect_v(const Point2i &p_point) const {
+	return point_inside_rect(p_point.x, p_point.y);
+}
+
+bool Image::point_inside_rect(int p_x, int p_y) const {
+	Point2i s_pos = selection.position;
+	Point2i s_size = selection.size;
+	if (s_size.x == 0 || s_size.y == 0) {
+		s_size = Point2i(width, height) - s_pos;
+	}
+	return !(p_x < s_pos.x || p_x >= s_size.x + s_pos.x || p_y < s_pos.y || p_y >= s_size.y + s_pos.y);
+}
+
+void Image::set_selection_rect(Point2i p_pos, Point2i p_size) {
+	selection.position = p_pos.clamp(Point2i(0, 0), Point2i(width, height));
+	selection.size = p_size.clamp(Point2i(0, 0), Point2i(width, height) - selection.position);
+}
+
+Rect2i Image::get_selection_rect() const {
+	return selection;
+}
+
+Color Image::get_pixel_v(const Point2i &p_point) const {
+	return get_pixel(p_point.x, p_point.y);
+}
+
 Color Image::get_pixel(int p_x, int p_y) const {
 #ifdef DEBUG_ENABLED
 	ERR_FAIL_INDEX_V(p_x, width, Color());
@@ -3285,18 +3217,311 @@ Color Image::get_pixel(int p_x, int p_y) const {
 	return _get_color_at_ofs(data.ptr(), ofs);
 }
 
-void Image::set_pixelv(const Point2i &p_point, const Color &p_color) {
+void Image::set_pixel_v(const Point2i &p_point, const Color &p_color) {
 	set_pixel(p_point.x, p_point.y, p_color);
 }
 
 void Image::set_pixel(int p_x, int p_y, const Color &p_color) {
-#ifdef DEBUG_ENABLED
-	ERR_FAIL_INDEX(p_x, width);
-	ERR_FAIL_INDEX(p_y, height);
-#endif
+	if (!point_inside_rect(p_x, p_y)) {
+		return;
+	}
 
 	uint32_t ofs = p_y * width + p_x;
 	_set_color_at_ofs(data.ptrw(), ofs, p_color);
+}
+
+PackedVector2Array Image::get_pixel_line_v(const Point2i &p_point0, const Point2i &p_point1) const {
+	return get_pixel_line(p_point0.x, p_point0.y, p_point1.x, p_point1.y);
+}
+
+PackedVector2Array Image::get_pixel_line(int p_x0, int p_y0, int p_x1, int p_y1) const {
+	PackedVector2Array arr;
+
+	int dx = abs(p_x1 - p_x0);
+	int dy = abs(p_y1 - p_y0);
+
+	int sx = p_x0 < p_x1 ? 1 : -1;
+	int sy = p_y0 < p_y1 ? 1 : -1;
+
+	int error = dx - dy;
+
+	int x = p_x0;
+	int y = p_y0;
+
+	while (true) {
+		if (point_inside_rect(x, y)) {
+			arr.push_back(Point2(x, y));
+		}
+		if (x == p_x1 && y == p_y1) {
+			break;
+		}
+		int error2 = error * 2;
+
+		if (error2 > -dy) {
+			error -= dy;
+			x += sx;
+		}
+		if (error2 < dx) {
+			error += dx;
+			y += sy;
+		}
+	}
+	return arr;
+}
+
+void Image::set_pixel_line_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color) {
+	set_pixel_line(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_color);
+}
+
+void Image::set_pixel_line(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color) {
+	PackedVector2Array arr = get_pixel_line(p_x0, p_y0, p_x1, p_y1);
+	for (int i = 0; i < arr.size(); i++) {
+		set_pixel(arr[i].x, arr[i].y, p_color);
+	}
+}
+
+PackedVector2Array Image::get_pixel_quadratic_curve_v(const Point2i &p_point0, const Point2i &p_point1, const Point2i &p_point2) const {
+	return get_pixel_quadratic_curve(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_point2.x, p_point2.y);
+}
+
+PackedVector2Array Image::get_pixel_quadratic_curve(int p_x0, int p_y0, int p_x1, int p_y1, int p_x2, int p_y2) const {
+	PackedVector2Array arr;
+
+	// int sx = p_x2 - p_x1;
+	// int sy = p_y2 - p_y1;
+
+	// float t = 0.0;
+	// float step = 1.0 / MAX(abs(sx), abs(sy));
+
+	// for (int i = 0; i <= MAX(abs(sx), abs(sy)); i++) {
+	// 	float t2 = t * t;
+	// 	float mt = 1 - t;
+	// 	float mt2 = mt * mt;
+
+	// 	int x = mt2 * p_x0 + 2 * mt * t * p_x1 + t2 * p_x2;
+	// 	int y = mt2 * p_y0 + 2 * mt * t * p_y1 + t2 * p_y2;
+	//  if (point_inside_rect(x, y)) {
+	// 		arr.push_back(Vector2(x, y));
+	//  }
+
+	// 	t += step;
+	// }
+	return arr;
+}
+
+void Image::set_pixel_quadratic_curve_v(const Point2i &p_point0, const Point2i &p_point1, const Point2i &p_point2, const Color &p_color) {
+	set_pixel_quadratic_curve(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_point2.x, p_point2.y, p_color);
+}
+
+void Image::set_pixel_quadratic_curve(int p_x0, int p_y0, int p_x1, int p_y1, int p_x2, int p_y2, const Color &p_color) {
+	PackedVector2Array arr = get_pixel_quadratic_curve(p_x0, p_y0, p_x1, p_y1, p_x2, p_y2);
+	for (int i = 0; i < arr.size(); i++) {
+		set_pixel(arr[i].x, arr[i].y, p_color);
+	}
+}
+
+PackedVector2Array Image::get_pixel_cubic_curve_v(const Point2i &p_point0, const Point2i &p_point1, const Point2i &p_point2, const Point2i &p_point3) const {
+	return get_pixel_cubic_curve(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_point2.x, p_point2.y, p_point3.x, p_point3.y);
+}
+
+PackedVector2Array Image::get_pixel_cubic_curve(int p_x0, int p_y0, int p_x1, int p_y1, int p_x2, int p_y2, int p_x3, int p_y3) const {
+	PackedVector2Array arr;
+	return arr;
+}
+
+void Image::set_pixel_cubic_curve_v(const Point2i &p_point0, const Point2i &p_point1, const Point2i &p_point2, const Point2i &p_point3, const Color &p_color) {
+}
+
+void Image::set_pixel_cubic_curve(int p_x0, int p_y0, int p_x1, int p_y1, int p_x2, int p_y2, int p_x3, int p_y3, const Color &p_color) {
+}
+
+PackedVector2Array Image::get_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled, bool p_square, bool p_centered) const {
+	return get_pixel_rect(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_filled, p_square, p_centered);
+}
+
+PackedVector2Array Image::get_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, bool p_filled, bool p_square, bool p_centered) const {
+	PackedVector2Array arr;
+
+	int dx = p_x1 - p_x0;
+	int dy = p_y1 - p_y0;
+
+	if (p_centered) {
+		if (p_square && abs(dx) != abs(dy)) {
+			if (abs(dx) > abs(dy)) {
+				dy = dy >= 0 ? abs(dx) : -abs(dx);
+			} else {
+				dx = dx >= 0 ? abs(dy) : -abs(dy);
+			}
+		}
+		p_x0 -= dx;
+		p_y0 -= dy;
+		dx = p_x1 - p_x0;
+		dy = p_y1 - p_y0;
+	}
+	if (p_square && abs(dx) != abs(dy)) {
+		if (abs(dx) > abs(dy)) {
+			p_y1 = dy >= 0 ? p_y1 + abs(abs(dy) - abs(dx)) : p_y1 - abs(abs(dy) - abs(dx));
+			dy = p_y1 - p_y0;
+		} else {
+			p_x1 = dx >= 0 ? p_x1 + abs(abs(dy) - abs(dx)) : p_x1 - abs(abs(dy) - abs(dx));
+			dx = p_x1 - p_x0;
+		}
+	}
+	int xx = dx > 0 ? 1 : -1;
+	int yy = dy > 0 ? 1 : -1;
+	Point2i st = Point2i(p_x0, p_y0);
+
+	for (int x = 0; x <= abs(dx); x++) {
+		if (!p_filled) {
+			arr.push_back(st);
+			arr.push_back(st + Point2i(0, dy));
+		} else {
+			arr.append_array(get_pixel_line_v(st, st + Point2i(0, dy)));
+		}
+		st.x += xx;
+	}
+	st = Point2i(p_x0, p_y0);
+
+	for (int y = 0; y <= abs(dy); y++) {
+		arr.append(st);
+		arr.append(st + Point2i(dx, 0));
+		st.y += yy;
+	}
+	return arr;
+}
+
+void Image::set_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color, bool p_filled, bool p_square, bool p_centered) {
+	set_pixel_rect(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_color, p_filled, p_square, p_centered);
+}
+
+void Image::set_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color, bool p_filled, bool p_square, bool p_centered) {
+	PackedVector2Array arr = get_pixel_rect(p_x0, p_y0, p_x1, p_y1, p_filled, p_square, p_centered);
+	for (int i = 0; i < arr.size(); i++) {
+		set_pixel(arr[i].x, arr[i].y, p_color);
+	}
+}
+
+PackedVector2Array Image::get_pixel_ellipse_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled, bool p_circle, bool p_centered) const {
+	return get_pixel_ellipse(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_filled, p_circle, p_centered);
+}
+
+PackedVector2Array Image::get_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_y1, bool p_filled, bool p_circle, bool p_centered) const {
+	PackedVector2Array arr;
+
+	int dx = p_x1 - p_x0;
+	int dy = p_y1 - p_y0;
+
+	if (p_centered) {
+		if (p_circle && abs(dx) != abs(dy)) {
+			if (abs(dx) > abs(dy)) {
+				dy = dy >= 0 ? abs(dx) : -abs(dx);
+			} else {
+				dx = dx >= 0 ? abs(dy) : -abs(dy);
+			}
+		}
+		p_x0 -= dx;
+		p_y0 -= dy;
+		dx = p_x1 - p_x0;
+		dy = p_y1 - p_y0;
+	}
+	if (p_circle && abs(dx) != abs(dy)) {
+		if (abs(dx) > abs(dy)) {
+			p_y1 = dy >= 0 ? p_y1 + abs(abs(dy) - abs(dx)) : p_y1 - abs(abs(dy) - abs(dx));
+			dy = p_y1 - p_y0;
+		} else {
+			p_x1 = dx >= 0 ? p_x1 + abs(abs(dy) - abs(dx)) : p_x1 - abs(abs(dy) - abs(dx));
+			dx = p_x1 - p_x0;
+		}
+	}
+	dx = abs(dx);
+	dy = abs(dy);
+	int b1 = dy & 1;
+	Point2i d = Point2i(4 * (1.0 - dx) * dy * dy, 4 * (b1 + 1) * dx * dx);
+	int err = d.x + d.y + b1 * dx * dx;
+	int e2;
+
+	if (p_x0 > p_x1) {
+		p_x0 = p_x1;
+		p_x1 += dx;
+	}
+	if (p_y0 > p_y1) {
+		p_y0 = p_y1;
+	}
+	p_y0 += (dy + 1) / 2;
+	p_y1 = p_y0 - b1;
+	dx *= 8 * dx;
+	b1 = 8 * dy * dy;
+
+	while (p_x0 <= p_x1) {
+		if (!p_filled) {
+			arr.push_back(Point2i(p_x0, p_y0));
+			arr.push_back(Point2i(p_x1, p_y0));
+			arr.push_back(Point2i(p_x0, p_y1));
+			arr.push_back(Point2i(p_x1, p_y1));
+		} else {
+			arr.append_array(get_pixel_line(p_x0, p_y0, p_x1, p_y0));
+			arr.append_array(get_pixel_line(p_x0, p_y1, p_x1, p_y1));
+		}
+		e2 = 2 * err;
+
+		if (e2 <= d.y) {
+			p_y0 += 1;
+			p_y1 -= 1;
+			d.y += dx;
+			err += d.y;
+		}
+		if (e2 >= d.x) {
+			p_x0 += 1;
+			p_x1 -= 1;
+			d.x += b1;
+			err += d.x;
+		}
+	}
+	while (p_y0 - p_y1 < dy) {
+		arr.push_back(Point2i(p_x0 - 1, p_y0));
+		arr.push_back(Point2i(p_x1 + 1, p_y0));
+		arr.push_back(Point2i(p_x0 - 1, p_y1));
+		arr.push_back(Point2i(p_x1 + 1, p_y1));
+
+		p_y0 += 1;
+		p_y1 -= 1;
+	}
+	return arr;
+}
+
+void Image::set_pixel_ellipse_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color, bool p_filled, bool p_circle, bool p_centered) {
+	set_pixel_ellipse(p_point0.x, p_point0.y, p_point1.x, p_point1.y, p_color, p_filled, p_circle, p_centered);
+}
+
+void Image::set_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color, bool p_filled, bool p_circle, bool p_centered) {
+	PackedVector2Array arr = get_pixel_ellipse(p_x0, p_y0, p_x1, p_y1, p_filled, p_circle, p_centered);
+	for (int i = 0; i < arr.size(); i++) {
+		set_pixel(arr[i].x, arr[i].y, p_color);
+	}
+}
+
+PackedVector2Array Image::get_pixel_contours(const PackedVector2Array &p_points, const Color &p_color) const {
+	PackedVector2Array arr;
+	return arr;
+}
+
+void Image::set_pixel_contours(const PackedVector2Array &p_points, const Color &p_color) {
+}
+
+PackedVector2Array Image::get_pixel_polygon(const PackedVector2Array &p_points, const Color &p_color) const {
+	PackedVector2Array arr;
+	return arr;
+}
+
+void Image::set_pixel_polygon(const PackedVector2Array &p_points, const Color &p_color) {
+}
+
+PackedVector2Array Image::get_pixel_fill(const Point2 &p_point, const Color &p_color, bool p_connected) const {
+	PackedVector2Array arr;
+	return arr;
+}
+
+void Image::set_pixel_fill(const Point2 &p_point, const Color &p_color, bool p_connected) {
 }
 
 void Image::adjust_bcs(float p_brightness, float p_contrast, float p_saturation) {
@@ -3462,8 +3687,6 @@ void Image::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("rgbe_to_srgb"), &Image::rgbe_to_srgb);
 	ClassDB::bind_method(D_METHOD("bump_map_to_normal_map", "bump_scale"), &Image::bump_map_to_normal_map, DEFVAL(1.0));
 
-	ClassDB::bind_method(D_METHOD("compute_image_metrics", "compared_image", "use_luma"), &Image::compute_image_metrics);
-
 	ClassDB::bind_method(D_METHOD("blit_rect", "src", "src_rect", "dst"), &Image::blit_rect);
 	ClassDB::bind_method(D_METHOD("blit_rect_mask", "src", "mask", "src_rect", "dst"), &Image::blit_rect_mask);
 	ClassDB::bind_method(D_METHOD("blend_rect", "src", "src_rect", "dst"), &Image::blend_rect);
@@ -3479,10 +3702,50 @@ void Image::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_set_data", "data"), &Image::_set_data);
 	ClassDB::bind_method(D_METHOD("_get_data"), &Image::_get_data);
 
-	ClassDB::bind_method(D_METHOD("get_pixelv", "point"), &Image::get_pixelv);
+	ClassDB::bind_method(D_METHOD("point_inside_rect_v", "point"), &Image::point_inside_rect_v);
+	ClassDB::bind_method(D_METHOD("point_inside_rect", "x", "y"), &Image::point_inside_rect);
+
+	ClassDB::bind_method(D_METHOD("set_selection_rect", "position", "size"), &Image::set_selection_rect);
+	ClassDB::bind_method(D_METHOD("get_selection_rect"), &Image::get_selection_rect);
+
+	ClassDB::bind_method(D_METHOD("get_pixel_v", "point"), &Image::get_pixel_v);
 	ClassDB::bind_method(D_METHOD("get_pixel", "x", "y"), &Image::get_pixel);
-	ClassDB::bind_method(D_METHOD("set_pixelv", "point", "color"), &Image::set_pixelv);
+	ClassDB::bind_method(D_METHOD("set_pixel_v", "point", "color"), &Image::set_pixel_v);
 	ClassDB::bind_method(D_METHOD("set_pixel", "x", "y", "color"), &Image::set_pixel);
+
+	ClassDB::bind_method(D_METHOD("get_pixel_line_v", "point0", "point1"), &Image::get_pixel_line_v);
+	ClassDB::bind_method(D_METHOD("get_pixel_line", "x0", "y0", "x1", "y1"), &Image::get_pixel_line);
+	ClassDB::bind_method(D_METHOD("set_pixel_line_v", "point0", "point1", "color"), &Image::set_pixel_line_v);
+	ClassDB::bind_method(D_METHOD("set_pixel_line", "x0", "y0", "x1", "y1", "color"), &Image::set_pixel_line);
+
+	ClassDB::bind_method(D_METHOD("get_pixel_quadratic_curve_v", "point0", "point1", "point2"), &Image::get_pixel_quadratic_curve_v);
+	ClassDB::bind_method(D_METHOD("get_pixel_quadratic_curve", "x0", "y0", "x1", "y1", "x2", "y2"), &Image::get_pixel_quadratic_curve);
+	ClassDB::bind_method(D_METHOD("set_pixel_quadratic_curve_v", "point0", "point1", "point2", "color"), &Image::set_pixel_quadratic_curve_v);
+	ClassDB::bind_method(D_METHOD("set_pixel_quadratic_curve", "x0", "y0", "x1", "y1", "x2", "y2", "color"), &Image::set_pixel_quadratic_curve);
+
+	ClassDB::bind_method(D_METHOD("get_pixel_cubic_curve_v", "point0", "point1", "point2", "point3"), &Image::get_pixel_cubic_curve_v);
+	ClassDB::bind_method(D_METHOD("get_pixel_cubic_curve", "x0", "y0", "x1", "y1", "x2", "y2", "x3", "y3"), &Image::get_pixel_cubic_curve);
+	ClassDB::bind_method(D_METHOD("set_pixel_cubic_curve_v", "point0", "point1", "point2", "point3", "color"), &Image::set_pixel_cubic_curve_v);
+	ClassDB::bind_method(D_METHOD("set_pixel_cubic_curve", "x0", "y0", "x1", "y1", "x2", "y2", "x3", "y3", "color"), &Image::set_pixel_cubic_curve);
+
+	ClassDB::bind_method(D_METHOD("get_pixel_rect_v", "point0", "point1", "filled", "square", "centered"), &Image::get_pixel_rect_v);
+	ClassDB::bind_method(D_METHOD("get_pixel_rect", "x0", "y0", "x1", "y1", "filled", "square", "centered"), &Image::get_pixel_rect);
+	ClassDB::bind_method(D_METHOD("set_pixel_rect_v", "point0", "point1", "color", "filled", "square", "centered"), &Image::set_pixel_rect_v);
+	ClassDB::bind_method(D_METHOD("set_pixel_rect", "x0", "y0", "x1", "y1", "color", "filled", "square", "centered"), &Image::set_pixel_rect);
+
+	ClassDB::bind_method(D_METHOD("get_pixel_ellipse_v", "point0", "point1", "filled", "circle", "centered"), &Image::get_pixel_ellipse_v);
+	ClassDB::bind_method(D_METHOD("get_pixel_ellipse", "x0", "y0", "x1", "y1", "filled", "circle", "centered"), &Image::get_pixel_ellipse);
+	ClassDB::bind_method(D_METHOD("set_pixel_ellipse_v", "point0", "point1", "color", "filled", "circle", "centered"), &Image::set_pixel_ellipse_v);
+	ClassDB::bind_method(D_METHOD("set_pixel_ellipse", "x0", "y0", "x1", "y1", "color", "filled", "circle", "centered"), &Image::set_pixel_ellipse);
+
+	ClassDB::bind_method(D_METHOD("get_pixel_contours", "points", "color"), &Image::get_pixel_contours);
+	ClassDB::bind_method(D_METHOD("set_pixel_contours", "points", "color"), &Image::set_pixel_contours);
+
+	ClassDB::bind_method(D_METHOD("get_pixel_polygon", "points", "color"), &Image::get_pixel_polygon);
+	ClassDB::bind_method(D_METHOD("set_pixel_polygon", "points", "color"), &Image::set_pixel_polygon);
+
+	ClassDB::bind_method(D_METHOD("get_pixel_fill", "point", "color", "connected"), &Image::get_pixel_fill);
+	ClassDB::bind_method(D_METHOD("set_pixel_fill", "point", "color", "connected"), &Image::set_pixel_fill);
 
 	ClassDB::bind_method(D_METHOD("adjust_bcs", "brightness", "contrast", "saturation"), &Image::adjust_bcs);
 
@@ -3491,7 +3754,6 @@ void Image::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("load_webp_from_buffer", "buffer"), &Image::load_webp_from_buffer);
 	ClassDB::bind_method(D_METHOD("load_tga_from_buffer", "buffer"), &Image::load_tga_from_buffer);
 	ClassDB::bind_method(D_METHOD("load_bmp_from_buffer", "buffer"), &Image::load_bmp_from_buffer);
-	ClassDB::bind_method(D_METHOD("load_ktx_from_buffer", "buffer"), &Image::load_ktx_from_buffer);
 
 	ClassDB::bind_method(D_METHOD("load_svg_from_buffer", "buffer", "scale"), &Image::load_svg_from_buffer, DEFVAL(1.0));
 	ClassDB::bind_method(D_METHOD("load_svg_from_string", "svg_str", "scale"), &Image::load_svg_from_string, DEFVAL(1.0));
@@ -3534,8 +3796,6 @@ void Image::_bind_methods() {
 	BIND_ENUM_CONSTANT(FORMAT_ETC2_RGB8);
 	BIND_ENUM_CONSTANT(FORMAT_ETC2_RGBA8);
 	BIND_ENUM_CONSTANT(FORMAT_ETC2_RGB8A1);
-	BIND_ENUM_CONSTANT(FORMAT_ETC2_RA_AS_RG);
-	BIND_ENUM_CONSTANT(FORMAT_DXT5_RA_AS_RG);
 	BIND_ENUM_CONSTANT(FORMAT_ASTC_4x4);
 	BIND_ENUM_CONSTANT(FORMAT_ASTC_4x4_HDR);
 	BIND_ENUM_CONSTANT(FORMAT_ASTC_8x8);
@@ -3867,40 +4127,6 @@ Error Image::load_svg_from_string(const String &p_svg_str, float scale) {
 	return load_svg_from_buffer(p_svg_str.to_utf8_buffer(), scale);
 }
 
-Error Image::load_ktx_from_buffer(const Vector<uint8_t> &p_array) {
-	ERR_FAIL_NULL_V_MSG(
-			_ktx_mem_loader_func,
-			ERR_UNAVAILABLE,
-			"The KTX module isn't enabled. Recompile the Godot editor or export template binary with the `module_ktx_enabled=yes` SCons option.");
-	return _load_from_buffer(p_array, _ktx_mem_loader_func);
-}
-
-void Image::convert_rg_to_ra_rgba8() {
-	ERR_FAIL_COND(format != FORMAT_RGBA8);
-	ERR_FAIL_COND(!data.size());
-
-	int s = data.size();
-	uint8_t *w = data.ptrw();
-	for (int i = 0; i < s; i += 4) {
-		w[i + 3] = w[i + 1];
-		w[i + 1] = 0;
-		w[i + 2] = 0;
-	}
-}
-
-void Image::convert_ra_rgba8_to_rg() {
-	ERR_FAIL_COND(format != FORMAT_RGBA8);
-	ERR_FAIL_COND(!data.size());
-
-	int s = data.size();
-	uint8_t *w = data.ptrw();
-	for (int i = 0; i < s; i += 4) {
-		w[i + 1] = w[i + 3];
-		w[i + 2] = 0;
-		w[i + 3] = 255;
-	}
-}
-
 void Image::convert_rgba8_to_bgra8() {
 	ERR_FAIL_COND(format != FORMAT_RGBA8);
 	ERR_FAIL_COND(!data.size());
@@ -4007,129 +4233,4 @@ Ref<Resource> Image::duplicate(bool p_subresources) const {
 
 void Image::set_as_black() {
 	memset(data.ptrw(), 0, data.size());
-}
-
-Dictionary Image::compute_image_metrics(const Ref<Image> p_compared_image, bool p_luma_metric) {
-	// https://github.com/richgel999/bc7enc_rdo/blob/master/LICENSE
-	//
-	// This is free and unencumbered software released into the public domain.
-	// Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
-	// software, either in source code form or as a compiled binary, for any purpose,
-	// commercial or non - commercial, and by any means.
-	// In jurisdictions that recognize copyright laws, the author or authors of this
-	// software dedicate any and all copyright interest in the software to the public
-	// domain. We make this dedication for the benefit of the public at large and to
-	// the detriment of our heirs and successors. We intend this dedication to be an
-	// overt act of relinquishment in perpetuity of all present and future rights to
-	// this software under copyright law.
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
-	// AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-	// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-	// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	Dictionary result;
-	result["max"] = INFINITY;
-	result["mean"] = INFINITY;
-	result["mean_squared"] = INFINITY;
-	result["root_mean_squared"] = INFINITY;
-	result["peak_snr"] = 0.0f;
-
-	ERR_FAIL_NULL_V(p_compared_image, result);
-	Error err = OK;
-	Ref<Image> compared_image = duplicate(true);
-	if (compared_image->is_compressed()) {
-		err = compared_image->decompress();
-	}
-	ERR_FAIL_COND_V(err != OK, result);
-	Ref<Image> source_image = p_compared_image->duplicate(true);
-	if (source_image->is_compressed()) {
-		err = source_image->decompress();
-	}
-	ERR_FAIL_COND_V(err != OK, result);
-
-	ERR_FAIL_COND_V(err != OK, result);
-
-	ERR_FAIL_COND_V_MSG((compared_image->get_format() >= Image::FORMAT_RH) && (compared_image->get_format() <= Image::FORMAT_RGBE9995), result, "Metrics on HDR images are not supported.");
-	ERR_FAIL_COND_V_MSG((source_image->get_format() >= Image::FORMAT_RH) && (source_image->get_format() <= Image::FORMAT_RGBE9995), result, "Metrics on HDR images are not supported.");
-
-	double image_metric_max, image_metric_mean, image_metric_mean_squared, image_metric_root_mean_squared, image_metric_peak_snr = 0.0;
-	const bool average_component_error = true;
-
-	const uint32_t w = MIN(compared_image->get_width(), source_image->get_width());
-	const uint32_t h = MIN(compared_image->get_height(), source_image->get_height());
-
-	// Histogram approach originally due to Charles Bloom.
-	double hist[256];
-	memset(hist, 0, sizeof(hist));
-
-	for (uint32_t y = 0; y < h; y++) {
-		for (uint32_t x = 0; x < w; x++) {
-			const Color color_a = compared_image->get_pixel(x, y);
-
-			const Color color_b = source_image->get_pixel(x, y);
-
-			if (!p_luma_metric) {
-				ERR_FAIL_COND_V_MSG(color_a.r > 1.0f, Dictionary(), "Can't compare HDR colors.");
-				ERR_FAIL_COND_V_MSG(color_b.r > 1.0f, Dictionary(), "Can't compare HDR colors.");
-				hist[Math::abs(color_a.get_r8() - color_b.get_r8())]++;
-				ERR_FAIL_COND_V_MSG(color_a.g > 1.0f, Dictionary(), "Can't compare HDR colors.");
-				ERR_FAIL_COND_V_MSG(color_b.g > 1.0f, Dictionary(), "Can't compare HDR colors.");
-				hist[Math::abs(color_a.get_g8() - color_b.get_g8())]++;
-				ERR_FAIL_COND_V_MSG(color_a.b > 1.0f, Dictionary(), "Can't compare HDR colors.");
-				ERR_FAIL_COND_V_MSG(color_b.b > 1.0f, Dictionary(), "Can't compare HDR colors.");
-				hist[Math::abs(color_a.get_b8() - color_b.get_b8())]++;
-				ERR_FAIL_COND_V_MSG(color_a.a > 1.0f, Dictionary(), "Can't compare HDR colors.");
-				ERR_FAIL_COND_V_MSG(color_b.a > 1.0f, Dictionary(), "Can't compare HDR colors.");
-				hist[Math::abs(color_a.get_a8() - color_b.get_a8())]++;
-			} else {
-				ERR_FAIL_COND_V_MSG(color_a.r > 1.0f, Dictionary(), "Can't compare HDR colors.");
-				ERR_FAIL_COND_V_MSG(color_b.r > 1.0f, Dictionary(), "Can't compare HDR colors.");
-				// REC709 weightings
-				int luma_a = (13938U * color_a.get_r8() + 46869U * color_a.get_g8() + 4729U * color_a.get_b8() + 32768U) >> 16U;
-				int luma_b = (13938U * color_b.get_r8() + 46869U * color_b.get_g8() + 4729U * color_b.get_b8() + 32768U) >> 16U;
-				hist[Math::abs(luma_a - luma_b)]++;
-			}
-		}
-	}
-
-	image_metric_max = 0;
-	double sum = 0.0f, sum2 = 0.0f;
-	for (uint32_t i = 0; i < 256; i++) {
-		if (!hist[i]) {
-			continue;
-		}
-
-		image_metric_max = MAX(image_metric_max, i);
-
-		double x = i * hist[i];
-
-		sum += x;
-		sum2 += i * x;
-	}
-
-	// See http://richg42.blogspot.com/2016/09/how-to-compute-psnr-from-old-berkeley.html
-	double total_values = w * h;
-
-	if (average_component_error) {
-		total_values *= 4;
-	}
-
-	image_metric_mean = CLAMP(sum / total_values, 0.0f, 255.0f);
-	image_metric_mean_squared = CLAMP(sum2 / total_values, 0.0f, 255.0f * 255.0f);
-
-	image_metric_root_mean_squared = sqrt(image_metric_mean_squared);
-
-	if (!image_metric_root_mean_squared) {
-		image_metric_peak_snr = 1e+10f;
-	} else {
-		image_metric_peak_snr = CLAMP(log10(255.0f / image_metric_root_mean_squared) * 20.0f, 0.0f, 500.0f);
-	}
-	result["max"] = image_metric_max;
-	result["mean"] = image_metric_mean;
-	result["mean_squared"] = image_metric_mean_squared;
-	result["root_mean_squared"] = image_metric_root_mean_squared;
-	result["peak_snr"] = image_metric_peak_snr;
-	return result;
 }

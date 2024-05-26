@@ -53,10 +53,6 @@
 #include "drivers/gles3/rasterizer_gles3.h"
 #endif
 
-#if defined(VULKAN_ENABLED)
-#include "servers/rendering/renderer_rd/renderer_compositor_rd.h"
-#endif
-
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 #import <IOKit/IOCFPlugIn.h>
@@ -179,12 +175,6 @@ DisplayServerMacOS::WindowID DisplayServerMacOS::_create_window(WindowMode p_mod
 			[layer setBackgroundColor:bg_color.CGColor];
 		}
 
-#if defined(VULKAN_ENABLED)
-		if (context_vulkan) {
-			Error err = context_vulkan->window_create(window_id_counter, p_vsync_mode, wd.window_view, p_rect.size.width, p_rect.size.height);
-			ERR_FAIL_COND_V_MSG(err != OK, INVALID_WINDOW_ID, "Can't create a Vulkan context");
-		}
-#endif
 #if defined(GLES3_ENABLED)
 		if (gl_manager_legacy) {
 			Error err = gl_manager_legacy->window_create(window_id_counter, wd.window_view, p_rect.size.width, p_rect.size.height);
@@ -230,11 +220,6 @@ DisplayServerMacOS::WindowID DisplayServerMacOS::_create_window(WindowMode p_mod
 	}
 	if (gl_manager_angle) {
 		gl_manager_angle->window_resize(id, wd.size.width, wd.size.height);
-	}
-#endif
-#if defined(VULKAN_ENABLED)
-	if (context_vulkan) {
-		context_vulkan->window_resize(id, wd.size.width, wd.size.height);
 	}
 #endif
 
@@ -763,11 +748,6 @@ void DisplayServerMacOS::window_destroy(WindowID p_window) {
 		gl_manager_legacy->window_destroy(p_window);
 	}
 #endif
-#ifdef VULKAN_ENABLED
-	if (context_vulkan) {
-		context_vulkan->window_destroy(p_window);
-	}
-#endif
 	windows.erase(p_window);
 	update_presentation_mode();
 }
@@ -779,11 +759,6 @@ void DisplayServerMacOS::window_resize(WindowID p_window, int p_width, int p_hei
 	}
 	if (gl_manager_angle) {
 		gl_manager_angle->window_resize(p_window, p_width, p_height);
-	}
-#endif
-#if defined(VULKAN_ENABLED)
-	if (context_vulkan) {
-		context_vulkan->window_resize(p_window, p_width, p_height);
 	}
 #endif
 }
@@ -3129,7 +3104,7 @@ void DisplayServerMacOS::window_set_transient(WindowID p_window, WindowID p_pare
 
 	ERR_FAIL_COND(wd_window.transient_parent == p_parent);
 
-	ERR_FAIL_COND_MSG(wd_window.on_top, "Windows with the 'on top' can't become transient.");
+	// ERR_FAIL_COND_MSG(wd_window.on_top, "Windows with the 'on top' can't become transient.");
 	if (p_parent == INVALID_WINDOW_ID) {
 		// Remove transient.
 		ERR_FAIL_COND(wd_window.transient_parent == INVALID_WINDOW_ID);
@@ -3782,11 +3757,6 @@ void DisplayServerMacOS::window_set_vsync_mode(DisplayServer::VSyncMode p_vsync_
 		gl_manager_legacy->set_use_vsync(p_vsync_mode != DisplayServer::VSYNC_DISABLED);
 	}
 #endif
-#if defined(VULKAN_ENABLED)
-	if (context_vulkan) {
-		context_vulkan->set_vsync_mode(p_window, p_vsync_mode);
-	}
-#endif
 }
 
 DisplayServer::VSyncMode DisplayServerMacOS::window_get_vsync_mode(WindowID p_window) const {
@@ -3797,11 +3767,6 @@ DisplayServer::VSyncMode DisplayServerMacOS::window_get_vsync_mode(WindowID p_wi
 	}
 	if (gl_manager_legacy) {
 		return (gl_manager_legacy->is_using_vsync() ? DisplayServer::VSyncMode::VSYNC_ENABLED : DisplayServer::VSyncMode::VSYNC_DISABLED);
-	}
-#endif
-#if defined(VULKAN_ENABLED)
-	if (context_vulkan) {
-		return context_vulkan->get_vsync_mode(p_window);
 	}
 #endif
 	return DisplayServer::VSYNC_ENABLED;
@@ -4265,26 +4230,10 @@ void DisplayServerMacOS::set_icon(const Ref<Image> &p_icon) {
 DisplayServer *DisplayServerMacOS::create_func(const String &p_rendering_driver, WindowMode p_mode, VSyncMode p_vsync_mode, uint32_t p_flags, const Vector2i *p_position, const Vector2i &p_resolution, int p_screen, Error &r_error) {
 	DisplayServer *ds = memnew(DisplayServerMacOS(p_rendering_driver, p_mode, p_vsync_mode, p_flags, p_position, p_resolution, p_screen, r_error));
 	if (r_error != OK) {
-		if (p_rendering_driver == "vulkan") {
-			String executable_command;
-			if (OS::get_singleton()->get_bundle_resource_dir() == OS::get_singleton()->get_executable_path().get_base_dir()) {
-				executable_command = vformat("\"%s\" --rendering-driver opengl3", OS::get_singleton()->get_executable_path());
-			} else {
-				executable_command = vformat("open \"%s\" --args --rendering-driver opengl3", OS::get_singleton()->get_bundle_resource_dir().path_join("../..").simplify_path());
-			}
-			OS::get_singleton()->alert(
-					vformat("Your video card drivers seem not to support the required Vulkan version.\n\n"
-							"If possible, consider updating your macOS version or using the OpenGL 3 driver.\n\n"
-							"You can enable the OpenGL 3 driver by starting the engine from the\n"
-							"command line with the command:\n\n    %s",
-							executable_command),
-					"Unable to initialize Vulkan video driver");
-		} else {
-			OS::get_singleton()->alert(
-					"Your video card drivers seem not to support the required OpenGL 3.3 version.\n\n"
-					"If possible, consider updating your macOS version.",
-					"Unable to initialize OpenGL video driver");
-		}
+		OS::get_singleton()->alert(
+				"Your video card drivers seem not to support the required OpenGL 3.3 version.\n\n"
+				"If possible, consider updating your macOS version.",
+				"Unable to initialize OpenGL video driver");
 	}
 	return ds;
 }
@@ -4292,9 +4241,6 @@ DisplayServer *DisplayServerMacOS::create_func(const String &p_rendering_driver,
 Vector<String> DisplayServerMacOS::get_rendering_drivers_func() {
 	Vector<String> drivers;
 
-#if defined(VULKAN_ENABLED)
-	drivers.push_back("vulkan");
-#endif
 #if defined(GLES3_ENABLED)
 	drivers.push_back("opengl3");
 	drivers.push_back("opengl3_angle");
@@ -4533,7 +4479,7 @@ DisplayServerMacOS::DisplayServerMacOS(const String &p_rendering_driver, WindowM
 	[main_menu setAutoenablesItems:NO];
 
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//TODO - do Vulkan and OpenGL support checks, driver selection and fallback
+	//TODO - do OpenGL support checks, driver selection and fallback
 	rendering_driver = p_rendering_driver;
 
 #if defined(GLES3_ENABLED)
@@ -4560,17 +4506,6 @@ DisplayServerMacOS::DisplayServerMacOS(const String &p_rendering_driver, WindowM
 			gl_manager_legacy = nullptr;
 			r_error = ERR_UNAVAILABLE;
 			ERR_FAIL_MSG("Could not initialize native OpenGL.");
-		}
-	}
-#endif
-#if defined(VULKAN_ENABLED)
-	if (rendering_driver == "vulkan") {
-		context_vulkan = memnew(VulkanContextMacOS);
-		if (context_vulkan->initialize() != OK) {
-			memdelete(context_vulkan);
-			context_vulkan = nullptr;
-			r_error = ERR_CANT_CREATE;
-			ERR_FAIL_MSG("Could not initialize Vulkan");
 		}
 	}
 #endif
@@ -4603,14 +4538,6 @@ DisplayServerMacOS::DisplayServerMacOS(const String &p_rendering_driver, WindowM
 		RasterizerGLES3::make_current(false);
 	}
 #endif
-#if defined(VULKAN_ENABLED)
-	if (rendering_driver == "vulkan") {
-		rendering_device_vulkan = memnew(RenderingDeviceVulkan);
-		rendering_device_vulkan->initialize(context_vulkan);
-
-		RendererCompositorRD::make_current();
-	}
-#endif
 
 	screen_set_keep_on(GLOBAL_GET("display/window/energy_saving/keep_screen_on"));
 }
@@ -4638,18 +4565,6 @@ DisplayServerMacOS::~DisplayServerMacOS() {
 	if (gl_manager_angle) {
 		memdelete(gl_manager_angle);
 		gl_manager_angle = nullptr;
-	}
-#endif
-#if defined(VULKAN_ENABLED)
-	if (rendering_device_vulkan) {
-		rendering_device_vulkan->finalize();
-		memdelete(rendering_device_vulkan);
-		rendering_device_vulkan = nullptr;
-	}
-
-	if (context_vulkan) {
-		memdelete(context_vulkan);
-		context_vulkan = nullptr;
 	}
 #endif
 

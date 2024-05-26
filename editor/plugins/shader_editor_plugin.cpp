@@ -38,7 +38,6 @@
 #include "editor/filesystem_dock.h"
 #include "editor/inspector_dock.h"
 #include "editor/plugins/text_shader_editor.h"
-#include "editor/plugins/visual_shader_editor_plugin.h"
 #include "editor/shader_create_dialog.h"
 #include "editor/window_wrapper.h"
 #include "scene/gui/item_list.h"
@@ -71,7 +70,6 @@ void ShaderEditorPlugin::_update_shader_list() {
 		if (edited_shader.shader_editor) {
 			unsaved = edited_shader.shader_editor->is_unsaved();
 		}
-		// TODO: Handle visual shaders too.
 
 		if (unsaved) {
 			text += "(*)";
@@ -153,17 +151,10 @@ void ShaderEditorPlugin::edit(Object *p_object) {
 			}
 		}
 		es.shader = Ref<Shader>(s);
-		Ref<VisualShader> vs = es.shader;
-		if (vs.is_valid()) {
-			es.visual_shader_editor = memnew(VisualShaderEditor);
-			shader_tabs->add_child(es.visual_shader_editor);
-			es.visual_shader_editor->edit(vs.ptr());
-		} else {
-			es.shader_editor = memnew(TextShaderEditor);
-			shader_tabs->add_child(es.shader_editor);
-			es.shader_editor->edit(s);
-			es.shader_editor->connect("validation_changed", callable_mp(this, &ShaderEditorPlugin::_update_shader_list));
-		}
+		es.shader_editor = memnew(TextShaderEditor);
+		shader_tabs->add_child(es.shader_editor);
+		es.shader_editor->edit(s);
+		es.shader_editor->connect("validation_changed", callable_mp(this, &ShaderEditorPlugin::_update_shader_list));
 	}
 
 	shader_tabs->set_current_tab(shader_tabs->get_tab_count() - 1);
@@ -188,15 +179,6 @@ TextShaderEditor *ShaderEditorPlugin::get_shader_editor(const Ref<Shader> &p_for
 	for (EditedShader &edited_shader : edited_shaders) {
 		if (edited_shader.shader == p_for_shader) {
 			return edited_shader.shader_editor;
-		}
-	}
-	return nullptr;
-}
-
-VisualShaderEditor *ShaderEditorPlugin::get_visual_shader_editor(const Ref<Shader> &p_for_shader) {
-	for (EditedShader &edited_shader : edited_shaders) {
-		if (edited_shader.shader == p_for_shader) {
-			return edited_shader.visual_shader_editor;
 		}
 	}
 	return nullptr;
@@ -268,7 +250,7 @@ void ShaderEditorPlugin::get_window_layout(Ref<ConfigFile> p_layout) {
 	String selected_shader;
 	for (int i = 0; i < shader_tabs->get_tab_count(); i++) {
 		EditedShader edited_shader = edited_shaders[i];
-		if (edited_shader.shader_editor || edited_shader.visual_shader_editor) {
+		if (edited_shader.shader_editor) {
 			String shader_path;
 			if (edited_shader.shader.is_valid()) {
 				shader_path = edited_shader.shader->get_path();
@@ -279,9 +261,8 @@ void ShaderEditorPlugin::get_window_layout(Ref<ConfigFile> p_layout) {
 			shaders.push_back(shader_path);
 
 			TextShaderEditor *shader_editor = Object::cast_to<TextShaderEditor>(shader_tabs->get_current_tab_control());
-			VisualShaderEditor *visual_shader_editor = Object::cast_to<VisualShaderEditor>(shader_tabs->get_current_tab_control());
 
-			if ((shader_editor && edited_shader.shader_editor == shader_editor) || (visual_shader_editor && edited_shader.visual_shader_editor == visual_shader_editor)) {
+			if (shader_editor && edited_shader.shader_editor == shader_editor) {
 				selected_shader = shader_path;
 			}
 		}
@@ -297,7 +278,7 @@ String ShaderEditorPlugin::get_unsaved_status(const String &p_for_scene) const {
 		return String();
 	}
 
-	// TODO: This should also include visual shaders and shader includes, but save_external_data() doesn't seem to save them...
+	// TODO: This should also include shader includes, but save_external_data() doesn't seem to save them...
 	PackedStringArray unsaved_shaders;
 	for (uint32_t i = 0; i < edited_shaders.size(); i++) {
 		if (edited_shaders[i].shader_editor) {

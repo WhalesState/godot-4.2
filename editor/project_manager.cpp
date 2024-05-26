@@ -48,7 +48,6 @@
 #include "editor/editor_themes.h"
 #include "editor/editor_vcs_interface.h"
 #include "editor/gui/editor_file_dialog.h"
-#include "editor/plugins/asset_library_editor_plugin.h"
 #include "main/main.h"
 #include "scene/gui/center_container.h"
 #include "scene/gui/check_box.h"
@@ -62,8 +61,6 @@
 #include "scene/main/window.h"
 #include "scene/resources/image_texture.h"
 #include "servers/display_server.h"
-#include "servers/navigation_server_3d.h"
-#include "servers/physics_server_2d.h"
 
 constexpr int GODOT4_CONFIG_VERSION = 5;
 
@@ -302,7 +299,7 @@ void ProjectDialog::_file_selected(const String &p_path) {
 	project_path->set_text(sp);
 	_path_text_changed(sp);
 	if (p.ends_with(".zip")) {
-		install_path->call_deferred(SNAME("grab_focus"));
+		install_path->call_deferred(SNAME("edit"));
 	} else {
 		get_ok_button()->call_deferred(SNAME("grab_focus"));
 	}
@@ -390,37 +387,6 @@ void ProjectDialog::_nonempty_confirmation_ok_pressed() {
 	ok_pressed();
 }
 
-void ProjectDialog::_renderer_selected() {
-	ERR_FAIL_NULL(renderer_button_group->get_pressed_button());
-
-	String renderer_type = renderer_button_group->get_pressed_button()->get_meta(SNAME("rendering_method"));
-
-	if (renderer_type == "forward_plus") {
-		renderer_info->set_text(
-				String::utf8("•  ") + TTR("Supports desktop platforms only.") +
-				String::utf8("\n•  ") + TTR("Advanced 3D graphics available.") +
-				String::utf8("\n•  ") + TTR("Can scale to large complex scenes.") +
-				String::utf8("\n•  ") + TTR("Uses RenderingDevice backend.") +
-				String::utf8("\n•  ") + TTR("Slower rendering of simple scenes."));
-	} else if (renderer_type == "mobile") {
-		renderer_info->set_text(
-				String::utf8("•  ") + TTR("Supports desktop + mobile platforms.") +
-				String::utf8("\n•  ") + TTR("Less advanced 3D graphics.") +
-				String::utf8("\n•  ") + TTR("Less scalable for complex scenes.") +
-				String::utf8("\n•  ") + TTR("Uses RenderingDevice backend.") +
-				String::utf8("\n•  ") + TTR("Fast rendering of simple scenes."));
-	} else if (renderer_type == "gl_compatibility") {
-		renderer_info->set_text(
-				String::utf8("•  ") + TTR("Supports desktop, mobile + web platforms.") +
-				String::utf8("\n•  ") + TTR("Least advanced 3D graphics (currently work-in-progress).") +
-				String::utf8("\n•  ") + TTR("Intended for low-end/older devices.") +
-				String::utf8("\n•  ") + TTR("Uses OpenGL 3 backend (OpenGL 3.3/ES 3.0/WebGL2).") +
-				String::utf8("\n•  ") + TTR("Fastest rendering of simple scenes."));
-	} else {
-		WARN_PRINT("Unknown renderer type. Please report this as a bug on GitHub.");
-	}
-}
-
 void ProjectDialog::_remove_created_folder() {
 	if (!created_folder_path.is_empty()) {
 		Ref<DirAccess> d = DirAccess::create(DirAccess::ACCESS_FILESYSTEM);
@@ -487,23 +453,12 @@ void ProjectDialog::ok_pressed() {
 				// Be sure to change this code if/when renderers are changed.
 				// Default values are "forward_plus" for the main setting, "mobile" for the mobile override,
 				// and "gl_compatibility" for the web override.
-				String renderer_type = renderer_button_group->get_pressed_button()->get_meta(SNAME("rendering_method"));
-				initial_settings["rendering/renderer/rendering_method"] = renderer_type;
+				String renderer_type = "gl_compatibility";
 
 				EditorSettings::get_singleton()->set("project_manager/default_renderer", renderer_type);
 				EditorSettings::get_singleton()->save();
 
-				if (renderer_type == "forward_plus") {
-					project_features.push_back("Forward Plus");
-				} else if (renderer_type == "mobile") {
-					project_features.push_back("Mobile");
-				} else if (renderer_type == "gl_compatibility") {
-					project_features.push_back("GL Compatibility");
-					// Also change the default rendering method for the mobile override.
-					initial_settings["rendering/renderer/rendering_method.mobile"] = "gl_compatibility";
-				} else {
-					WARN_PRINT("Unknown renderer type. Please report this as a bug on GitHub.");
-				}
+				project_features.push_back("GL Compatibility");
 
 				project_features.sort();
 				initial_settings["application/config/features"] = project_features;
@@ -688,7 +643,6 @@ void ProjectDialog::show_dialog() {
 		msg->hide();
 		install_path_container->hide();
 		install_status_rect->hide();
-		renderer_container->hide();
 		default_files_container->hide();
 		get_ok_button()->set_disabled(false);
 
@@ -707,7 +661,7 @@ void ProjectDialog::show_dialog() {
 			_text_changed(cur_name);
 		}
 
-		project_name->call_deferred(SNAME("grab_focus"));
+		project_name->call_deferred(SNAME("edit"));
 
 		create_dir->hide();
 
@@ -743,19 +697,16 @@ void ProjectDialog::show_dialog() {
 			set_ok_button_text(TTR("Import & Edit"));
 			name_container->hide();
 			install_path_container->hide();
-			renderer_container->hide();
 			default_files_container->hide();
-			project_path->grab_focus();
+			project_path->edit();
 
 		} else if (mode == MODE_NEW) {
 			set_title(TTR("Create New Project"));
 			set_ok_button_text(TTR("Create & Edit"));
 			name_container->show();
 			install_path_container->hide();
-			renderer_container->show();
 			default_files_container->show();
-			project_name->call_deferred(SNAME("grab_focus"));
-			project_name->call_deferred(SNAME("select_all"));
+			project_name->call_deferred(SNAME("edit"), true);
 
 		} else if (mode == MODE_INSTALL) {
 			set_title(TTR("Install Project:") + " " + zip_title);
@@ -763,9 +714,8 @@ void ProjectDialog::show_dialog() {
 			project_name->set_text(zip_title);
 			name_container->show();
 			install_path_container->hide();
-			renderer_container->hide();
 			default_files_container->hide();
-			project_path->grab_focus();
+			project_path->edit();
 		}
 
 		_test_path();
@@ -865,97 +815,18 @@ ProjectDialog::ProjectDialog() {
 	msg->set_custom_minimum_size(Size2(200, 0) * EDSCALE);
 	vb->add_child(msg);
 
-	// Renderer selection.
-	renderer_container = memnew(VBoxContainer);
-	vb->add_child(renderer_container);
-	l = memnew(Label);
-	l->set_text(TTR("Renderer:"));
-	renderer_container->add_child(l);
-	HBoxContainer *rshc = memnew(HBoxContainer);
-	renderer_container->add_child(rshc);
-	renderer_button_group.instantiate();
-
-	// Left hand side, used for checkboxes to select renderer.
-	Container *rvb = memnew(VBoxContainer);
-	rshc->add_child(rvb);
-
-	String default_renderer_type = "forward_plus";
-	if (EditorSettings::get_singleton()->has_setting("project_manager/default_renderer")) {
-		default_renderer_type = EditorSettings::get_singleton()->get_setting("project_manager/default_renderer");
-	}
-
-	Button *rs_button = memnew(CheckBox);
-	rs_button->set_button_group(renderer_button_group);
-	rs_button->set_text(TTR("Forward+"));
-#if defined(WEB_ENABLED)
-	rs_button->set_disabled(true);
-#endif
-	rs_button->set_meta(SNAME("rendering_method"), "forward_plus");
-	rs_button->connect("pressed", callable_mp(this, &ProjectDialog::_renderer_selected));
-	rvb->add_child(rs_button);
-	if (default_renderer_type == "forward_plus") {
-		rs_button->set_pressed(true);
-	}
-	rs_button = memnew(CheckBox);
-	rs_button->set_button_group(renderer_button_group);
-	rs_button->set_text(TTR("Mobile"));
-#if defined(WEB_ENABLED)
-	rs_button->set_disabled(true);
-#endif
-	rs_button->set_meta(SNAME("rendering_method"), "mobile");
-	rs_button->connect("pressed", callable_mp(this, &ProjectDialog::_renderer_selected));
-	rvb->add_child(rs_button);
-	if (default_renderer_type == "mobile") {
-		rs_button->set_pressed(true);
-	}
-	rs_button = memnew(CheckBox);
-	rs_button->set_button_group(renderer_button_group);
-	rs_button->set_text(TTR("Compatibility"));
-#if !defined(GLES3_ENABLED)
-	rs_button->set_disabled(true);
-#endif
-	rs_button->set_meta(SNAME("rendering_method"), "gl_compatibility");
-	rs_button->connect("pressed", callable_mp(this, &ProjectDialog::_renderer_selected));
-	rvb->add_child(rs_button);
-#if defined(GLES3_ENABLED)
-	if (default_renderer_type == "gl_compatibility") {
-		rs_button->set_pressed(true);
-	}
-#endif
-	rshc->add_child(memnew(VSeparator));
-
-	// Right hand side, used for text explaining each choice.
-	rvb = memnew(VBoxContainer);
-	rvb->set_h_size_flags(Control::SIZE_EXPAND_FILL);
-	rshc->add_child(rvb);
-	renderer_info = memnew(Label);
-	renderer_info->set_modulate(Color(1, 1, 1, 0.7));
-	rvb->add_child(renderer_info);
-	_renderer_selected();
-
-	l = memnew(Label);
-	l->set_text(TTR("The renderer can be changed later, but scenes may need to be adjusted."));
-	// Add some extra spacing to separate it from the list above and the buttons below.
-	l->set_custom_minimum_size(Size2(0, 40) * EDSCALE);
-	l->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_CENTER);
-	l->set_vertical_alignment(VERTICAL_ALIGNMENT_CENTER);
-	l->set_modulate(Color(1, 1, 1, 0.7));
-	renderer_container->add_child(l);
-
 	default_files_container = memnew(HBoxContainer);
 	vb->add_child(default_files_container);
 	l = memnew(Label);
 	l->set_text(TTR("Version Control Metadata:"));
 	default_files_container->add_child(l);
 	vcs_metadata_selection = memnew(OptionButton);
+	vcs_metadata_selection->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_BEGIN);
 	vcs_metadata_selection->set_custom_minimum_size(Size2(100, 20));
 	vcs_metadata_selection->add_item(TTR("None"), (int)EditorVCSInterface::VCSMetadata::NONE);
 	vcs_metadata_selection->add_item(TTR("Git"), (int)EditorVCSInterface::VCSMetadata::GIT);
 	vcs_metadata_selection->select((int)EditorVCSInterface::VCSMetadata::GIT);
 	default_files_container->add_child(vcs_metadata_selection);
-	Control *spacer = memnew(Control);
-	spacer->set_h_size_flags(Control::SIZE_EXPAND_FILL);
-	default_files_container->add_child(spacer);
 
 	fdialog = memnew(EditorFileDialog);
 	fdialog->set_previews_enabled(false); //Crucial, otherwise the engine crashes.
@@ -1105,19 +976,14 @@ void ProjectListItemControl::set_is_missing(bool p_missing) {
 
 	if (project_is_missing) {
 		project_icon->set_modulate(Color(1, 1, 1, 0.5));
-
 		explore_button->set_icon(get_editor_theme_icon(SNAME("FileBroken")));
 		explore_button->set_tooltip_text(TTR("Error: Project is missing on the filesystem."));
 	} else {
 		project_icon->set_modulate(Color(1, 1, 1, 1.0));
-
 		explore_button->set_icon(get_editor_theme_icon(SNAME("Load")));
-#if !defined(ANDROID_ENABLED) && !defined(WEB_ENABLED)
 		explore_button->set_tooltip_text(TTR("Show in File Manager"));
-#else
 		// Opening the system file manager is not supported on the Android and web editors.
 		explore_button->hide();
-#endif
 	}
 }
 
@@ -1493,10 +1359,7 @@ void ProjectList::_create_project_item_control(int p_index) {
 
 	hb->connect("gui_input", callable_mp(this, &ProjectList::_panel_input).bind(hb));
 	hb->connect("favorite_pressed", callable_mp(this, &ProjectList::_favorite_pressed).bind(hb));
-
-#if !defined(ANDROID_ENABLED) && !defined(WEB_ENABLED)
 	hb->connect("explore_pressed", callable_mp(this, &ProjectList::_show_project).bind(item.path));
-#endif
 
 	_scroll_children->add_child(hb);
 	item.control = hb;
@@ -2024,28 +1887,11 @@ void ProjectManager::_notification(int p_what) {
 			manage_tags_btn->add_theme_constant_override("h_separation", get_theme_constant(SNAME("sidebar_button_icon_separation"), SNAME("ProjectManager")));
 			erase_btn->add_theme_constant_override("h_separation", get_theme_constant(SNAME("sidebar_button_icon_separation"), SNAME("ProjectManager")));
 			erase_missing_btn->add_theme_constant_override("h_separation", get_theme_constant(SNAME("sidebar_button_icon_separation"), SNAME("ProjectManager")));
-
-			// Asset library popup.
-			if (asset_library) {
-				// Removes extra border margins.
-				asset_library->add_theme_style_override("panel", memnew(StyleBoxEmpty));
-			}
 		} break;
 
 		case NOTIFICATION_RESIZED: {
 			if (open_templates && open_templates->is_visible()) {
 				open_templates->popup_centered();
-			}
-			if (asset_library) {
-				real_t size = get_size().x / EDSCALE;
-				// Adjust names of tabs to fit the new size.
-				if (size < 650) {
-					local_projects_vb->set_name(TTR("Local"));
-					asset_library->set_name(TTR("Asset Library"));
-				} else {
-					local_projects_vb->set_name(TTR("Local Projects"));
-					asset_library->set_name(TTR("Asset Library Projects"));
-				}
 			}
 		} break;
 
@@ -2054,17 +1900,10 @@ void ProjectManager::_notification(int p_what) {
 			filter_option->select(default_sorting);
 			_project_list->set_order_option(default_sorting);
 
-#ifndef ANDROID_ENABLED
 			if (_project_list->get_project_count() >= 1) {
 				// Focus on the search box immediately to allow the user
 				// to search without having to reach for their mouse
-				search_box->grab_focus();
-			}
-#endif
-
-			// Suggest browsing asset library to get templates/demos.
-			if (asset_library && open_templates && _project_list->get_project_count() == 0) {
-				open_templates->popup_centered();
+				search_box->edit();
 			}
 		} break;
 
@@ -2092,7 +1931,7 @@ Ref<Texture2D> ProjectManager::_file_dialog_get_icon(const String &p_path) {
 
 Ref<Texture2D> ProjectManager::_file_dialog_get_thumbnail(const String &p_path) {
 	if (p_path.get_extension().to_lower() == "godot") {
-		return singleton->icon_type_cache["GodotFile"];
+		return singleton->icon_type_cache["PixelEngineFile"];
 	}
 
 	return Ref<Texture2D>();
@@ -2244,7 +2083,7 @@ void ProjectManager::shortcut_input(const Ref<InputEvent> &p_ev) {
 			} break;
 			case Key::F: {
 				if (k->is_command_or_control_pressed()) {
-					this->search_box->grab_focus();
+					this->search_box->edit();
 				} else {
 					keycode_handled = false;
 				}
@@ -2354,34 +2193,26 @@ void ProjectManager::_open_selected_projects_ask() {
 
 	Label *ask_update_label = ask_update_settings->get_label();
 	ask_update_label->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_LEFT); // Reset in case of previous center align.
-	full_convert_button->hide();
 
 	ask_update_settings->get_ok_button()->set_text("OK");
 
 	// Check if the config_version property was empty or 0.
 	if (config_version == 0) {
-		ask_update_settings->set_text(vformat(TTR("The selected project \"%s\" does not specify its supported Godot version in its configuration file (\"project.godot\").\n\nProject path: %s\n\nIf you proceed with opening it, it will be converted to Godot's current configuration file format.\n\nWarning: You won't be able to open the project with previous versions of the engine anymore."), project.project_name, project.path));
+		ask_update_settings->set_text(vformat(TTR("The selected project \"%s\" does not specify its supported Godot version in its configuration file (\"project.godot\").\n\nProject path: %s\n\nIf you proceed with opening it, it will be converted to Godot's current configuration file format."), project.project_name, project.path));
 		ask_update_settings->popup_centered(popup_min_size);
 		return;
 	}
 	// Check if we need to convert project settings from an earlier engine version.
 	if (config_version < ProjectSettings::CONFIG_VERSION) {
-		if (config_version == GODOT4_CONFIG_VERSION - 1 && ProjectSettings::CONFIG_VERSION == GODOT4_CONFIG_VERSION) { // Conversion from Godot 3 to 4.
-			full_convert_button->show();
-			ask_update_settings->set_text(vformat(TTR("The selected project \"%s\" was generated by Godot 3.x, and needs to be converted for Godot 4.x.\n\nProject path: %s\n\nYou have three options:\n- Convert only the configuration file (\"project.godot\"). Use this to open the project without attempting to convert its scenes, resources and scripts.\n- Convert the entire project including its scenes, resources and scripts (recommended if you are upgrading).\n- Do nothing and go back.\n\nWarning: If you select a conversion option, you won't be able to open the project with previous versions of the engine anymore."), project.project_name, project.path));
-			ask_update_settings->get_ok_button()->set_text(TTR("Convert project.godot Only"));
-		} else {
-			ask_update_settings->set_text(vformat(TTR("The selected project \"%s\" was generated by an older engine version, and needs to be converted for this version.\n\nProject path: %s\n\nDo you want to convert it?\n\nWarning: You won't be able to open the project with previous versions of the engine anymore."), project.project_name, project.path));
-			ask_update_settings->get_ok_button()->set_text(TTR("Convert project.godot"));
-		}
+		ask_update_settings->set_text(vformat(TTR("The selected project \"%s\" was generated by an older version.\n\nProject path: %s"), project.project_name, project.path));
 		ask_update_settings->popup_centered(popup_min_size);
 		ask_update_settings->get_cancel_button()->grab_focus(); // To prevent accidents.
 		return;
 	}
 	// Check if the file was generated by a newer, incompatible engine version.
 	if (config_version > ProjectSettings::CONFIG_VERSION) {
-		dialog_error->set_text(vformat(TTR("Can't open project \"%s\" at the following path:\n\n%s\n\nThe project settings were created by a newer engine version, whose settings are not compatible with this version."), project.project_name, project.path));
-		dialog_error->popup_centered(popup_min_size);
+		ask_update_settings->set_text(vformat(TTR("The selected project \"%s\" was generated by a newer version.\n\nProject path: %s"), project.project_name, project.path));
+		ask_update_settings->popup_centered(popup_min_size);
 		return;
 	}
 	// Check if the project is using features not supported by this build of Godot.
@@ -2391,14 +2222,6 @@ void ProjectManager::_open_selected_projects_ask() {
 			String feature = unsupported_features[i];
 			if (feature == "Double Precision") {
 				warning_message += TTR("Warning: This project uses double precision floats, but this version of\nGodot uses single precision floats. Opening this project may cause data loss.\n\n");
-				unsupported_features.remove_at(i);
-				i--;
-			} else if (feature == "C#") {
-				warning_message += TTR("Warning: This project uses C#, but this build of Godot does not have\nthe Mono module. If you proceed you will not be able to use any C# scripts.\n\n");
-				unsupported_features.remove_at(i);
-				i--;
-			} else if (_project_feature_looks_like_version(feature)) {
-				warning_message += vformat(TTR("Warning: This project was last edited in Godot %s. Opening will change it to Godot %s.\n\n"), Variant(feature), Variant(VERSION_BRANCH));
 				unsupported_features.remove_at(i);
 				i--;
 			}
@@ -2413,37 +2236,8 @@ void ProjectManager::_open_selected_projects_ask() {
 		ask_update_settings->popup_centered(popup_min_size);
 		return;
 	}
-
 	// Open if the project is up-to-date.
 	_open_selected_projects();
-}
-
-void ProjectManager::_full_convert_button_pressed() {
-	ask_update_settings->hide();
-	ask_full_convert_dialog->popup_centered(Size2i(600.0 * EDSCALE, 0));
-	ask_full_convert_dialog->get_cancel_button()->grab_focus();
-}
-
-void ProjectManager::_perform_full_project_conversion() {
-	Vector<ProjectList::Item> selected_list = _project_list->get_selected_projects();
-	if (selected_list.is_empty()) {
-		return;
-	}
-
-	const String &path = selected_list[0].path;
-
-	print_line("Converting project: " + path);
-	List<String> args;
-	args.push_back("--path");
-	args.push_back(path);
-	args.push_back("--convert-3to4");
-	args.push_back("--rendering-driver");
-	args.push_back(Main::get_rendering_driver_name());
-
-	Error err = OS::get_singleton()->create_instance(args);
-	ERR_FAIL_COND(err);
-
-	_project_list->set_project_version(path, GODOT4_CONFIG_VERSION);
 }
 
 void ProjectManager::_run_project_confirm() {
@@ -2725,16 +2519,14 @@ void ProjectManager::_on_order_option_changed(int p_idx) {
 }
 
 void ProjectManager::_on_tab_changed(int p_tab) {
-#ifndef ANDROID_ENABLED
 	if (p_tab == 0) { // Projects
 		// Automatically grab focus when the user moves from the Templates tab
 		// back to the Projects tab.
-		search_box->grab_focus();
+		search_box->edit();
 	}
 
 	// The Templates tab's search field is focused on display in the asset
 	// library editor plugin code.
-#endif
 }
 
 void ProjectManager::_on_search_term_changed(const String &p_term) {
@@ -2754,11 +2546,6 @@ void ProjectManager::_on_search_term_submitted(const String &p_text) {
 	}
 
 	_open_selected_projects_ask();
-}
-
-void ProjectManager::_open_asset_library() {
-	asset_library->disable_community_support();
-	tabs->set_current_tab(1);
 }
 
 void ProjectManager::_version_button_pressed() {
@@ -2802,11 +2589,6 @@ ProjectManager::ProjectManager() {
 	if (!EditorSettings::get_singleton()) {
 		EditorSettings::create();
 	}
-
-	// Turn off some servers we aren't going to be using in the Project Manager.
-	NavigationServer3D::get_singleton()->set_active(false);
-	PhysicsServer3D::get_singleton()->set_active(false);
-	PhysicsServer2D::get_singleton()->set_active(false);
 
 	EditorSettings::get_singleton()->set_optimize_save(false); //just write settings as they came
 
@@ -3004,9 +2786,8 @@ ProjectManager::ProjectManager() {
 		erase_missing_btn->connect("pressed", callable_mp(this, &ProjectManager::_erase_missing_projects));
 		tree_vb->add_child(erase_missing_btn);
 
-		tree_vb->add_spacer();
-
 		about_btn = memnew(Button);
+		about_btn->set_v_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
 		about_btn->set_text(TTR("About"));
 		about_btn->connect("pressed", callable_mp(this, &ProjectManager::_show_about));
 		tree_vb->add_child(about_btn);
@@ -3015,18 +2796,13 @@ ProjectManager::ProjectManager() {
 	{
 		// Version info and language options
 		settings_hb = memnew(HBoxContainer);
+		settings_hb->add_theme_constant_override("separation", 8 * EDSCALE);
 		settings_hb->set_alignment(BoxContainer::ALIGNMENT_END);
 		settings_hb->set_h_grow_direction(Control::GROW_DIRECTION_BEGIN);
 		settings_hb->set_anchors_and_offsets_preset(Control::PRESET_TOP_RIGHT);
 
-		// A VBoxContainer that contains a dummy Control node to adjust the LinkButton's vertical position.
-		VBoxContainer *spacer_vb = memnew(VBoxContainer);
-		settings_hb->add_child(spacer_vb);
-
-		Control *v_spacer = memnew(Control);
-		spacer_vb->add_child(v_spacer);
-
 		version_btn = memnew(LinkButton);
+		version_btn->set_v_size_flags(SIZE_EXPAND | SIZE_SHRINK_CENTER);
 		String hash = String(VERSION_HASH);
 		if (hash.length() != 0) {
 			hash = " " + vformat("[%s]", hash.left(9));
@@ -3037,24 +2813,17 @@ ProjectManager::ProjectManager() {
 		version_btn->set_underline_mode(LinkButton::UNDERLINE_MODE_ON_HOVER);
 		version_btn->set_tooltip_text(TTR("Click to copy."));
 		version_btn->connect("pressed", callable_mp(this, &ProjectManager::_version_button_pressed));
-		spacer_vb->add_child(version_btn);
-
-		// Add a small horizontal spacer between the version and language buttons
-		// to distinguish them.
-		Control *h_spacer = memnew(Control);
-		settings_hb->add_child(h_spacer);
+		settings_hb->add_child(version_btn);
 
 		language_btn = memnew(OptionButton);
 		language_btn->set_focus_mode(Control::FOCUS_NONE);
 		language_btn->set_fit_to_longest_item(false);
 		language_btn->set_flat(true);
 		language_btn->connect("item_selected", callable_mp(this, &ProjectManager::_language_selected));
-#ifdef ANDROID_ENABLED
 		// The language selection dropdown doesn't work on Android (as the setting isn't saved), see GH-60353.
 		// Also, the dropdown it spawns is very tall and can't be scrolled without a hardware mouse.
 		// Hiding the language selection dropdown also leaves more space for the version label to display.
 		language_btn->hide();
-#endif
 
 		Vector<String> editor_languages;
 		List<PropertyInfo> editor_settings_properties;
@@ -3082,16 +2851,6 @@ ProjectManager::ProjectManager() {
 		settings_hb->add_child(language_btn);
 		center_box->add_child(settings_hb);
 	}
-
-	if (AssetLibraryEditorPlugin::is_available()) {
-		asset_library = memnew(EditorAssetLibrary(true));
-		asset_library->set_name(TTR("Asset Library Projects"));
-		tabs->add_child(asset_library);
-		asset_library->connect("install_asset", callable_mp(this, &ProjectManager::_install_project));
-	} else {
-		print_verbose("Asset Library not available (due to using Web editor, or SSL support disabled).");
-	}
-
 	{
 		// Dialogs
 		language_restart_ask = memnew(ConfirmationDialog);
@@ -3144,15 +2903,7 @@ ProjectManager::ProjectManager() {
 		ask_update_settings = memnew(ConfirmationDialog);
 		ask_update_settings->set_autowrap(true);
 		ask_update_settings->get_ok_button()->connect("pressed", callable_mp(this, &ProjectManager::_confirm_update_settings));
-		full_convert_button = ask_update_settings->add_button(TTR("Convert Full Project"), !GLOBAL_GET("gui/common/swap_cancel_ok"));
-		full_convert_button->connect("pressed", callable_mp(this, &ProjectManager::_full_convert_button_pressed));
 		add_child(ask_update_settings);
-
-		ask_full_convert_dialog = memnew(ConfirmationDialog);
-		ask_full_convert_dialog->set_autowrap(true);
-		ask_full_convert_dialog->set_text(TTR("This option will perform full project conversion, updating scenes, resources and scripts from Godot 3 to work in Godot 4.\n\nNote that this is a best-effort conversion, i.e. it makes upgrading the project easier, but it will not open out-of-the-box and will still require manual adjustments.\n\nIMPORTANT: Make sure to backup your project before converting, as this operation makes it impossible to open it in older versions of Godot."));
-		ask_full_convert_dialog->connect("confirmed", callable_mp(this, &ProjectManager::_perform_full_project_conversion));
-		add_child(ask_full_convert_dialog);
 
 		npdialog = memnew(ProjectDialog);
 		npdialog->connect("projects_updated", callable_mp(this, &ProjectManager::_on_projects_updated));
@@ -3165,14 +2916,6 @@ ProjectManager::ProjectManager() {
 
 		dialog_error = memnew(AcceptDialog);
 		add_child(dialog_error);
-
-		if (asset_library) {
-			open_templates = memnew(ConfirmationDialog);
-			open_templates->set_text(TTR("You currently don't have any projects.\nWould you like to explore official example projects in the Asset Library?"));
-			open_templates->set_ok_button_text(TTR("Open Asset Library"));
-			open_templates->connect("confirmed", callable_mp(this, &ProjectManager::_open_asset_library));
-			add_child(open_templates);
-		}
 
 		about = memnew(EditorAbout);
 		add_child(about);

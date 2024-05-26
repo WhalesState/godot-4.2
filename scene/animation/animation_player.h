@@ -38,19 +38,6 @@
 class AnimationPlayer : public AnimationMixer {
 	GDCLASS(AnimationPlayer, AnimationMixer);
 
-#ifndef DISABLE_DEPRECATED
-public:
-	enum AnimationProcessCallback {
-		ANIMATION_PROCESS_PHYSICS,
-		ANIMATION_PROCESS_IDLE,
-		ANIMATION_PROCESS_MANUAL,
-	};
-	enum AnimationMethodCallMode {
-		ANIMATION_METHOD_CALL_DEFERRED,
-		ANIMATION_METHOD_CALL_IMMEDIATE,
-	};
-#endif // DISABLE_DEPRECATED
-
 private:
 	HashMap<StringName, StringName> animation_next_set; // For auto advance.
 
@@ -106,7 +93,6 @@ private:
 	StringName autoplay;
 
 	bool reset_on_save = true;
-	bool movie_quit_on_finish = false;
 
 	void _process_playback_data(PlaybackData &cd, double p_delta, float p_blend, bool p_seeked, bool p_started, bool p_is_current = false);
 	void _blend_playback_data(double p_delta, bool p_started);
@@ -132,18 +118,6 @@ protected:
 
 	virtual void _animation_removed(const StringName &p_name, const StringName &p_library) override;
 	virtual void _rename_animation(const StringName &p_from_name, const StringName &p_to_name) override;
-
-#ifndef DISABLE_DEPRECATED
-	void _set_process_callback_bind_compat_80813(AnimationProcessCallback p_mode);
-	AnimationProcessCallback _get_process_callback_bind_compat_80813() const;
-	void _set_method_call_mode_bind_compat_80813(AnimationMethodCallMode p_mode);
-	AnimationMethodCallMode _get_method_call_mode_bind_compat_80813() const;
-	void _set_root_bind_compat_80813(const NodePath &p_root);
-	NodePath _get_root_bind_compat_80813() const;
-	void _seek_bind_compat_80813(double p_time, bool p_update = false);
-
-	static void _bind_compatibility_methods();
-#endif // DISABLE_DEPRECATED
 
 public:
 	void animation_set_next(const StringName &p_animation, const StringName &p_next);
@@ -176,9 +150,6 @@ public:
 	void set_autoplay(const String &p_name);
 	String get_autoplay() const;
 
-	void set_movie_quit_on_finish_enabled(bool p_enabled);
-	bool is_movie_quit_on_finish_enabled() const;
-
 	void seek(double p_time, bool p_update = false, bool p_update_only = false);
 
 	double get_current_animation_position() const;
@@ -191,10 +162,5 @@ public:
 	AnimationPlayer();
 	~AnimationPlayer();
 };
-
-#ifndef DISABLE_DEPRECATED
-VARIANT_ENUM_CAST(AnimationPlayer::AnimationProcessCallback);
-VARIANT_ENUM_CAST(AnimationPlayer::AnimationMethodCallMode);
-#endif // DISABLE_DEPRECATED
 
 #endif // ANIMATION_PLAYER_H

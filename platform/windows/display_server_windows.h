@@ -45,17 +45,10 @@
 #include "servers/audio_server.h"
 #include "servers/display_server.h"
 #include "servers/rendering/renderer_compositor.h"
-#include "servers/rendering/renderer_rd/renderer_compositor_rd.h"
 #include "servers/rendering_server.h"
 
 #ifdef XAUDIO2_ENABLED
 #include "drivers/xaudio2/audio_driver_xaudio2.h"
-#endif
-
-#if defined(VULKAN_ENABLED)
-#include "vulkan_context_win.h"
-
-#include "drivers/vulkan/rendering_device_vulkan.h"
 #endif
 
 #if defined(GLES3_ENABLED)
@@ -341,11 +334,6 @@ class DisplayServerWindows : public DisplayServer {
 #if defined(GLES3_ENABLED)
 	GLManagerANGLE_Windows *gl_manager_angle = nullptr;
 	GLManagerNative_Windows *gl_manager_native = nullptr;
-#endif
-
-#if defined(VULKAN_ENABLED)
-	VulkanContextWindows *context_vulkan = nullptr;
-	RenderingDeviceVulkan *rendering_device_vulkan = nullptr;
 #endif
 
 	RBMap<int, Vector2> touch_state;

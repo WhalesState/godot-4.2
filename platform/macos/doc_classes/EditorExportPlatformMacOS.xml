@@ -120,9 +120,6 @@
 		<member name="codesign/entitlements/calendars" type="bool" setter="" getter="">
 			Enable to allow access to the user's calendar, if it's enabled you should also provide usage message in the [member privacy/calendar_usage_description] option. See [url=https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_security_personal-information_calendars]com.apple.security.personal-information.calendars[/url].
 		</member>
-		<member name="codesign/entitlements/camera" type="bool" setter="" getter="">
-			Enable if you need to use the camera, if it's enabled you should also provide usage message in the [member privacy/camera_usage_description] option. See [url=https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_security_device_camera]com.apple.security.device.camera[/url].
-		</member>
 		<member name="codesign/entitlements/custom_file" type="String" setter="" getter="">
 			Custom entitlements [code].plist[/code] file, if specified the rest of entitlements in the export config are ignored.
 		</member>
@@ -197,12 +194,6 @@
 		</member>
 		<member name="privacy/calendar_usage_description_localized" type="Dictionary" setter="" getter="">
 			A message displayed when requesting access to the user's calendar data (localized).
-		</member>
-		<member name="privacy/camera_usage_description" type="String" setter="" getter="">
-			A message displayed when requesting access to the device's camera (in English).
-		</member>
-		<member name="privacy/camera_usage_description_localized" type="Dictionary" setter="" getter="">
-			A message displayed when requesting access to the device's camera (localized).
 		</member>
 		<member name="privacy/desktop_folder_usage_description" type="String" setter="" getter="">
 			A message displayed when requesting access to the user's "Desktop" folder (in English).

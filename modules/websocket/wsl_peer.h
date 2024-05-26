@@ -31,8 +31,6 @@
 #ifndef WSL_PEER_H
 #define WSL_PEER_H
 
-#ifndef WEB_ENABLED
-
 #include "packet_buffer.h"
 #include "websocket_peer.h"
 
@@ -152,7 +150,5 @@ public:
 	WSLPeer();
 	~WSLPeer();
 };
-
-#endif // WEB_ENABLED
 
 #endif // WSL_PEER_H

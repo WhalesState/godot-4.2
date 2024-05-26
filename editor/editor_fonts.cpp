@@ -126,8 +126,8 @@ void editor_register_fonts(Ref<Theme> p_theme) {
 			font_hinting = TextServer::HINTING_NONE;
 			font_mono_hinting = TextServer::HINTING_NONE;
 #else
-			font_hinting = TextServer::HINTING_LIGHT;
-			font_mono_hinting = TextServer::HINTING_LIGHT;
+			font_hinting = TextServer::HINTING_NORMAL;
+			font_mono_hinting = TextServer::HINTING_NORMAL;
 #endif
 			break;
 		case 1:
@@ -421,7 +421,7 @@ void editor_register_fonts(Ref<Theme> p_theme) {
 	p_theme->set_font("doc_keyboard", EditorStringName(EditorFonts), mono_fc);
 
 	// Ruler font
-	p_theme->set_font_size("rulers_size", EditorStringName(EditorFonts), 8 * EDSCALE);
+	p_theme->set_font_size("rulers_size", EditorStringName(EditorFonts), 10 * EDSCALE);
 	p_theme->set_font("rulers", EditorStringName(EditorFonts), default_fc);
 
 	// Rotation widget font

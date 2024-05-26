@@ -284,9 +284,7 @@ private:
 	void _compute_offsets(Rect2 p_rect, const real_t p_anchors[4], real_t (&r_offsets)[4]);
 	void _compute_anchors(Rect2 p_rect, const real_t p_offsets[4], real_t (&r_anchors)[4]);
 
-	void _set_layout_mode(LayoutMode p_mode);
 	void _update_layout_mode();
-	LayoutMode _get_layout_mode() const;
 	LayoutMode _get_default_layout_mode() const;
 	void _set_anchors_layout_preset(int p_preset);
 	int _get_anchors_layout_preset() const;
@@ -423,6 +421,8 @@ public:
 
 	virtual Transform2D get_transform() const override;
 
+	void set_layout_mode(LayoutMode p_mode);
+	LayoutMode get_layout_mode() const;
 	void set_anchor(Side p_side, real_t p_anchor, bool p_keep_offset = true, bool p_push_opposite_anchor = true);
 	real_t get_anchor(Side p_side) const;
 	void set_offset(Side p_side, real_t p_value);

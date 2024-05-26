@@ -103,11 +103,6 @@ protected:
 
 	virtual void reset_state() override;
 
-#ifndef DISABLE_DEPRECATED
-	RID _find_variation_compat_80954(const Dictionary &p_variation_coordinates, int p_face_index = 0, float p_strength = 0.0, Transform2D p_transform = Transform2D()) const;
-	static void _bind_compatibility_methods();
-#endif
-
 public:
 	virtual void _invalidate_rids();
 
@@ -196,11 +191,6 @@ class FontFile : public Font {
 	TextServer::Hinting hinting = TextServer::HINTING_LIGHT;
 	TextServer::SubpixelPositioning subpixel_positioning = TextServer::SUBPIXEL_POSITIONING_AUTO;
 	real_t oversampling = 0.f;
-
-#ifndef DISABLE_DEPRECATED
-	real_t bmp_height = 0.0;
-	real_t bmp_ascent = 0.0;
-#endif
 
 	// Cache.
 	mutable Vector<RID> cache;

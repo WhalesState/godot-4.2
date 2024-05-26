@@ -97,7 +97,7 @@
 		<method name="get_contents_minimum_size" qualifiers="const">
 			<return type="Vector2" />
 			<description>
-				Returns the combined minimum size from the child [Control] nodes of the window. Use [method child_controls_changed] to update it when child nodes have changed.
+				Returns the combined minimum size from the child [Control] nodes of the window. Use [method child_controls_changed] to update it when children nodes have changed.
 				The value returned by this method can be overridden with [method _get_contents_minimum_size].
 			</description>
 		</method>
@@ -622,22 +622,9 @@
 			# Set region, using Path2D node.
 			$Window.mouse_passthrough_polygon = $Path2D.curve.get_baked_points()
 
-			# Set region, using Polygon2D node.
-			$Window.mouse_passthrough_polygon = $Polygon2D.polygon
-
 			# Reset region to default.
 			$Window.mouse_passthrough_polygon = []
 			[/gdscript]
-			[csharp]
-			// Set region, using Path2D node.
-			GetNode&lt;Window&gt;("Window").MousePassthrough = GetNode&lt;Path2D&gt;("Path2D").Curve.GetBakedPoints();
-
-			// Set region, using Polygon2D node.
-			GetNode&lt;Window&gt;("Window").MousePassthrough = GetNode&lt;Polygon2D&gt;("Polygon2D").Polygon;
-
-			// Reset region to default.
-			GetNode&lt;Window&gt;("Window").MousePassthrough = new Vector2[] {};
-			[/csharp]
 			[/codeblocks]
 			[b]Note:[/b] This property is ignored if [member mouse_passthrough] is set to [code]true[/code].
 			[b]Note:[/b] On Windows, the portion of a window that lies outside the region is not drawn, while on Linux (X11) and macOS it is.
@@ -728,11 +715,6 @@
 		<signal name="focus_exited">
 			<description>
 				Emitted when the [Window] loses its focus.
-			</description>
-		</signal>
-		<signal name="go_back_requested">
-			<description>
-				Emitted when a go back request is sent (e.g. pressing the "Back" button on Android), right after [constant Node.NOTIFICATION_WM_GO_BACK_REQUEST].
 			</description>
 		</signal>
 		<signal name="mouse_entered">

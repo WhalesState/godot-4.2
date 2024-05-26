@@ -197,10 +197,7 @@ template <typename T>
 T convert_to_vector(const Variant &p_variant, bool p_linear_color = false) {
 	const Variant::Type type = p_variant.get_type();
 
-	if (type == Variant::QUATERNION) {
-		Quaternion quat = p_variant;
-		return construct_vector<T>({ quat.x, quat.y, quat.z, quat.w });
-	} else if (type == Variant::PLANE) {
+	if (type == Variant::PLANE) {
 		Plane p = p_variant;
 		return construct_vector<T>({ p.normal.x, p.normal.y, p.normal.z, p.d });
 	} else if (type == Variant::RECT2 || type == Variant::RECT2I) {

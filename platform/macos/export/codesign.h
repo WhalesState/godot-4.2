@@ -357,7 +357,7 @@ public:
 class CodeSign {
 	static PackedByteArray file_hash_sha1(const String &p_path);
 	static PackedByteArray file_hash_sha256(const String &p_path);
-	static Error _codesign_file(bool p_use_hardened_runtime, bool p_force, const String &p_info, const String &p_exe_path, const String &p_bundle_path, const String &p_ent_path, bool p_ios_bundle, String &r_error_msg);
+	static Error _codesign_file(bool p_use_hardened_runtime, bool p_force, const String &p_info, const String &p_exe_path, const String &p_bundle_path, const String &p_ent_path, String &r_error_msg);
 
 public:
 	static Error codesign(bool p_use_hardened_runtime, bool p_force, const String &p_path, const String &p_ent_path, String &r_error_msg);

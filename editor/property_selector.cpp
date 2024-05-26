@@ -140,7 +140,6 @@ void PropertySelector::_update_search() {
 			search_options->get_editor_theme_icon(SNAME("Vector4")),
 			search_options->get_editor_theme_icon(SNAME("Vector4i")),
 			search_options->get_editor_theme_icon(SNAME("Plane")),
-			search_options->get_editor_theme_icon(SNAME("Quaternion")),
 			search_options->get_editor_theme_icon(SNAME("AABB")),
 			search_options->get_editor_theme_icon(SNAME("Basis")),
 			search_options->get_editor_theme_icon(SNAME("Transform3D")),
@@ -420,7 +419,7 @@ void PropertySelector::select_method_from_base_type(const String &p_base, const 
 
 	popup_centered_ratio(0.6);
 	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->edit();
 	_update_search();
 }
 
@@ -436,7 +435,7 @@ void PropertySelector::select_method_from_script(const Ref<Script> &p_script, co
 
 	popup_centered_ratio(0.6);
 	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->edit();
 	_update_search();
 }
 
@@ -452,7 +451,7 @@ void PropertySelector::select_method_from_basic_type(Variant::Type p_type, const
 
 	popup_centered_ratio(0.6);
 	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->edit();
 	_update_search();
 }
 
@@ -473,7 +472,7 @@ void PropertySelector::select_method_from_instance(Object *p_instance, const Str
 
 	popup_centered_ratio(0.6);
 	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->edit();
 	_update_search();
 }
 
@@ -488,7 +487,7 @@ void PropertySelector::select_property_from_base_type(const String &p_base, cons
 
 	popup_centered_ratio(0.6);
 	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->edit();
 	_update_search();
 }
 
@@ -505,7 +504,7 @@ void PropertySelector::select_property_from_script(const Ref<Script> &p_script, 
 
 	popup_centered_ratio(0.6);
 	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->edit();
 	_update_search();
 }
 
@@ -521,7 +520,7 @@ void PropertySelector::select_property_from_basic_type(Variant::Type p_type, con
 
 	popup_centered_ratio(0.6);
 	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->edit();
 	_update_search();
 }
 
@@ -536,7 +535,7 @@ void PropertySelector::select_property_from_instance(Object *p_instance, const S
 
 	popup_centered_ratio(0.6);
 	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->edit();
 	_update_search();
 }
 

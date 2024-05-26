@@ -129,12 +129,6 @@ void ShaderGLES3::_setup(const char *p_vertex_code, const char *p_fragment_code,
 	feedback_count = p_feedback_count;
 
 	StringBuilder tohash;
-	/*
-	tohash.append("[SpirvCacheKey]");
-	tohash.append(RenderingDevice::get_singleton()->shader_get_spirv_cache_key());
-	tohash.append("[BinaryCacheKey]");
-	tohash.append(RenderingDevice::get_singleton()->shader_get_binary_cache_key());
-	*/
 	tohash.append("[Vertex]");
 	tohash.append(p_vertex_code ? p_vertex_code : "");
 	tohash.append("[Fragment]");
@@ -188,31 +182,11 @@ void ShaderGLES3::_build_variant_code(StringBuilder &builder, uint32_t p_variant
 	}
 	builder.append("\n"); //make sure defines begin at newline
 
-	// Insert multiview extension loading, because it needs to appear before
-	// any non-preprocessor code (like the "precision highp..." lines below).
-	builder.append("#ifdef USE_MULTIVIEW\n");
-	builder.append("#if defined(GL_OVR_multiview2)\n");
-	builder.append("#extension GL_OVR_multiview2 : require\n");
-	builder.append("#elif defined(GL_OVR_multiview)\n");
-	builder.append("#extension GL_OVR_multiview : require\n");
-	builder.append("#endif\n");
-	if (p_stage_type == StageType::STAGE_TYPE_VERTEX) {
-		builder.append("layout(num_views=2) in;\n");
-	}
-	builder.append("#define ViewIndex gl_ViewID_OVR\n");
-	builder.append("#define MAX_VIEWS 2\n");
-	builder.append("#else\n");
-	builder.append("#define ViewIndex uint(0)\n");
-	builder.append("#define MAX_VIEWS 1\n");
-	builder.append("#endif\n");
-
 	// Default to highp precision unless specified otherwise.
 	builder.append("precision highp float;\n");
 	builder.append("precision highp int;\n");
 	if (!RasterizerGLES3::is_gles_over_gl()) {
 		builder.append("precision highp sampler2D;\n");
-		builder.append("precision highp samplerCube;\n");
-		builder.append("precision highp sampler2DArray;\n");
 	}
 
 	const StageTemplate &stage_template = stage_templates[p_stage_type];
@@ -529,20 +503,13 @@ String ShaderGLES3::_version_get_sha1(Version *p_version) const {
 	return hash_build.as_string().sha1_text();
 }
 
-#ifndef WEB_ENABLED // not supported in webgl
 static const char *shader_file_header = "GLSC";
 static const uint32_t cache_file_version = 3;
-#endif
 
 bool ShaderGLES3::_load_from_cache(Version *p_version) {
-#ifdef WEB_ENABLED // not supported in webgl
-	return false;
-#else
-#if !defined(ANDROID_ENABLED) && !defined(IOS_ENABLED)
 	if (RasterizerGLES3::is_gles_over_gl() && (glProgramBinary == NULL)) { // ARB_get_program_binary extension not available.
 		return false;
 	}
-#endif
 	String sha1 = _version_get_sha1(p_version);
 	String path = shader_cache_dir.path_join(name).path_join(base_sha256).path_join(sha1) + ".cache";
 
@@ -584,19 +551,6 @@ bool ShaderGLES3::_load_from_cache(Version *p_version) {
 			Version::Specialization specialization;
 
 			specialization.id = glCreateProgram();
-			if (feedback_count) {
-				Vector<const char *> feedback;
-				for (int feedback_index = 0; feedback_index < feedback_count; feedback_index++) {
-					if (feedbacks[feedback_index].specialization == 0 || (feedbacks[feedback_index].specialization & specialization_key)) {
-						// Specialization for this feedback is enabled.
-						feedback.push_back(feedbacks[feedback_index].name);
-					}
-				}
-
-				if (!feedback.is_empty()) {
-					glTransformFeedbackVaryings(specialization.id, feedback.size(), feedback.ptr(), GL_INTERLEAVED_ATTRIBS);
-				}
-			}
 			glProgramBinary(specialization.id, variant_format, variant_bytes.ptr(), variant_bytes.size());
 
 			GLint link_status = 0;
@@ -617,19 +571,12 @@ bool ShaderGLES3::_load_from_cache(Version *p_version) {
 	p_version->variants = variants;
 
 	return true;
-#endif // WEB_ENABLED
 }
 
 void ShaderGLES3::_save_to_cache(Version *p_version) {
-#ifdef WEB_ENABLED // not supported in webgl
-	return;
-#else
-	ERR_FAIL_COND(!shader_cache_dir_valid);
-#if !defined(ANDROID_ENABLED) && !defined(IOS_ENABLED)
 	if (RasterizerGLES3::is_gles_over_gl() && (glGetProgramBinary == NULL)) { // ARB_get_program_binary extension not available.
 		return;
 	}
-#endif
 	String sha1 = _version_get_sha1(p_version);
 	String path = shader_cache_dir.path_join(name).path_join(base_sha256).path_join(sha1) + ".cache";
 
@@ -672,7 +619,6 @@ void ShaderGLES3::_save_to_cache(Version *p_version) {
 			f->store_buffer(compiled_program.ptr(), compiled_program.size());
 		}
 	}
-#endif // WEB_ENABLED
 }
 
 void ShaderGLES3::_clear_version(Version *p_version) {

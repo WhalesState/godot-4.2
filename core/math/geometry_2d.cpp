@@ -319,35 +319,3 @@ Vector<Vector<Point2>> Geometry2D::_polypath_offset(const Vector<Point2> &p_poly
 	}
 	return polypaths;
 }
-
-Vector<Vector3i> Geometry2D::partial_pack_rects(const Vector<Vector2i> &p_sizes, const Size2i &p_atlas_size) {
-	Vector<stbrp_node> nodes;
-	nodes.resize(p_atlas_size.width);
-	memset(nodes.ptrw(), 0, sizeof(stbrp_node) * nodes.size());
-
-	stbrp_context context;
-	stbrp_init_target(&context, p_atlas_size.width, p_atlas_size.height, nodes.ptrw(), p_atlas_size.width);
-
-	Vector<stbrp_rect> rects;
-	rects.resize(p_sizes.size());
-
-	for (int i = 0; i < p_sizes.size(); i++) {
-		rects.write[i].id = i;
-		rects.write[i].w = p_sizes[i].width;
-		rects.write[i].h = p_sizes[i].height;
-		rects.write[i].x = 0;
-		rects.write[i].y = 0;
-		rects.write[i].was_packed = 0;
-	}
-
-	stbrp_pack_rects(&context, rects.ptrw(), rects.size());
-
-	Vector<Vector3i> ret;
-	ret.resize(p_sizes.size());
-
-	for (int i = 0; i < p_sizes.size(); i++) {
-		ret.write[rects[i].id] = Vector3i(rects[i].x, rects[i].y, rects[i].was_packed != 0 ? 1 : 0);
-	}
-
-	return ret;
-}

@@ -108,8 +108,6 @@ public:
 		FORMAT_ETC2_RGB8,
 		FORMAT_ETC2_RGBA8,
 		FORMAT_ETC2_RGB8A1,
-		FORMAT_ETC2_RA_AS_RG, //used to make basis universal happy
-		FORMAT_DXT5_RA_AS_RG, //used to make basis universal happy
 		FORMAT_ASTC_4x4,
 		FORMAT_ASTC_4x4_HDR,
 		FORMAT_ASTC_8x8,
@@ -150,7 +148,6 @@ public:
 	static ImageMemLoadFunc _tga_mem_loader_func;
 	static ImageMemLoadFunc _bmp_mem_loader_func;
 	static ScalableImageMemLoadFunc _svg_scalable_mem_loader_func;
-	static ImageMemLoadFunc _ktx_mem_loader_func;
 
 	static void (*_image_compress_bc_func)(Image *, UsedChannels p_channels);
 	static void (*_image_compress_bptc_func)(Image *, UsedChannels p_channels);
@@ -169,9 +166,6 @@ public:
 	static Ref<Image> (*webp_unpacker)(const Vector<uint8_t> &p_buffer);
 	static Vector<uint8_t> (*png_packer)(const Ref<Image> &p_image);
 	static Ref<Image> (*png_unpacker)(const Vector<uint8_t> &p_buffer);
-	static Vector<uint8_t> (*basis_universal_packer)(const Ref<Image> &p_image, UsedChannels p_channels);
-	static Ref<Image> (*basis_universal_unpacker)(const Vector<uint8_t> &p_buffer);
-	static Ref<Image> (*basis_universal_unpacker_ptr)(const uint8_t *p_data, int p_size);
 
 	_FORCE_INLINE_ Color _get_color_at_ofs(const uint8_t *ptr, uint32_t ofs) const;
 	_FORCE_INLINE_ void _set_color_at_ofs(uint8_t *ptr, uint32_t ofs, const Color &p_color);
@@ -184,6 +178,7 @@ private:
 	Vector<uint8_t> data;
 	int width = 0;
 	int height = 0;
+	Rect2i selection = Rect2i(Point2i(0, 0), Size2i(0, 0));
 	bool mipmaps = false;
 
 	void _copy_internals_from(const Image &p_image) {
@@ -241,19 +236,6 @@ public:
 	int get_mipmap_offset(int p_mipmap) const; //get where the mipmap begins in data
 	void get_mipmap_offset_and_size(int p_mipmap, int &r_ofs, int &r_size) const; //get where the mipmap begins in data
 	void get_mipmap_offset_size_and_dimensions(int p_mipmap, int &r_ofs, int &r_size, int &w, int &h) const; //get where the mipmap begins in data
-
-	enum Image3DValidateError {
-		VALIDATE_3D_OK,
-		VALIDATE_3D_ERR_IMAGE_EMPTY,
-		VALIDATE_3D_ERR_MISSING_IMAGES,
-		VALIDATE_3D_ERR_EXTRA_IMAGES,
-		VALIDATE_3D_ERR_IMAGE_SIZE_MISMATCH,
-		VALIDATE_3D_ERR_IMAGE_FORMAT_MISMATCH,
-		VALIDATE_3D_ERR_IMAGE_HAS_MIPMAPS,
-	};
-
-	static Image3DValidateError validate_3d_image(Format p_format, int p_width, int p_height, int p_depth, bool p_mipmaps, const Vector<Ref<Image>> &p_images);
-	static String get_3d_image_validation_error_text(Image3DValidateError p_error);
 
 	/**
 	 * Resize the image, using the preferred interpolation method.
@@ -403,13 +385,10 @@ public:
 	Error load_webp_from_buffer(const Vector<uint8_t> &p_array);
 	Error load_tga_from_buffer(const Vector<uint8_t> &p_array);
 	Error load_bmp_from_buffer(const Vector<uint8_t> &p_array);
-	Error load_ktx_from_buffer(const Vector<uint8_t> &p_array);
 
 	Error load_svg_from_buffer(const Vector<uint8_t> &p_array, float scale = 1.0);
 	Error load_svg_from_string(const String &p_svg_str, float scale = 1.0);
 
-	void convert_rg_to_ra_rgba8();
-	void convert_ra_rgba8_to_rg();
 	void convert_rgba8_to_bgra8();
 
 	Image(const uint8_t *p_mem_png_jpg, int p_len = -1);
@@ -420,10 +399,50 @@ public:
 	UsedChannels detect_used_channels(CompressSource p_source = COMPRESS_SOURCE_GENERIC) const;
 	void optimize_channels();
 
-	Color get_pixelv(const Point2i &p_point) const;
+	bool point_inside_rect(int p_x, int p_y) const;
+	bool point_inside_rect_v(const Point2i &p_point) const;
+
+	void set_selection_rect(Point2i p_pos, Point2i p_size);
+	Rect2i get_selection_rect() const;
+
+	Color get_pixel_v(const Point2i &p_point) const;
 	Color get_pixel(int p_x, int p_y) const;
-	void set_pixelv(const Point2i &p_point, const Color &p_color);
+	void set_pixel_v(const Point2i &p_point, const Color &p_color);
 	void set_pixel(int p_x, int p_y, const Color &p_color);
+
+	PackedVector2Array get_pixel_line_v(const Point2i &p_point0, const Point2i &p_point1) const;
+	PackedVector2Array get_pixel_line(int p_x0, int p_y0, int p_x1, int p_y1) const;
+	void set_pixel_line_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color);
+	void set_pixel_line(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color);
+
+	PackedVector2Array get_pixel_quadratic_curve_v(const Point2i &p_point0, const Point2i &p_point1, const Point2i &p_point2) const;
+	PackedVector2Array get_pixel_quadratic_curve(int p_x0, int p_y0, int p_x1, int p_y1, int p_x2, int p_y2) const;
+	void set_pixel_quadratic_curve_v(const Point2i &p_point0, const Point2i &p_point1, const Point2i &p_point2, const Color &p_color);
+	void set_pixel_quadratic_curve(int p_x0, int p_y0, int p_x1, int p_y1, int p_x2, int p_y2, const Color &p_color);
+
+	PackedVector2Array get_pixel_cubic_curve_v(const Point2i &p_point0, const Point2i &p_point1, const Point2i &p_point2, const Point2i &p_point3) const;
+	PackedVector2Array get_pixel_cubic_curve(int p_x0, int p_y0, int p_x1, int p_y1, int p_x2, int p_y2, int p_x3, int p_y3) const;
+	void set_pixel_cubic_curve_v(const Point2i &p_point0, const Point2i &p_point1, const Point2i &p_point2, const Point2i &p_point3, const Color &p_color);
+	void set_pixel_cubic_curve(int p_x0, int p_y0, int p_x1, int p_y1, int p_x2, int p_y2, int p_x3, int p_y3, const Color &p_color);
+
+	PackedVector2Array get_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled = false, bool p_square = false, bool p_centered = false) const;
+	PackedVector2Array get_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, bool p_filled = false, bool p_square = false, bool p_centered = false) const;
+	void set_pixel_rect_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color, bool p_filled = false, bool p_square = false, bool p_centered = false);
+	void set_pixel_rect(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color, bool p_filled = false, bool p_square = false, bool p_centered = false);
+
+	PackedVector2Array get_pixel_ellipse_v(const Point2i &p_point0, const Point2i &p_point1, bool p_filled = false, bool p_circle = false, bool p_centered = false) const;
+	PackedVector2Array get_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_y1, bool p_filled = false, bool p_circle = false, bool p_centered = false) const;
+	void set_pixel_ellipse_v(const Point2i &p_point0, const Point2i &p_point1, const Color &p_color, bool p_filled = false, bool p_circle = false, bool p_centered = false);
+	void set_pixel_ellipse(int p_x0, int p_y0, int p_x1, int p_y1, const Color &p_color, bool p_filled = false, bool p_circle = false, bool p_centered = false);
+
+	PackedVector2Array get_pixel_contours(const PackedVector2Array &p_points, const Color &p_color) const;
+	void set_pixel_contours(const PackedVector2Array &p_points, const Color &p_color);
+
+	PackedVector2Array get_pixel_polygon(const PackedVector2Array &p_points, const Color &p_color) const;
+	void set_pixel_polygon(const PackedVector2Array &p_points, const Color &p_color);
+
+	PackedVector2Array get_pixel_fill(const Point2 &p_point, const Color &p_color, bool p_connected = true) const;
+	void set_pixel_fill(const Point2 &p_point, const Color &p_color, bool p_connected = true);
 
 	void adjust_bcs(float p_brightness, float p_contrast, float p_saturation);
 
@@ -437,8 +456,6 @@ public:
 		mipmaps = p_image->mipmaps;
 		data = p_image->data;
 	}
-
-	Dictionary compute_image_metrics(const Ref<Image> p_compared_image, bool p_luma_metric = true);
 };
 
 VARIANT_ENUM_CAST(Image::Format)

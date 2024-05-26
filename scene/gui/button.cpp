@@ -346,13 +346,12 @@ void Button::_notification(int p_what) {
 					}
 				} break;
 			}
-
 			Color font_outline_color = theme_cache.font_outline_color;
 			int outline_size = theme_cache.outline_size;
 			if (outline_size > 0 && font_outline_color.a > 0) {
-				text_buf->draw_outline(ci, text_ofs, outline_size, font_outline_color);
+				text_buf->draw_outline(ci, text_ofs.round(), outline_size, font_outline_color);
 			}
-			text_buf->draw(ci, text_ofs, color);
+			text_buf->draw(ci, text_ofs.round(), color);
 		} break;
 	}
 }

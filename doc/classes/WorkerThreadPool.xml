@@ -21,23 +21,6 @@
 		    WorkerThreadPool.wait_for_group_task_completion(task_id)
 		    # Other code that depends on the enemy AI already being processed.
 		[/gdscript]
-		[csharp]
-		private List&lt;Node&gt; _enemies = new List&lt;Node&gt;(); // A list to be filled with enemies.
-
-		private void ProcessEnemyAI(int enemyIndex)
-		{
-		    Node processedEnemy = _enemies[enemyIndex];
-		    // Expensive logic here.
-		}
-
-		public override void _Process(double delta)
-		{
-		    long taskId = WorkerThreadPool.AddGroupTask(Callable.From&lt;int&gt;(ProcessEnemyAI), _enemies.Count);
-		    // Other code...
-		    WorkerThreadPool.WaitForGroupTaskCompletion(taskId);
-		    // Other code that depends on the enemy AI already being processed.
-		}
-		[/csharp]
 		[/codeblocks]
 		The above code relies on the number of elements in the [code]enemies[/code] array remaining constant during the multithreaded part.
 		[b]Note:[/b] Using this singleton could affect performance negatively if the task being distributed between threads is not computationally expensive.

@@ -87,8 +87,6 @@ void EditorColorMap::create() {
 	add_conversion_color_pair("#c38ef1", "#a85de9"); // Animation
 	add_conversion_color_pair("#8da5f3", "#3d64dd"); // 2D
 	add_conversion_color_pair("#7582a8", "#6d83c8"); // 2D Abstract
-	add_conversion_color_pair("#fc7f7f", "#cd3838"); // 3D
-	add_conversion_color_pair("#b56d6d", "#be6a6a"); // 3D Abstract
 	add_conversion_color_pair("#8eef97", "#2fa139"); // GUI Control
 	add_conversion_color_pair("#76ad7b", "#64a66a"); // GUI Control Abstract
 
@@ -139,11 +137,6 @@ void EditorColorMap::create() {
 	add_conversion_color_pair("#474747", "#d6d6d6"); // Background part
 	add_conversion_color_pair("#919191", "#6e6e6e"); // Border part
 
-	// TileSet editor icons
-	add_conversion_color_pair("#fce00e", "#aa8d24"); // New Single Tile
-	add_conversion_color_pair("#0e71fc", "#0350bd"); // New Autotile
-	add_conversion_color_pair("#c6ced4", "#828f9b"); // New Atlas
-
 	// Variant types
 	add_conversion_color_pair("#41ecad", "#25e3a0"); // Variant
 	add_conversion_color_pair("#6f91f0", "#6d8eeb"); // bool
@@ -158,7 +151,6 @@ void EditorColorMap::create() {
 	add_conversion_color_pair("#55f3e3", "#12d5c3"); // Object
 	add_conversion_color_pair("#f74949", "#f77070"); // Plane
 	add_conversion_color_pair("#44bd44", "#46b946"); // Projection
-	add_conversion_color_pair("#ec418e", "#ec69a3"); // Quaternion
 	add_conversion_color_pair("#f1738f", "#ee758e"); // Rect2
 	add_conversion_color_pair("#41ec80", "#2ce573"); // RID
 	add_conversion_color_pair("#b9ec41", "#96ce1a"); // Transform2D
@@ -170,13 +162,12 @@ void EditorColorMap::create() {
 	// Visual shaders
 	add_conversion_color_pair("#77ce57", "#67c046"); // Vector funcs
 	add_conversion_color_pair("#ea686c", "#d95256"); // Vector transforms
-	add_conversion_color_pair("#eac968", "#d9b64f"); // Textures and cubemaps
+	add_conversion_color_pair("#eac968", "#d9b64f"); // Textures
 	add_conversion_color_pair("#cf68ea", "#c050dd"); // Functions and expressions
 
 	// These icons should not be converted.
 	add_conversion_exception("EditorPivot");
 	add_conversion_exception("EditorHandle");
-	add_conversion_exception("Editor3DHandle");
 	add_conversion_exception("EditorBoneHandle");
 	add_conversion_exception("Godot");
 	add_conversion_exception("Sky");
@@ -191,10 +182,6 @@ void EditorColorMap::create() {
 	add_conversion_exception("StatusSuccess");
 	add_conversion_exception("StatusWarning");
 	add_conversion_exception("OverbrightIndicator");
-	add_conversion_exception("MaterialPreviewCube");
-	add_conversion_exception("MaterialPreviewSphere");
-	add_conversion_exception("MaterialPreviewLight1");
-	add_conversion_exception("MaterialPreviewLight2");
 
 	// GUI
 	add_conversion_exception("GuiChecked");
@@ -368,7 +355,7 @@ static Ref<ImageTexture> editor_generate_icon(int p_index, float p_scale, float 
 	const bool upsample = !Math::is_equal_approx(Math::round(p_scale), p_scale);
 	Error err = ImageLoaderSVG::create_image_from_string(img, editor_icons_sources[p_index], p_scale, upsample, p_convert_colors);
 	ERR_FAIL_COND_V_MSG(err != OK, Ref<ImageTexture>(), "Failed generating icon, unsupported or invalid SVG data in editor theme.");
-	if (p_saturation != 1.0) {
+	if (p_saturation != 0.5) {
 		img->adjust_bcs(1.0, 1.0, p_saturation);
 	}
 #else
@@ -468,7 +455,7 @@ void editor_register_and_generate_icons(Ref<Theme> p_theme, bool p_dark_theme, f
 			} else {
 				float saturation = p_icon_saturation;
 				if (saturation_exceptions.has(editor_icon_name)) {
-					saturation = 1.0;
+					saturation = 0.5;
 				}
 
 				if (conversion_exceptions.has(editor_icon_name)) {
@@ -495,7 +482,7 @@ void editor_register_and_generate_icons(Ref<Theme> p_theme, bool p_dark_theme, f
 			} else {
 				float saturation = p_icon_saturation;
 				if (saturation_exceptions.has(editor_icons_names[index])) {
-					saturation = 1.0;
+					saturation = 0.5;
 				}
 
 				if (conversion_exceptions.has(editor_icons_names[index])) {
@@ -518,7 +505,7 @@ void editor_register_and_generate_icons(Ref<Theme> p_theme, bool p_dark_theme, f
 			} else {
 				float saturation = p_icon_saturation;
 				if (saturation_exceptions.has(editor_icons_names[index])) {
-					saturation = 1.0;
+					saturation = 0.5;
 				}
 
 				if (conversion_exceptions.has(editor_icons_names[index])) {
@@ -561,7 +548,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	float preset_contrast = 0;
 	bool preset_draw_extra_borders = false;
 
-	const float default_contrast = 0.3;
+	const float default_contrast = 0.24;
 
 	// Please use alphabetical order if you're adding a new theme here
 	// (after "Custom")
@@ -603,8 +590,8 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 		preset_contrast = 0.0;
 		preset_draw_extra_borders = true;
 	} else { // Default
-		preset_accent_color = Color(0.44, 0.73, 0.98);
-		preset_base_color = Color(0.21, 0.24, 0.29);
+		preset_accent_color = Color(0.725, 0.467, 0.988);
+		preset_base_color = Color(0.196, 0.18, 0.231);
 		preset_contrast = default_contrast;
 	}
 
@@ -972,22 +959,6 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	Ref<StyleBoxFlat> style_launch_pad = make_flat_stylebox(dark_color_1, 2 * EDSCALE, 0, 2 * EDSCALE, 0, corner_width);
 	style_launch_pad->set_corner_radius_all(corner_radius * EDSCALE);
 	theme->set_stylebox("LaunchPadNormal", EditorStringName(EditorStyles), style_launch_pad);
-	Ref<StyleBoxFlat> style_launch_pad_movie = style_launch_pad->duplicate();
-	style_launch_pad_movie->set_bg_color(accent_color * Color(1, 1, 1, 0.1));
-	style_launch_pad_movie->set_border_color(accent_color);
-	style_launch_pad_movie->set_border_width_all(Math::round(2 * EDSCALE));
-	theme->set_stylebox("LaunchPadMovieMode", EditorStringName(EditorStyles), style_launch_pad_movie);
-
-	theme->set_stylebox("MovieWriterButtonNormal", EditorStringName(EditorStyles), make_empty_stylebox(0, 0, 0, 0));
-	Ref<StyleBoxFlat> style_write_movie_button = style_widget_pressed->duplicate();
-	style_write_movie_button->set_bg_color(accent_color);
-	style_write_movie_button->set_corner_radius_all(corner_radius * EDSCALE);
-	style_write_movie_button->set_content_margin(SIDE_TOP, 0);
-	style_write_movie_button->set_content_margin(SIDE_BOTTOM, 0);
-	style_write_movie_button->set_content_margin(SIDE_LEFT, 0);
-	style_write_movie_button->set_content_margin(SIDE_RIGHT, 0);
-	style_write_movie_button->set_expand_margin(SIDE_RIGHT, 2 * EDSCALE);
-	theme->set_stylebox("MovieWriterButtonPressed", EditorStringName(EditorStyles), style_write_movie_button);
 
 	// MenuButton
 	theme->set_stylebox("normal", "MenuButton", style_menu);
@@ -1087,25 +1058,6 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	editor_log_button_pressed->set_border_width(SIDE_BOTTOM, 2 * EDSCALE);
 	editor_log_button_pressed->set_border_color(accent_color);
 	theme->set_stylebox("pressed", "EditorLogFilterButton", editor_log_button_pressed);
-
-	// Buttons in material previews
-	const Color dim_light_color = icon_normal_color.darkened(0.24);
-	const Color dim_light_highlighted_color = icon_normal_color.darkened(0.18);
-	Ref<StyleBox> sb_empty_borderless = make_empty_stylebox();
-
-	theme->set_type_variation("PreviewLightButton", "Button");
-	// When pressed, don't use the accent color tint. When unpressed, dim the icon.
-	theme->set_color("icon_normal_color", "PreviewLightButton", dim_light_color);
-	theme->set_color("icon_focus_color", "PreviewLightButton", dim_light_color);
-	theme->set_color("icon_pressed_color", "PreviewLightButton", icon_normal_color);
-	theme->set_color("icon_hover_pressed_color", "PreviewLightButton", icon_normal_color);
-	// Unpressed icon is dim, so use a dim highlight.
-	theme->set_color("icon_hover_color", "PreviewLightButton", dim_light_highlighted_color);
-
-	theme->set_stylebox("normal", "PreviewLightButton", sb_empty_borderless);
-	theme->set_stylebox("hover", "PreviewLightButton", sb_empty_borderless);
-	theme->set_stylebox("focus", "PreviewLightButton", sb_empty_borderless);
-	theme->set_stylebox("pressed", "PreviewLightButton", sb_empty_borderless);
 
 	// ProjectTag
 	{
@@ -1706,7 +1658,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_color("clear_button_color", "LineEdit", font_color);
 	theme->set_color("clear_button_color_pressed", "LineEdit", accent_color);
 
-	theme->set_constant("minimum_character_width", "LineEdit", 4);
+	theme->set_constant("minimum_character_width", "LineEdit", 3);
 	theme->set_constant("outline_size", "LineEdit", 0);
 	theme->set_constant("caret_width", "LineEdit", 1);
 
@@ -1966,182 +1918,6 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_color("font_outline_color", "ProgressBar", font_outline_color);
 	theme->set_constant("outline_size", "ProgressBar", 0);
 
-	// GraphEdit
-	theme->set_stylebox("panel", "GraphEdit", style_tree_bg);
-	Ref<StyleBoxFlat> graph_toolbar_style = make_flat_stylebox(dark_color_1 * Color(1, 1, 1, 0.6), 4, 2, 4, 2, 3);
-	theme->set_stylebox("menu_panel", "GraphEdit", graph_toolbar_style);
-
-	if (dark_theme) {
-		theme->set_color("grid_major", "GraphEdit", Color(1.0, 1.0, 1.0, 0.1));
-		theme->set_color("grid_minor", "GraphEdit", Color(1.0, 1.0, 1.0, 0.05));
-	} else {
-		theme->set_color("grid_major", "GraphEdit", Color(0.0, 0.0, 0.0, 0.15));
-		theme->set_color("grid_minor", "GraphEdit", Color(0.0, 0.0, 0.0, 0.07));
-	}
-	theme->set_color("selection_fill", "GraphEdit", theme->get_color(SNAME("box_selection_fill_color"), EditorStringName(Editor)));
-	theme->set_color("selection_stroke", "GraphEdit", theme->get_color(SNAME("box_selection_stroke_color"), EditorStringName(Editor)));
-	theme->set_color("activity", "GraphEdit", accent_color);
-
-	theme->set_icon("zoom_out", "GraphEdit", theme->get_icon(SNAME("ZoomLess"), EditorStringName(EditorIcons)));
-	theme->set_icon("zoom_in", "GraphEdit", theme->get_icon(SNAME("ZoomMore"), EditorStringName(EditorIcons)));
-	theme->set_icon("zoom_reset", "GraphEdit", theme->get_icon(SNAME("ZoomReset"), EditorStringName(EditorIcons)));
-	theme->set_icon("grid_toggle", "GraphEdit", theme->get_icon(SNAME("GridToggle"), EditorStringName(EditorIcons)));
-	theme->set_icon("minimap_toggle", "GraphEdit", theme->get_icon(SNAME("GridMinimap"), EditorStringName(EditorIcons)));
-	theme->set_icon("snapping_toggle", "GraphEdit", theme->get_icon(SNAME("SnapGrid"), EditorStringName(EditorIcons)));
-	theme->set_icon("layout", "GraphEdit", theme->get_icon(SNAME("GridLayout"), EditorStringName(EditorIcons)));
-
-	// GraphEditMinimap
-	Ref<StyleBoxFlat> style_minimap_bg = make_flat_stylebox(dark_color_1, 0, 0, 0, 0);
-	style_minimap_bg->set_border_color(dark_color_3);
-	style_minimap_bg->set_border_width_all(1);
-	theme->set_stylebox("panel", "GraphEditMinimap", style_minimap_bg);
-
-	Ref<StyleBoxFlat> style_minimap_camera;
-	Ref<StyleBoxFlat> style_minimap_node;
-	if (dark_theme) {
-		style_minimap_camera = make_flat_stylebox(Color(0.65, 0.65, 0.65, 0.2), 0, 0, 0, 0);
-		style_minimap_camera->set_border_color(Color(0.65, 0.65, 0.65, 0.45));
-		style_minimap_node = make_flat_stylebox(Color(1, 1, 1), 0, 0, 0, 0);
-	} else {
-		style_minimap_camera = make_flat_stylebox(Color(0.38, 0.38, 0.38, 0.2), 0, 0, 0, 0);
-		style_minimap_camera->set_border_color(Color(0.38, 0.38, 0.38, 0.45));
-		style_minimap_node = make_flat_stylebox(Color(0, 0, 0), 0, 0, 0, 0);
-	}
-	style_minimap_camera->set_border_width_all(1);
-	style_minimap_node->set_anti_aliased(false);
-	theme->set_stylebox("camera", "GraphEditMinimap", style_minimap_camera);
-	theme->set_stylebox("node", "GraphEditMinimap", style_minimap_node);
-
-	Color minimap_resizer_color;
-	if (dark_theme) {
-		minimap_resizer_color = Color(1, 1, 1, 0.65);
-	} else {
-		minimap_resizer_color = Color(0, 0, 0, 0.65);
-	}
-	theme->set_icon("resizer", "GraphEditMinimap", theme->get_icon(SNAME("GuiResizerTopLeft"), EditorStringName(EditorIcons)));
-	theme->set_color("resizer_color", "GraphEditMinimap", minimap_resizer_color);
-
-	// GraphNode
-
-	const int gn_margin_top = 2;
-	const int gn_margin_side = 2;
-	const int gn_margin_bottom = 2;
-
-	Color graphnode_bg = dark_color_3;
-	if (!dark_theme) {
-		graphnode_bg = prop_section_color;
-	}
-	const Color graph_node_selected_border_color = graphnode_bg.lerp(accent_color, 0.275);
-
-	const Color graphnode_frame_bg = graphnode_bg.lerp(style_tree_bg->get_bg_color(), 0.3);
-
-	Ref<StyleBoxFlat> graphn_sb_panel = make_flat_stylebox(graphnode_frame_bg, gn_margin_side, gn_margin_top, gn_margin_side, gn_margin_bottom, corner_width);
-	graphn_sb_panel->set_border_width_all(border_width);
-	graphn_sb_panel->set_border_color(graphnode_bg);
-	graphn_sb_panel->set_corner_radius_individual(0, 0, corner_radius * EDSCALE, corner_radius * EDSCALE);
-	graphn_sb_panel->set_expand_margin(SIDE_TOP, 17 * EDSCALE);
-
-	Ref<StyleBoxFlat> graphn_sb_panel_selected = make_flat_stylebox(graphnode_frame_bg, gn_margin_side, gn_margin_top, gn_margin_side, gn_margin_bottom, corner_width);
-	graphn_sb_panel_selected->set_border_width_all(2 * EDSCALE + border_width);
-	graphn_sb_panel_selected->set_border_color(graph_node_selected_border_color);
-	graphn_sb_panel_selected->set_corner_radius_individual(0, 0, corner_radius * EDSCALE, corner_radius * EDSCALE);
-	graphn_sb_panel_selected->set_expand_margin(SIDE_TOP, 17 * EDSCALE);
-
-	const int gn_titlebar_margin_left = 12;
-	const int gn_titlebar_margin_right = 4; // The rest is for the close button.
-	Ref<StyleBoxFlat> graphn_sb_titlebar = make_flat_stylebox(graphnode_bg, gn_titlebar_margin_left, gn_margin_top, gn_titlebar_margin_right, 0, corner_width);
-	graphn_sb_titlebar->set_expand_margin(SIDE_TOP, 2 * EDSCALE);
-	graphn_sb_titlebar->set_corner_radius_individual(corner_radius * EDSCALE, corner_radius * EDSCALE, 0, 0);
-
-	Ref<StyleBoxFlat> graphn_sb_titlebar_selected = make_flat_stylebox(graph_node_selected_border_color, gn_titlebar_margin_left, gn_margin_top, gn_titlebar_margin_right, 0, corner_width);
-	graphn_sb_titlebar_selected->set_corner_radius_individual(corner_radius * EDSCALE, corner_radius * EDSCALE, 0, 0);
-	graphn_sb_titlebar_selected->set_expand_margin(SIDE_TOP, 2 * EDSCALE);
-	Ref<StyleBoxEmpty> graphn_sb_slot = make_empty_stylebox(12, 0, 12, 0);
-
-	theme->set_stylebox("panel", "GraphElement", graphn_sb_panel);
-	theme->set_stylebox("panel_selected", "GraphElement", graphn_sb_panel_selected);
-	theme->set_stylebox("titlebar", "GraphElement", graphn_sb_titlebar);
-	theme->set_stylebox("titlebar_selected", "GraphElement", graphn_sb_titlebar_selected);
-
-	// GraphNode's title Label.
-	theme->set_type_variation("GraphNodeTitleLabel", "Label");
-
-	theme->set_stylebox("normal", "GraphNodeTitleLabel", make_empty_stylebox(0, 0, 0, 0));
-	theme->set_color("font_color", "GraphNodeTitleLabel", font_color);
-	theme->set_constant("line_spacing", "GraphNodeTitleLabel", 3 * EDSCALE);
-
-	Color graphnode_decoration_color = dark_color_1.inverted();
-
-	theme->set_color("resizer_color", "GraphElement", graphnode_decoration_color);
-	theme->set_icon("resizer", "GraphElement", theme->get_icon(SNAME("GuiResizer"), EditorStringName(EditorIcons)));
-
-	// GraphNode.
-	theme->set_stylebox("panel", "GraphNode", graphn_sb_panel);
-	theme->set_stylebox("panel_selected", "GraphNode", graphn_sb_panel_selected);
-	theme->set_stylebox("titlebar", "GraphNode", graphn_sb_titlebar);
-	theme->set_stylebox("titlebar_selected", "GraphNode", graphn_sb_titlebar_selected);
-	theme->set_stylebox("slot", "GraphNode", graphn_sb_slot);
-
-	theme->set_color("resizer_color", "GraphNode", graphnode_decoration_color);
-
-	theme->set_constant("port_h_offset", "GraphNode", 0);
-	theme->set_constant("separation", "GraphNode", 1 * EDSCALE);
-
-	Ref<ImageTexture> port_icon = theme->get_icon(SNAME("GuiGraphNodePort"), EditorStringName(EditorIcons));
-	// The true size is 24x24 This is necessary for sharp port icons at high zoom levels in GraphEdit (up to ~200%).
-	port_icon->set_size_override(Size2(12, 12));
-	theme->set_icon("port", "GraphNode", port_icon);
-
-	// StateMachine graph
-	theme->set_stylebox("panel", "GraphStateMachine", style_tree_bg);
-	theme->set_stylebox("error_panel", "GraphStateMachine", style_tree_bg);
-	theme->set_color("error_color", "GraphStateMachine", error_color);
-
-	const int sm_margin_side = 10 * EDSCALE;
-
-	Ref<StyleBoxFlat> sm_node_style = make_flat_stylebox(dark_color_3 * Color(1, 1, 1, 0.7), sm_margin_side, 24 * EDSCALE, sm_margin_side, gn_margin_bottom, corner_width);
-	sm_node_style->set_border_width_all(border_width);
-	sm_node_style->set_border_color(graphnode_bg);
-
-	Ref<StyleBoxFlat> sm_node_selected_style = make_flat_stylebox(graphnode_bg * Color(1, 1, 1, 0.9), sm_margin_side, 24 * EDSCALE, sm_margin_side, gn_margin_bottom, corner_width);
-	sm_node_selected_style->set_border_width_all(2 * EDSCALE + border_width);
-	sm_node_selected_style->set_border_color(accent_color * Color(1, 1, 1, 0.9));
-	sm_node_selected_style->set_shadow_size(8 * EDSCALE);
-	sm_node_selected_style->set_shadow_color(shadow_color);
-
-	Ref<StyleBoxFlat> sm_node_playing_style = sm_node_selected_style->duplicate();
-	sm_node_playing_style->set_border_color(warning_color);
-	sm_node_playing_style->set_shadow_color(warning_color * Color(1, 1, 1, 0.2));
-
-	theme->set_stylebox("node_frame", "GraphStateMachine", sm_node_style);
-	theme->set_stylebox("node_frame_selected", "GraphStateMachine", sm_node_selected_style);
-	theme->set_stylebox("node_frame_playing", "GraphStateMachine", sm_node_playing_style);
-
-	Ref<StyleBoxFlat> sm_node_start_style = sm_node_style->duplicate();
-	sm_node_start_style->set_border_width_all(1 * EDSCALE);
-	sm_node_start_style->set_border_color(success_color.lightened(0.24));
-	theme->set_stylebox("node_frame_start", "GraphStateMachine", sm_node_start_style);
-
-	Ref<StyleBoxFlat> sm_node_end_style = sm_node_style->duplicate();
-	sm_node_end_style->set_border_width_all(1 * EDSCALE);
-	sm_node_end_style->set_border_color(error_color);
-	theme->set_stylebox("node_frame_end", "GraphStateMachine", sm_node_end_style);
-
-	theme->set_font("node_title_font", "GraphStateMachine", theme->get_font(SNAME("font"), SNAME("Label")));
-	theme->set_font_size("node_title_font_size", "GraphStateMachine", theme->get_font_size(SNAME("font_size"), SNAME("Label")));
-	theme->set_color("node_title_font_color", "GraphStateMachine", font_color);
-
-	theme->set_color("transition_color", "GraphStateMachine", font_color);
-	theme->set_color("transition_disabled_color", "GraphStateMachine", font_color * Color(1, 1, 1, 0.2));
-	theme->set_color("transition_icon_color", "GraphStateMachine", Color(1, 1, 1));
-	theme->set_color("transition_icon_disabled_color", "GraphStateMachine", Color(1, 1, 1, 0.2));
-	theme->set_color("highlight_color", "GraphStateMachine", accent_color);
-	theme->set_color("highlight_disabled_color", "GraphStateMachine", accent_color * Color(1, 1, 1, 0.6));
-	theme->set_color("guideline_color", "GraphStateMachine", font_color * Color(1, 1, 1, 0.3));
-
-	theme->set_color("playback_color", "GraphStateMachine", font_color);
-	theme->set_color("playback_background_color", "GraphStateMachine", font_color * Color(1, 1, 1, 0.3));
-
 	// GridContainer
 	theme->set_constant("v_separation", "GridContainer", Math::round(widget_default_margin.y - 2 * EDSCALE));
 
@@ -2158,13 +1934,16 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_color("files_disabled", "FileDialog", font_disabled_color);
 
 	// ColorPicker
-	theme->set_constant("margin", "ColorPicker", default_margin_size);
-	theme->set_constant("sv_width", "ColorPicker", 256 * EDSCALE);
-	theme->set_constant("sv_height", "ColorPicker", 256 * EDSCALE);
-	theme->set_constant("h_width", "ColorPicker", 30 * EDSCALE);
-	theme->set_constant("label_width", "ColorPicker", 10 * EDSCALE);
+	theme->set_constant("margin_left", "ColorPicker", 2 * EDSCALE);
+	theme->set_constant("margin_top", "ColorPicker", 2 * EDSCALE);
+	theme->set_constant("margin_right", "ColorPicker", 2 * EDSCALE);
+	theme->set_constant("margin_bottom", "ColorPicker", 2 * EDSCALE);
+	theme->set_constant("sv_width", "ColorPicker", 264 * EDSCALE);
+	theme->set_constant("sv_height", "ColorPicker", 264 * EDSCALE);
+	theme->set_constant("h_width", "ColorPicker", 24 * EDSCALE);
 	theme->set_constant("center_slider_grabbers", "ColorPicker", 1);
 	theme->set_icon("screen_picker", "ColorPicker", theme->get_icon(SNAME("ColorPick"), EditorStringName(EditorIcons)));
+	theme->set_icon("modes_icon", "ColorPicker", theme->get_icon(SNAME("GuiTabMenuHl"), EditorStringName(EditorIcons)));
 	theme->set_icon("shape_circle", "ColorPicker", theme->get_icon(SNAME("PickerShapeCircle"), EditorStringName(EditorIcons)));
 	theme->set_icon("shape_rect", "ColorPicker", theme->get_icon(SNAME("PickerShapeRectangle"), EditorStringName(EditorIcons)));
 	theme->set_icon("shape_rect_wheel", "ColorPicker", theme->get_icon(SNAME("PickerShapeRectangleWheel"), EditorStringName(EditorIcons)));
@@ -2183,17 +1962,9 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_icon("preset_bg", "ColorPresetButton", theme->get_icon(SNAME("GuiMiniCheckerboard"), EditorStringName(EditorIcons)));
 	theme->set_icon("overbright_indicator", "ColorPresetButton", theme->get_icon(SNAME("OverbrightIndicator"), EditorStringName(EditorIcons)));
 
-	// Information on 3D viewport
-	Ref<StyleBoxFlat> style_info_3d_viewport = style_default->duplicate();
-	style_info_3d_viewport->set_bg_color(style_info_3d_viewport->get_bg_color() * Color(1, 1, 1, 0.5));
-	style_info_3d_viewport->set_border_width_all(0);
-	theme->set_stylebox("Information3dViewport", EditorStringName(EditorStyles), style_info_3d_viewport);
-
-	// Asset Library.
-	theme->set_stylebox("bg", "AssetLib", style_empty);
-	theme->set_stylebox("panel", "AssetLib", style_content_panel);
-	theme->set_color("status_color", "AssetLib", Color(0.5, 0.5, 0.5));
-	theme->set_icon("dismiss", "AssetLib", theme->get_icon(SNAME("Close"), EditorStringName(EditorIcons)));
+	// ZoomWidget
+	theme->set_icon("zoom_less", "ZoomWidget", theme->get_icon(SNAME("ZoomLess"), EditorStringName(EditorIcons)));
+	theme->set_icon("zoom_more", "ZoomWidget", theme->get_icon(SNAME("ZoomMore"), EditorStringName(EditorIcons)));
 
 	// Theme editor.
 	theme->set_color("preview_picker_overlay_color", "ThemeEditor", Color(0.1, 0.1, 0.1, 0.25));
@@ -2238,6 +2009,8 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	const Color engine_type_color = dark_theme ? Color(0.56, 1, 0.86) : Color(0.11, 0.55, 0.4);
 	const Color user_type_color = dark_theme ? Color(0.78, 1, 0.93) : Color(0.18, 0.45, 0.4);
 	const Color comment_color = dark_theme ? dim_color : Color(0.08, 0.08, 0.08, 0.5);
+	const Color comment_warning_color = Color(0.969, 0.44, 0.333);
+	const Color comment_question_color = Color(0.04, 0.52, 1); 
 	const Color doc_comment_color = dark_theme ? Color(0.6, 0.7, 0.8, 0.8) : Color(0.15, 0.15, 0.4, 0.7);
 	const Color string_color = dark_theme ? Color(1, 0.93, 0.63) : Color(0.6, 0.42, 0);
 
@@ -2282,6 +2055,8 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 		setting->set_initial_value("text_editor/theme/highlighting/engine_type_color", engine_type_color, true);
 		setting->set_initial_value("text_editor/theme/highlighting/user_type_color", user_type_color, true);
 		setting->set_initial_value("text_editor/theme/highlighting/comment_color", comment_color, true);
+		setting->set_initial_value("text_editor/theme/highlighting/comment_warning", comment_warning_color, true);
+		setting->set_initial_value("text_editor/theme/highlighting/comment_question", comment_question_color, true);
 		setting->set_initial_value("text_editor/theme/highlighting/doc_comment_color", doc_comment_color, true);
 		setting->set_initial_value("text_editor/theme/highlighting/string_color", string_color, true);
 		setting->set_initial_value("text_editor/theme/highlighting/background_color", te_background_color, true);

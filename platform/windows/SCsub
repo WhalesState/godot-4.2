@@ -15,7 +15,6 @@ common_win = [
     "joypad_windows.cpp",
     "tts_windows.cpp",
     "windows_terminal_logger.cpp",
-    "vulkan_context_win.cpp",
     "gl_manager_windows_native.cpp",
     "gl_manager_windows_angle.cpp",
     "wgl_detect_version.cpp",
@@ -25,8 +24,8 @@ common_win_wrap = [
     "console_wrapper_windows.cpp",
 ]
 
-res_file = "godot_res.rc"
-res_target = "godot_res" + env["OBJSUFFIX"]
+res_file = "pixel_engine_res.rc"
+res_target = "pixel_engine_res" + env["OBJSUFFIX"]
 res_obj = env.RES(res_target, res_file)
 
 prog = env.add_program("#bin/godot", common_win + res_obj, PROGSUFFIX=env["PROGSUFFIX"])
@@ -34,8 +33,8 @@ prog = env.add_program("#bin/godot", common_win + res_obj, PROGSUFFIX=env["PROGS
 # Build console wrapper app.
 if env["windows_subsystem"] == "gui":
     env_wrap = env.Clone()
-    res_wrap_file = "godot_res_wrap.rc"
-    res_wrap_target = "godot_res_wrap" + env["OBJSUFFIX"]
+    res_wrap_file = "pixel_engine_res_wrap.rc"
+    res_wrap_target = "pixel_engine_res_wrap" + env["OBJSUFFIX"]
     res_wrap_obj = env_wrap.RES(res_wrap_target, res_wrap_file)
 
     if env.msvc:

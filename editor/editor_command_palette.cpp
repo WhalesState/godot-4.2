@@ -36,6 +36,7 @@
 #include "editor/editor_string_names.h"
 #include "editor/gui/editor_toaster.h"
 #include "scene/gui/control.h"
+#include "scene/gui/margin_container.h"
 #include "scene/gui/tree.h"
 
 EditorCommandPalette *EditorCommandPalette::singleton = nullptr;
@@ -204,7 +205,7 @@ void EditorCommandPalette::open_popup() {
 	}
 
 	command_search_box->clear();
-	command_search_box->grab_focus();
+	command_search_box->edit();
 
 	search_options->scroll_to_item(search_options->get_root());
 }

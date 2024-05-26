@@ -20,9 +20,6 @@ if env["use_sowrap"]:
         ]
     )
 
-if env["vulkan"]:
-    source_files.append("vulkan_context_x11.cpp")
-
 if env["opengl3"]:
     env.Append(CPPDEFINES=["GLAD_GLX_NO_X11"])
     source_files.append(

@@ -36,10 +36,8 @@
 #include "core/math/aabb.h"
 #include "core/math/basis.h"
 #include "core/math/color.h"
-#include "core/math/face3.h"
 #include "core/math/plane.h"
 #include "core/math/projection.h"
-#include "core/math/quaternion.h"
 #include "core/math/rect2.h"
 #include "core/math/rect2i.h"
 #include "core/math/transform_2d.h"
@@ -99,7 +97,6 @@ public:
 		VECTOR4,
 		VECTOR4I,
 		PLANE,
-		QUATERNION,
 		AABB,
 		BASIS,
 		TRANSFORM3D,
@@ -270,7 +267,6 @@ private:
 			false, //VECTOR4,
 			false, //VECTOR4I,
 			false, //PLANE,
-			false, //QUATERNION,
 			true, //AABB,
 			true, //BASIS,
 			true, //TRANSFORM,
@@ -386,7 +382,6 @@ public:
 	operator Vector4i() const;
 	operator Plane() const;
 	operator ::AABB() const;
-	operator Quaternion() const;
 	operator Basis() const;
 	operator Transform2D() const;
 	operator Transform3D() const;
@@ -413,7 +408,6 @@ public:
 	operator Vector<Vector3>() const;
 	operator Vector<Color>() const;
 	operator Vector<Plane>() const;
-	operator Vector<Face3>() const;
 
 	operator Vector<Variant>() const;
 	operator Vector<StringName>() const;
@@ -459,7 +453,6 @@ public:
 	Variant(const Vector4i &p_vector4i);
 	Variant(const Plane &p_plane);
 	Variant(const ::AABB &p_aabb);
-	Variant(const Quaternion &p_quat);
 	Variant(const Basis &p_matrix);
 	Variant(const Transform2D &p_transform);
 	Variant(const Transform3D &p_transform);
@@ -482,7 +475,6 @@ public:
 	Variant(const Vector<String> &p_string_array);
 	Variant(const Vector<Vector3> &p_vector3_array);
 	Variant(const Vector<Color> &p_color_array);
-	Variant(const Vector<Face3> &p_face_array);
 
 	Variant(const Vector<Variant> &p_array);
 	Variant(const Vector<StringName> &p_array);

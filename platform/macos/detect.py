@@ -26,7 +26,6 @@ def get_opts():
     return [
         ("osxcross_sdk", "OSXCross SDK version", "darwin16"),
         ("MACOS_SDK_PATH", "Path to the macOS SDK", ""),
-        ("vulkan_sdk_path", "Path to the Vulkan SDK", ""),
         EnumVariable("macports_clang", "Build using Clang from MacPorts", "no", ("no", "5.0", "devel")),
         BoolVariable("use_ubsan", "Use LLVM/GCC compiler undefined behavior sanitizer (UBSAN)", False),
         BoolVariable("use_asan", "Use LLVM/GCC compiler address sanitizer (ASAN)", False),
@@ -49,7 +48,6 @@ def get_doc_path():
 def get_flags():
     return [
         ("arch", detect_arch()),
-        ("use_volk", False),
     ]
 
 
@@ -268,39 +266,3 @@ def configure(env: "Environment"):
         env.Prepend(CPPPATH=["#thirdparty/angle/include"])
 
     env.Append(LINKFLAGS=["-rpath", "@executable_path/../Frameworks", "-rpath", "@executable_path"])
-
-    if env["vulkan"]:
-        env.Append(CPPDEFINES=["VULKAN_ENABLED"])
-        env.Append(LINKFLAGS=["-framework", "Metal", "-framework", "IOSurface"])
-        if not env["use_volk"]:
-            env.Append(LINKFLAGS=["-lMoltenVK"])
-            mvk_found = False
-
-            mvk_list = [get_mvk_sdk_path(), "/opt/homebrew/lib", "/usr/local/homebrew/lib", "/opt/local/lib"]
-            if env["vulkan_sdk_path"] != "":
-                mvk_list.insert(0, os.path.expanduser(env["vulkan_sdk_path"]))
-                mvk_list.insert(
-                    0,
-                    os.path.join(
-                        os.path.expanduser(env["vulkan_sdk_path"]), "macOS/lib/MoltenVK.xcframework/macos-arm64_x86_64/"
-                    ),
-                )
-                mvk_list.insert(
-                    0,
-                    os.path.join(
-                        os.path.expanduser(env["vulkan_sdk_path"]), "MoltenVK/MoltenVK.xcframework/macos-arm64_x86_64/"
-                    ),
-                )
-
-            for mvk_path in mvk_list:
-                if mvk_path and os.path.isfile(os.path.join(mvk_path, "libMoltenVK.a")):
-                    mvk_found = True
-                    print("MoltenVK found at: " + mvk_path)
-                    env.Append(LINKFLAGS=["-L" + mvk_path])
-                    break
-
-            if not mvk_found:
-                print(
-                    "MoltenVK SDK installation directory not found, use 'vulkan_sdk_path' SCons parameter to specify SDK path."
-                )
-                sys.exit(255)

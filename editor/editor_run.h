@@ -53,7 +53,7 @@ public:
 	Status get_status() const;
 	String get_running_scene() const;
 
-	Error run(const String &p_scene, const String &p_write_movie = "");
+	Error run(const String &p_scene);
 	void run_native_notify() { status = STATUS_PLAY; }
 	void stop();
 

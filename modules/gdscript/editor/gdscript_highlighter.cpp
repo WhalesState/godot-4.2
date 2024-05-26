@@ -732,12 +732,20 @@ void GDScriptSyntaxHighlighter::_update_cache() {
 
 	/* Comments */
 	const Color comment_color = EDITOR_GET("text_editor/theme/highlighting/comment_color");
+	const Color comment_warning_color = EDITOR_GET("text_editor/theme/highlighting/comment_warning");
+	const Color comment_question_color = EDITOR_GET("text_editor/theme/highlighting/comment_question");
 	List<String> comments;
 	gdscript->get_comment_delimiters(&comments);
 	for (const String &comment : comments) {
+		Color col = comment_color;
+		if (comment == "#!") {
+			col = comment_warning_color;
+		} else if (comment == "#?") {
+			col = comment_question_color;
+		}
 		String beg = comment.get_slice(" ", 0);
 		String end = comment.get_slice_count(" ") > 1 ? comment.get_slice(" ", 1) : String();
-		add_color_region(beg, end, comment_color, end.is_empty());
+		add_color_region(beg, end, col, end.is_empty());
 	}
 
 	/* Doc comments */

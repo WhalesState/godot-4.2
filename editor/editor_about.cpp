@@ -120,7 +120,7 @@ ScrollContainer *EditorAbout::_populate_list(const String &p_name, const List<St
 }
 
 EditorAbout::EditorAbout() {
-	set_title(TTR("Thanks from the Godot community!"));
+	set_title(TTR("Thanks for Godot developers and community!"));
 	set_hide_on_ok(true);
 
 	VBoxContainer *vbc = memnew(VBoxContainer);
@@ -138,10 +138,6 @@ EditorAbout::EditorAbout() {
 
 	VBoxContainer *version_info_vbc = memnew(VBoxContainer);
 
-	// Add a dummy control node for spacing.
-	Control *v_spacer = memnew(Control);
-	version_info_vbc->add_child(v_spacer);
-
 	version_btn = memnew(LinkButton);
 	String hash = String(VERSION_HASH);
 	if (hash.length() != 0) {
@@ -157,8 +153,8 @@ EditorAbout::EditorAbout() {
 
 	Label *about_text = memnew(Label);
 	about_text->set_v_size_flags(Control::SIZE_SHRINK_CENTER);
-	about_text->set_text(
-			String::utf8("\xc2\xa9 2014-present ") + TTR("Godot Engine contributors") + "." +
+	about_text->set_text(String::utf8("\xc2\xa9 2023-present ") + TTR("Pixel Engine contributors") + "." +
+			String::utf8("\n\xc2\xa9 2014-present ") + TTR("Godot Engine contributors") + "." +
 			String::utf8("\n\xc2\xa9 2007-2014 Juan Linietsky, Ariel Manzur.\n"));
 	version_info_vbc->add_child(about_text);
 
@@ -174,39 +170,45 @@ EditorAbout::EditorAbout() {
 	// Authors
 
 	List<String> dev_sections;
-	dev_sections.push_back(TTR("Project Founders"));
-	dev_sections.push_back(TTR("Lead Developer"));
+	dev_sections.push_back(TTR("Godot Project Founders"));
+	dev_sections.push_back(TTR("Godot Lead Developer"));
+	dev_sections.push_back(TTR("Pixel Engine Lead Developer"));
 	// TRANSLATORS: This refers to a job title.
-	dev_sections.push_back(TTR("Project Manager", "Job Title"));
-	dev_sections.push_back(TTR("Developers"));
+	dev_sections.push_back(TTR("Godot Project Manager", "Job Title"));
+	dev_sections.push_back(TTR("Pixel Engine Project Manager", "Job Title"));
+	dev_sections.push_back(TTR("Godot Developers"));
+	dev_sections.push_back(TTR("Pixel Engine Developers"));
 	const char *const *dev_src[] = {
-		AUTHORS_FOUNDERS,
-		AUTHORS_LEAD_DEVELOPERS,
-		AUTHORS_PROJECT_MANAGERS,
-		AUTHORS_DEVELOPERS,
+		GODOT_AUTHORS_FOUNDERS,
+		GODOT_AUTHORS_LEAD_DEVELOPERS,
+		PIXEL_ENGINE_AUTHORS_LEAD_DEVELOPERS,
+		GODOT_AUTHORS_PROJECT_MANAGERS,
+		PIXEL_ENGINE_AUTHORS_PROJECT_MANAGERS,
+		GODOT_AUTHORS_DEVELOPERS,
+		PIXEL_ENGINE_AUTHORS_DEVELOPERS
 	};
 	tc->add_child(_populate_list(TTR("Authors"), dev_sections, dev_src, 1));
 
 	// Donors
 
 	List<String> donor_sections;
-	donor_sections.push_back(TTR("Patrons"));
-	donor_sections.push_back(TTR("Platinum Sponsors"));
-	donor_sections.push_back(TTR("Gold Sponsors"));
-	donor_sections.push_back(TTR("Silver Sponsors"));
-	donor_sections.push_back(TTR("Diamond Members"));
-	donor_sections.push_back(TTR("Titanium Members"));
-	donor_sections.push_back(TTR("Platinum Members"));
-	donor_sections.push_back(TTR("Gold Members"));
+	donor_sections.push_back(TTR("Godot Engine Patrons"));
+	donor_sections.push_back(TTR("Godot Engine Platinum Sponsors"));
+	donor_sections.push_back(TTR("Godot Engine Gold Sponsors"));
+	donor_sections.push_back(TTR("Godot Engine Silver Sponsors"));
+	donor_sections.push_back(TTR("Godot Engine Diamond Members"));
+	donor_sections.push_back(TTR("Godot Engine Titanium Members"));
+	donor_sections.push_back(TTR("Godot Engine Platinum Members"));
+	donor_sections.push_back(TTR("Godot Engine Gold Members"));
 	const char *const *donor_src[] = {
-		DONORS_PATRONS,
-		DONORS_SPONSORS_PLATINUM,
-		DONORS_SPONSORS_GOLD,
-		DONORS_SPONSORS_SILVER,
-		DONORS_MEMBERS_DIAMOND,
-		DONORS_MEMBERS_TITANIUM,
-		DONORS_MEMBERS_PLATINUM,
-		DONORS_MEMBERS_GOLD,
+		GODOT_ENGINE_DONORS_PATRONS,
+		GODOT_ENGINE_DONORS_SPONSORS_PLATINUM,
+		GODOT_ENGINE_DONORS_SPONSORS_GOLD,
+		GODOT_ENGINE_DONORS_SPONSORS_SILVER,
+		GODOT_ENGINE_DONORS_MEMBERS_DIAMOND,
+		GODOT_ENGINE_DONORS_MEMBERS_TITANIUM,
+		GODOT_ENGINE_DONORS_MEMBERS_PLATINUM,
+		GODOT_ENGINE_DONORS_MEMBERS_GOLD,
 	};
 	tc->add_child(_populate_list(TTR("Donors"), donor_sections, donor_src, 3));
 
@@ -217,7 +219,7 @@ EditorAbout::EditorAbout() {
 	_license_text->set_name(TTR("License"));
 	_license_text->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	_license_text->set_v_size_flags(Control::SIZE_EXPAND_FILL);
-	_license_text->set_text(String::utf8(GODOT_LICENSE_TEXT));
+	_license_text->set_text(String::utf8(PIXEL_ENGINE_LICENSE_TEXT));
 	tc->add_child(_license_text);
 
 	// Thirdparty License
@@ -230,7 +232,7 @@ EditorAbout::EditorAbout() {
 	Label *tpl_label = memnew(Label);
 	tpl_label->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	tpl_label->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
-	tpl_label->set_text(TTR("Godot Engine relies on a number of third-party free and open source libraries, all compatible with the terms of its MIT license. The following is an exhaustive list of all such third-party components with their respective copyright statements and license terms."));
+	tpl_label->set_text(TTR("Pixel Engine relies on a number of third-party free and open source libraries, all compatible with the terms of its MIT license. The following is an exhaustive list of all such third-party components with their respective copyright statements and license terms."));
 	tpl_label->set_size(Size2(630, 1) * EDSCALE);
 	license_thirdparty->add_child(tpl_label);
 

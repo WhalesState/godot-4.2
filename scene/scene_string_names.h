@@ -217,11 +217,6 @@ public:
 	StringName theme_changed;
 	StringName shader_overrides_group;
 	StringName shader_overrides_group_active;
-
-#ifndef DISABLE_DEPRECATED
-	StringName use_in_baked_light;
-	StringName use_dynamic_gi;
-#endif
 };
 
 #endif // SCENE_STRING_NAMES_H

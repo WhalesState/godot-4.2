@@ -296,9 +296,6 @@
 				[gdscript]
 				$TabBar.tab_close_pressed.connect($TabBar.remove_tab)
 				[/gdscript]
-				[csharp]
-				GetNode&lt;TabBar&gt;("TabBar").TabClosePressed += GetNode&lt;TabBar&gt;("TabBar").RemoveTab;
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</signal>

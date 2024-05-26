@@ -33,6 +33,7 @@
 #include "core/debugger/engine_debugger.h"
 #include "core/debugger/engine_profiler.h"
 #include "core/io/marshalls.h"
+#include "core/io/resource_saver.h"
 #include "core/object/script_language.h"
 #include "core/templates/local_vector.h"
 #include "scene/main/scene_tree.h"
@@ -113,26 +114,6 @@ Error SceneDebugger::parse_message(void *p_user, const String &p_msg, const Arra
 		ERR_FAIL_COND_V(p_args.size() < 1, ERR_INVALID_DATA);
 		Transform2D transform = p_args[0];
 		scene_tree->get_root()->set_canvas_transform_override(transform);
-#ifndef _3D_DISABLED
-	} else if (p_msg == "override_camera_3D:set") {
-		ERR_FAIL_COND_V(p_args.size() < 1, ERR_INVALID_DATA);
-		bool enable = p_args[0];
-		scene_tree->get_root()->enable_camera_3d_override(enable);
-
-	} else if (p_msg == "override_camera_3D:transform") {
-		ERR_FAIL_COND_V(p_args.size() < 5, ERR_INVALID_DATA);
-		Transform3D transform = p_args[0];
-		bool is_perspective = p_args[1];
-		float size_or_fov = p_args[2];
-		float near = p_args[3];
-		float far = p_args[4];
-		if (is_perspective) {
-			scene_tree->get_root()->set_camera_3d_override_perspective(size_or_fov, near, far);
-		} else {
-			scene_tree->get_root()->set_camera_3d_override_orthogonal(size_or_fov, near, far);
-		}
-		scene_tree->get_root()->set_camera_3d_override_transform(transform);
-#endif // _3D_DISABLED
 	} else if (p_msg == "set_object_property") {
 		ERR_FAIL_COND_V(p_args.size() < 3, ERR_INVALID_DATA);
 		_set_object_property(p_args[0], p_args[1], p_args[2]);
@@ -341,12 +322,6 @@ SceneDebuggerObject::SceneDebuggerObject(ObjectID p_id) {
 	}
 
 	if (Node *node = Object::cast_to<Node>(obj)) {
-		// For debugging multiplayer.
-		{
-			PropertyInfo pi(Variant::INT, String("Node/multiplayer_authority"), PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY);
-			properties.push_back(SceneDebuggerProperty(pi, node->get_multiplayer_authority()));
-		}
-
 		// Add specialized NodePath info (if inside tree).
 		if (node->is_inside_tree()) {
 			PropertyInfo pi(Variant::NODE_PATH, String("Node/path"));

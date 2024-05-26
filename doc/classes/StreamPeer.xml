@@ -179,9 +179,6 @@
 				[gdscript]
 				put_data("Hello world".to_ascii_buffer())
 				[/gdscript]
-				[csharp]
-				PutData("Hello World".ToAsciiBuffer());
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -223,9 +220,6 @@
 				[gdscript]
 				put_data("Hello world".to_utf8_buffer())
 				[/gdscript]
-				[csharp]
-				PutData("Hello World".ToUtf8Buffer());
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>

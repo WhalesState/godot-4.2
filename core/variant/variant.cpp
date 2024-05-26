@@ -97,9 +97,6 @@ String Variant::get_type_name(Variant::Type p_type) {
 		case AABB: {
 			return "AABB";
 		}
-		case QUATERNION: {
-			return "Quaternion";
-		}
 		case BASIS: {
 			return "Basis";
 		}
@@ -311,18 +308,8 @@ bool Variant::can_convert(Variant::Type p_type_from, Variant::Type p_type_to) {
 
 		} break;
 
-		case QUATERNION: {
-			static const Type valid[] = {
-				BASIS,
-				NIL
-			};
-
-			valid_types = valid;
-
-		} break;
 		case BASIS: {
 			static const Type valid[] = {
-				QUATERNION,
 				NIL
 			};
 
@@ -332,7 +319,6 @@ bool Variant::can_convert(Variant::Type p_type_from, Variant::Type p_type_to) {
 		case TRANSFORM3D: {
 			static const Type valid[] = {
 				TRANSFORM2D,
-				QUATERNION,
 				BASIS,
 				PROJECTION,
 				NIL
@@ -645,18 +631,8 @@ bool Variant::can_convert_strict(Variant::Type p_type_from, Variant::Type p_type
 
 		} break;
 
-		case QUATERNION: {
-			static const Type valid[] = {
-				BASIS,
-				NIL
-			};
-
-			valid_types = valid;
-
-		} break;
 		case BASIS: {
 			static const Type valid[] = {
-				QUATERNION,
 				NIL
 			};
 
@@ -666,7 +642,6 @@ bool Variant::can_convert_strict(Variant::Type p_type_from, Variant::Type p_type
 		case TRANSFORM3D: {
 			static const Type valid[] = {
 				TRANSFORM2D,
-				QUATERNION,
 				BASIS,
 				PROJECTION,
 				NIL
@@ -910,9 +885,6 @@ bool Variant::is_zero() const {
 		case AABB: {
 			return *_data._aabb == ::AABB();
 		}
-		case QUATERNION: {
-			return *reinterpret_cast<const Quaternion *>(_data._mem) == Quaternion();
-		}
 		case BASIS: {
 			return *_data._basis == Basis();
 		}
@@ -1124,9 +1096,6 @@ void Variant::reference(const Variant &p_variant) {
 			_data._aabb = (::AABB *)Pools::_bucket_small.alloc();
 			memnew_placement(_data._aabb, ::AABB(*p_variant._data._aabb));
 		} break;
-		case QUATERNION: {
-			memnew_placement(_data._mem, Quaternion(*reinterpret_cast<const Quaternion *>(p_variant._data._mem)));
-		} break;
 		case BASIS: {
 			_data._basis = (Basis *)Pools::_bucket_medium.alloc();
 			memnew_placement(_data._basis, Basis(*p_variant._data._basis));
@@ -1282,10 +1251,6 @@ void Variant::zero() {
 		case PLANE:
 			*reinterpret_cast<Plane *>(this->_data._mem) = Plane();
 			break;
-		case QUATERNION:
-			*reinterpret_cast<Quaternion *>(this->_data._mem) = Quaternion();
-			break;
-
 		case COLOR:
 			*reinterpret_cast<Color *>(this->_data._mem) = Color();
 			break;
@@ -1412,7 +1377,7 @@ void Variant::_clear_internal() {
 		} break;
 		default: {
 			// Not needed, there is no point. The following do not allocate memory:
-			// VECTOR2, VECTOR3, RECT2, PLANE, QUATERNION, COLOR.
+			// VECTOR2, VECTOR3, RECT2, PLANE, COLOR.
 		}
 	}
 }
@@ -1745,8 +1710,6 @@ String Variant::stringify(int recursion_count) const {
 			return operator Plane();
 		case AABB:
 			return operator ::AABB();
-		case QUATERNION:
-			return operator Quaternion();
 		case BASIS:
 			return operator Basis();
 		case TRANSFORM3D:
@@ -2006,24 +1969,10 @@ Variant::operator ::AABB() const {
 Variant::operator Basis() const {
 	if (type == BASIS) {
 		return *_data._basis;
-	} else if (type == QUATERNION) {
-		return *reinterpret_cast<const Quaternion *>(_data._mem);
 	} else if (type == TRANSFORM3D) { // unexposed in Variant::can_convert?
 		return _data._transform3d->basis;
 	} else {
 		return Basis();
-	}
-}
-
-Variant::operator Quaternion() const {
-	if (type == QUATERNION) {
-		return *reinterpret_cast<const Quaternion *>(_data._mem);
-	} else if (type == BASIS) {
-		return *_data._basis;
-	} else if (type == TRANSFORM3D) {
-		return _data._transform3d->basis;
-	} else {
-		return Quaternion();
 	}
 }
 
@@ -2032,8 +1981,6 @@ Variant::operator Transform3D() const {
 		return *_data._transform3d;
 	} else if (type == BASIS) {
 		return Transform3D(*_data._basis, Vector3());
-	} else if (type == QUATERNION) {
-		return Transform3D(Basis(*reinterpret_cast<const Quaternion *>(_data._mem)), Vector3());
 	} else if (type == TRANSFORM2D) {
 		const Transform2D &t = *_data._transform2d;
 		Transform3D m;
@@ -2056,8 +2003,6 @@ Variant::operator Projection() const {
 		return *_data._transform3d;
 	} else if (type == BASIS) {
 		return Transform3D(*_data._basis, Vector3());
-	} else if (type == QUATERNION) {
-		return Transform3D(Basis(*reinterpret_cast<const Quaternion *>(_data._mem)), Vector3());
 	} else if (type == TRANSFORM2D) {
 		const Transform2D &t = *_data._transform2d;
 		Transform3D m;
@@ -2349,25 +2294,6 @@ Variant::operator Vector<Plane>() const {
 	return planes;
 }
 
-Variant::operator Vector<Face3>() const {
-	Vector<Vector3> va = operator Vector<Vector3>();
-	Vector<Face3> faces;
-	int va_size = va.size();
-	if (va_size == 0) {
-		return faces;
-	}
-
-	faces.resize(va_size / 3);
-	Face3 *w = faces.ptrw();
-	const Vector3 *r = va.ptr();
-
-	for (int i = 0; i < va_size; i++) {
-		w[i / 3].vertex[i % 3] = r[i];
-	}
-
-	return faces;
-}
-
 Variant::operator Vector<Variant>() const {
 	Array va = operator Array();
 	Vector<Variant> variants;
@@ -2565,11 +2491,6 @@ Variant::Variant(const Basis &p_matrix) {
 	memnew_placement(_data._basis, Basis(p_matrix));
 }
 
-Variant::Variant(const Quaternion &p_quaternion) {
-	type = QUATERNION;
-	memnew_placement(_data._mem, Quaternion(p_quaternion));
-}
-
 Variant::Variant(const Transform3D &p_transform) {
 	type = TRANSFORM3D;
 	_data._transform3d = (Transform3D *)Pools::_bucket_medium.alloc();
@@ -2716,27 +2637,6 @@ Variant::Variant(const Vector<Color> &p_color_array) {
 	_data.packed_array = PackedArrayRef<Color>::create(p_color_array);
 }
 
-Variant::Variant(const Vector<Face3> &p_face_array) {
-	Vector<Vector3> vertices;
-	int face_count = p_face_array.size();
-	vertices.resize(face_count * 3);
-
-	if (face_count) {
-		const Face3 *r = p_face_array.ptr();
-		Vector3 *w = vertices.ptrw();
-
-		for (int i = 0; i < face_count; i++) {
-			for (int j = 0; j < 3; j++) {
-				w[i * 3 + j] = r[i].vertex[j];
-			}
-		}
-	}
-
-	type = NIL;
-
-	*this = vertices;
-}
-
 /* helpers */
 Variant::Variant(const Vector<Variant> &p_array) {
 	type = NIL;
@@ -2822,9 +2722,6 @@ void Variant::operator=(const Variant &p_variant) {
 
 		case AABB: {
 			*_data._aabb = *(p_variant._data._aabb);
-		} break;
-		case QUATERNION: {
-			*reinterpret_cast<Quaternion *>(_data._mem) = *reinterpret_cast<const Quaternion *>(p_variant._data._mem);
 		} break;
 		case BASIS: {
 			*_data._basis = *(p_variant._data._basis);
@@ -2997,15 +2894,6 @@ uint32_t Variant::recursive_hash(int recursion_count) const {
 		} break;
 		case AABB: {
 			return HashMapHasherDefault::hash(*_data._aabb);
-		} break;
-		case QUATERNION: {
-			uint32_t h = HASH_MURMUR3_SEED;
-			const Quaternion &q = *reinterpret_cast<const Quaternion *>(_data._mem);
-			h = hash_murmur3_one_real(q.x, h);
-			h = hash_murmur3_one_real(q.y, h);
-			h = hash_murmur3_one_real(q.z, h);
-			h = hash_murmur3_one_real(q.w, h);
-			return hash_fmix32(h);
 		} break;
 		case BASIS: {
 			uint32_t h = HASH_MURMUR3_SEED;
@@ -3262,12 +3150,6 @@ uint32_t Variant::recursive_hash(int recursion_count) const {
 			hash_compare_scalar((p_lhs).z, (p_rhs).z) && \
 			hash_compare_scalar((p_lhs).w, (p_rhs).w))
 
-#define hash_compare_quaternion(p_lhs, p_rhs)            \
-	(hash_compare_scalar((p_lhs).x, (p_rhs).x) &&        \
-			hash_compare_scalar((p_lhs).y, (p_rhs).y) && \
-			hash_compare_scalar((p_lhs).z, (p_rhs).z) && \
-			hash_compare_scalar((p_lhs).w, (p_rhs).w))
-
 #define hash_compare_color(p_lhs, p_rhs)                 \
 	(hash_compare_scalar((p_lhs).r, (p_rhs).r) &&        \
 			hash_compare_scalar((p_lhs).g, (p_rhs).g) && \
@@ -3392,13 +3274,6 @@ bool Variant::hash_compare(const Variant &p_variant, int recursion_count, bool s
 			return hash_compare_vector3(l->position, r->position) &&
 					hash_compare_vector3(l->size, r->size);
 
-		} break;
-
-		case QUATERNION: {
-			const Quaternion *l = reinterpret_cast<const Quaternion *>(_data._mem);
-			const Quaternion *r = reinterpret_cast<const Quaternion *>(p_variant._data._mem);
-
-			return hash_compare_quaternion(*l, *r);
 		} break;
 
 		case BASIS: {

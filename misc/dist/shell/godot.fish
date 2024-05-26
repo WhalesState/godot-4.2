@@ -32,7 +32,6 @@ end
 
 function godot_rendering_driver_args
     # Use a function instead of a fixed string to customize the argument descriptions.
-    echo -e "vulkan\tVulkan renderer"
     echo -e "opengl3\tOpenGL ES 3.0 renderer"
     echo -e "dummy\tDummy renderer"
 end
@@ -77,7 +76,6 @@ complete -c godot -s t -l always-on-top -d "Request an always-on-top window"
 complete -c godot -l resolution -d "Request window resolution" -x
 complete -c godot -l position -d "Request window position" -x
 complete -c godot -l single-window -d "Use a single window (no separate subwindows)"
-complete -c godot -l xr-mode -d "Select Extended Reality (XR) mode" -a "default off on"
 
 # Debug options:
 complete -c godot -s d -l debug -d "Debug (local stdout debugger)"
@@ -108,7 +106,6 @@ complete -c godot -l convert-3to4 -d "Converts project from Godot 3.x to Godot 4
 complete -c godot -l validate-conversion-3to4 -d "Shows what elements will be renamed when converting project from Godot 3.x to Godot 4.x"
 complete -c godot -l doctool -d "Dump the engine API reference to the given path in XML format, merging if existing files are found" -r
 complete -c godot -l no-docbase -d "Disallow dumping the base types (used with --doctool)"
-complete -c godot -l build-solutions -d "Build the scripting solutions (e.g. for C# projects)"
 complete -c godot -l dump-gdextension-interface -d "Generate GDExtension header file 'gdextension_interface.h' in the current folder. This file is the base file required to implement a GDExtension"
 complete -c godot -l dump-extension-api -d "Generate JSON dump of the Godot API for GDExtension bindings named 'extension_api.json' in the current folder"
 complete -c godot -l benchmark -d "Benchmark the run time and print it to console"

@@ -32,33 +32,6 @@
 		    else:
 		        print("An error occurred when trying to access the path.")
 		[/gdscript]
-		[csharp]
-		public void DirContents(string path)
-		{
-		    using var dir = DirAccess.Open(path);
-		    if (dir != null)
-		    {
-		        dir.ListDirBegin();
-		        string fileName = dir.GetNext();
-		        while (fileName != "")
-		        {
-		            if (dir.CurrentIsDir())
-		            {
-		                GD.Print($"Found directory: {fileName}");
-		            }
-		            else
-		            {
-		                GD.Print($"Found file: {fileName}");
-		            }
-		            fileName = dir.GetNext();
-		        }
-		    }
-		    else
-		    {
-		        GD.Print("An error occurred when trying to access the path.");
-		    }
-		}
-		[/csharp]
 		[/codeblocks]
 	</description>
 	<tutorials>

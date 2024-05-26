@@ -43,9 +43,9 @@
 #include "core/variant/variant_parser.h"
 #include "core/version.h"
 
-#ifdef TOOLS_ENABLED
-#include "modules/modules_enabled.gen.h" // For mono.
-#endif // TOOLS_ENABLED
+// #ifdef TOOLS_ENABLED
+// #include "modules/modules_enabled.gen.h" // For mono.
+// #endif // TOOLS_ENABLED
 
 const String ProjectSettings::PROJECT_DATA_DIR_NAME_SUFFIX = "godot";
 
@@ -86,23 +86,12 @@ const PackedStringArray ProjectSettings::get_required_features() {
 // Returns the features supported by this build of Godot. Includes all required features.
 const PackedStringArray ProjectSettings::_get_supported_features() {
 	PackedStringArray features = get_required_features();
-#ifdef MODULE_MONO_ENABLED
-	features.append("C#");
-#endif
 	// Allow pinning to a specific patch number or build type by marking
 	// them as supported. They're only used if the user adds them manually.
 	features.append(VERSION_BRANCH "." _MKSTR(VERSION_PATCH));
 	features.append(VERSION_FULL_CONFIG);
 	features.append(VERSION_FULL_BUILD);
-
-#ifdef VULKAN_ENABLED
-	features.append("Forward Plus");
-	features.append("Mobile");
-#endif
-
-#ifdef GLES3_ENABLED
 	features.append("GL Compatibility");
-#endif
 	return features;
 }
 
@@ -960,24 +949,6 @@ Error ProjectSettings::_save_custom_bnd(const String &p_file) { // add other par
 	return save_custom(p_file);
 }
 
-#ifdef TOOLS_ENABLED
-bool _csproj_exists(String p_root_dir) {
-	Ref<DirAccess> dir = DirAccess::open(p_root_dir);
-	ERR_FAIL_COND_V(dir.is_null(), false);
-
-	dir->list_dir_begin();
-	String file_name = dir->_get_next();
-	while (file_name != "") {
-		if (!dir->current_is_dir() && file_name.get_extension() == "csproj") {
-			return true;
-		}
-		file_name = dir->_get_next();
-	}
-
-	return false;
-}
-#endif // TOOLS_ENABLED
-
 Error ProjectSettings::save_custom(const String &p_path, const CustomMap &p_custom, const Vector<String> &p_custom_features, bool p_merge_with_current) {
 	ERR_FAIL_COND_V_MSG(p_path.is_empty(), ERR_INVALID_PARAMETER, "Project settings save path cannot be empty.");
 
@@ -988,24 +959,8 @@ Error ProjectSettings::save_custom(const String &p_path, const CustomMap &p_cust
 		project_features = ProjectSettings::get_required_features();
 	}
 	// Check the rendering API.
-	const String rendering_api = has_setting("rendering/renderer/rendering_method") ? (String)get_setting("rendering/renderer/rendering_method") : String();
-	if (!rendering_api.is_empty()) {
-		// Add the rendering API as a project feature if it doesn't already exist.
-		if (!project_features.has(rendering_api)) {
-			project_features.append(rendering_api);
-		}
-	}
-	// Check for the existence of a csproj file.
-	if (_csproj_exists(get_resource_path())) {
-		// If there is a csproj file, add the C# feature if it doesn't already exist.
-		if (!project_features.has("C#")) {
-			project_features.append("C#");
-		}
-	} else {
-		// If there isn't a csproj file, remove the C# feature if it exists.
-		if (project_features.has("C#")) {
-			project_features.remove_at(project_features.find("C#"));
-		}
+	if (!project_features.has("gl_compatibility")) {
+		project_features.append("gl_compatibility");
 	}
 	project_features = _trim_to_supported_features(project_features);
 	set_setting("application/config/features", project_features);
@@ -1300,7 +1255,6 @@ ProjectSettings::ProjectSettings() {
 	GLOBAL_DEF_BASIC(PropertyInfo(Variant::STRING, "application/config/description", PROPERTY_HINT_MULTILINE_TEXT), "");
 	GLOBAL_DEF_BASIC("application/config/version", "");
 	GLOBAL_DEF_INTERNAL(PropertyInfo(Variant::STRING, "application/config/tags"), PackedStringArray());
-	GLOBAL_DEF_BASIC(PropertyInfo(Variant::STRING, "application/run/main_scene", PROPERTY_HINT_FILE, "*.tscn,*.scn,*.res"), "");
 	GLOBAL_DEF("application/run/disable_stdout", false);
 	GLOBAL_DEF("application/run/disable_stderr", false);
 	GLOBAL_DEF_RST("application/config/use_hidden_project_data_directory", true);
@@ -1309,8 +1263,8 @@ ProjectSettings::ProjectSettings() {
 	GLOBAL_DEF("application/config/project_settings_override", "");
 
 	GLOBAL_DEF("application/run/main_loop_type", "SceneTree");
+	GLOBAL_DEF("application/run/root_type", "");
 	GLOBAL_DEF("application/config/auto_accept_quit", true);
-	GLOBAL_DEF("application/config/quit_on_go_back", true);
 
 	// The default window size is tuned to:
 	// - Have a 16:9 aspect ratio,
@@ -1341,17 +1295,12 @@ ProjectSettings::ProjectSettings() {
 
 	GLOBAL_DEF_BASIC(PropertyInfo(Variant::STRING, "audio/buses/default_bus_layout", PROPERTY_HINT_FILE, "*.tres"), "res://default_bus_layout.tres");
 	GLOBAL_DEF_RST("audio/general/text_to_speech", false);
-	GLOBAL_DEF_RST(PropertyInfo(Variant::FLOAT, "audio/general/2d_panning_strength", PROPERTY_HINT_RANGE, "0,2,0.01"), 0.5f);
-	GLOBAL_DEF_RST(PropertyInfo(Variant::FLOAT, "audio/general/3d_panning_strength", PROPERTY_HINT_RANGE, "0,2,0.01"), 0.5f);
 
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "audio/general/ios/session_category", PROPERTY_HINT_ENUM, "Ambient,Multi Route,Play and Record,Playback,Record,Solo Ambient"), 0);
 	GLOBAL_DEF("audio/general/ios/mix_with_others", false);
 
 	PackedStringArray extensions;
 	extensions.push_back("gd");
-	if (Engine::get_singleton()->has_singleton("GodotSharp")) {
-		extensions.push_back("cs");
-	}
 	extensions.push_back("gdshader");
 
 	GLOBAL_DEF(PropertyInfo(Variant::PACKED_STRING_ARRAY, "editor/script/search_in_file_extensions"), extensions);
@@ -1364,8 +1313,6 @@ ProjectSettings::ProjectSettings() {
 	// Keep the enum values in sync with the `DisplayServer::VSyncMode` enum.
 	custom_prop_info["display/window/vsync/vsync_mode"] = PropertyInfo(Variant::INT, "display/window/vsync/vsync_mode", PROPERTY_HINT_ENUM, "Disabled,Enabled,Adaptive,Mailbox");
 	custom_prop_info["rendering/driver/threads/thread_model"] = PropertyInfo(Variant::INT, "rendering/driver/threads/thread_model", PROPERTY_HINT_ENUM, "Single-Unsafe,Single-Safe,Multi-Threaded");
-	GLOBAL_DEF("physics/2d/run_on_separate_thread", false);
-	GLOBAL_DEF("physics/3d/run_on_separate_thread", false);
 
 	GLOBAL_DEF_BASIC(PropertyInfo(Variant::STRING, "display/window/stretch/mode", PROPERTY_HINT_ENUM, "disabled,canvas_items,viewport"), "disabled");
 	GLOBAL_DEF_BASIC(PropertyInfo(Variant::STRING, "display/window/stretch/aspect", PROPERTY_HINT_ENUM, "ignore,keep,keep_width,keep_height,expand"), "keep");
@@ -1384,7 +1331,6 @@ ProjectSettings::ProjectSettings() {
 			String("Please include this when reporting the bug to the project developer."));
 	GLOBAL_DEF("debug/settings/crash_handler/message.editor",
 			String("Please include this when reporting the bug on: https://github.com/godotengine/godot/issues"));
-	GLOBAL_DEF_RST(PropertyInfo(Variant::INT, "rendering/occlusion_culling/bvh_build_quality", PROPERTY_HINT_ENUM, "Low,Medium,High"), 2);
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "memory/limits/multithreaded_server/rid_pool_prealloc", PROPERTY_HINT_RANGE, "0,500,1"), 60); // No negative and limit to 500 due to crashes.
 	GLOBAL_DEF_RST("internationalization/rendering/force_right_to_left_layout_direction", false);
 	GLOBAL_DEF_BASIC(PropertyInfo(Variant::INT, "internationalization/rendering/root_node_layout_direction", PROPERTY_HINT_ENUM, "Based on Locale,Left-to-Right,Right-to-Left"), 0);
@@ -1393,17 +1339,12 @@ ProjectSettings::ProjectSettings() {
 
 	GLOBAL_DEF_BASIC("gui/common/snap_controls_to_pixels", true);
 	GLOBAL_DEF_BASIC("gui/fonts/dynamic_fonts/use_oversampling", true);
+	GLOBAL_DEF_RST_BASIC(PropertyInfo(Variant::INT, "gui/fonts/dynamic_fonts/line_join", PROPERTY_HINT_ENUM, "Round,Bevel,Miter Variable,Miter Fixed"), 0);
+	GLOBAL_DEF_RST_BASIC(PropertyInfo(Variant::INT, "gui/fonts/dynamic_fonts/line_cap", PROPERTY_HINT_ENUM, "Butt,Round,Square"), 0);
+	GLOBAL_DEF_RST_BASIC(PropertyInfo(Variant::FLOAT, "gui/fonts/dynamic_fonts/miter_limit"), 0.0);
 
-	GLOBAL_DEF("rendering/rendering_device/staging_buffer/block_size_kb", 256);
-	GLOBAL_DEF("rendering/rendering_device/staging_buffer/max_size_mb", 128);
-	GLOBAL_DEF("rendering/rendering_device/staging_buffer/texture_upload_region_size_px", 64);
-	GLOBAL_DEF("rendering/rendering_device/pipeline_cache/save_chunk_size_mb", 3.0);
-	GLOBAL_DEF("rendering/rendering_device/vulkan/max_descriptors_per_pool", 64);
-
-	GLOBAL_DEF_BASIC(PropertyInfo(Variant::INT, "rendering/textures/canvas_textures/default_texture_filter", PROPERTY_HINT_ENUM, "Nearest,Linear,Linear Mipmap,Nearest Mipmap"), 1);
+	GLOBAL_DEF_BASIC(PropertyInfo(Variant::INT, "rendering/textures/canvas_textures/default_texture_filter", PROPERTY_HINT_ENUM, "Nearest,Linear,Linear Mipmap,Nearest Mipmap"), 0);
 	GLOBAL_DEF_BASIC(PropertyInfo(Variant::INT, "rendering/textures/canvas_textures/default_texture_repeat", PROPERTY_HINT_ENUM, "Disable,Enable,Mirror"), 0);
-
-	GLOBAL_DEF("collada/use_ambient", false);
 
 	// These properties will not show up in the dialog. If you want to exclude whole groups, use add_hidden_prefix().
 	GLOBAL_DEF_INTERNAL("application/config/features", PackedStringArray());

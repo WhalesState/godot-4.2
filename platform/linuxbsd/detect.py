@@ -292,18 +292,6 @@ def configure(env: "Environment"):
     if not env["builtin_pcre2"]:
         env.ParseConfig("pkg-config libpcre2-32 --cflags --libs")
 
-    if not env["builtin_recastnavigation"]:
-        # No pkgconfig file so far, hardcode default paths.
-        env.Prepend(CPPPATH=["/usr/include/recastnavigation"])
-        env.Append(LIBS=["Recast"])
-
-    if not env["builtin_embree"] and env["arch"] in ["x86_64", "arm64"]:
-        # No pkgconfig file so far, hardcode expected lib name.
-        env.Append(LIBS=["embree3"])
-
-    if not env["builtin_openxr"]:
-        env.ParseConfig("pkg-config openxr --cflags --libs")
-
     if env["fontconfig"]:
         if not env["use_sowrap"]:
             if os.system("pkg-config --exists fontconfig") == 0:  # 0 means found
@@ -432,14 +420,6 @@ def configure(env: "Environment"):
                 sys.exit(255)
             env.ParseConfig("pkg-config xi --cflags --libs")
         env.Append(CPPDEFINES=["X11_ENABLED"])
-
-    if env["vulkan"]:
-        env.Append(CPPDEFINES=["VULKAN_ENABLED"])
-        if not env["use_volk"]:
-            env.ParseConfig("pkg-config vulkan --cflags --libs")
-        if not env["builtin_glslang"]:
-            # No pkgconfig file so far, hardcode expected lib name.
-            env.Append(LIBS=["glslang", "SPIRV"])
 
     if env["opengl3"]:
         env.Append(CPPDEFINES=["GLES3_ENABLED"])

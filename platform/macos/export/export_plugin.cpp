@@ -140,9 +140,6 @@ String EditorExportPlatformMacOS::get_export_option_warning(const EditorExportPr
 
 		if (p_name == "codesign/codesign") {
 			if (dist_type == 2) {
-				if (codesign_tool == 2 && Engine::get_singleton()->has_singleton("GodotSharp")) {
-					return TTR("'rcodesign' doesn't support signing applications with embedded dynamic libraries (GDExtension or .NET).");
-				}
 				if (codesign_tool == 0) {
 					return TTR("Code signing is required for App Store distribution.");
 				}
@@ -205,13 +202,6 @@ String EditorExportPlatformMacOS::get_export_option_warning(const EditorExportPr
 				bool enabled = p_preset->get("codesign/entitlements/audio_input");
 				if (enabled && discr.is_empty()) {
 					return TTR("Microphone access is enabled, but usage description is not specified.");
-				}
-			}
-			if (p_name == "privacy/camera_usage_description") {
-				String discr = p_preset->get("privacy/camera_usage_description");
-				bool enabled = p_preset->get("codesign/entitlements/camera");
-				if (enabled && discr.is_empty()) {
-					return TTR("Camera access is enabled, but usage description is not specified.");
 				}
 			}
 			if (p_name == "privacy/location_usage_description") {
@@ -325,13 +315,6 @@ bool EditorExportPlatformMacOS::get_export_option_visibility(const EditorExportP
 			} break;
 		}
 	}
-
-	// These entitlements are required to run managed code, and are always enabled in Mono builds.
-	if (Engine::get_singleton()->has_singleton("GodotSharp")) {
-		if (p_option == "codesign/entitlements/allow_jit_code_execution" || p_option == "codesign/entitlements/allow_unsigned_executable_memory" || p_option == "codesign/entitlements/allow_dyld_environment_variables") {
-			return false;
-		}
-	}
 	return true;
 }
 
@@ -416,7 +399,6 @@ void EditorExportPlatformMacOS::get_export_options(List<ExportOption> *r_options
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/allow_dyld_environment_variables"), false));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/disable_library_validation"), false));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/audio_input"), false));
-	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/camera"), false));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/location"), false));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/address_book"), false));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/calendars"), false));
@@ -451,8 +433,6 @@ void EditorExportPlatformMacOS::get_export_options(List<ExportOption> *r_options
 
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "privacy/microphone_usage_description", PROPERTY_HINT_PLACEHOLDER_TEXT, "Provide a message if you need to use the microphone"), "", false, true));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::DICTIONARY, "privacy/microphone_usage_description_localized", PROPERTY_HINT_LOCALIZABLE_STRING), Dictionary()));
-	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "privacy/camera_usage_description", PROPERTY_HINT_PLACEHOLDER_TEXT, "Provide a message if you need to use the camera"), "", false, true));
-	r_options->push_back(ExportOption(PropertyInfo(Variant::DICTIONARY, "privacy/camera_usage_description_localized", PROPERTY_HINT_LOCALIZABLE_STRING), Dictionary()));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "privacy/location_usage_description", PROPERTY_HINT_PLACEHOLDER_TEXT, "Provide a message if you need to use the location information"), "", false, true));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::DICTIONARY, "privacy/location_usage_description_localized", PROPERTY_HINT_LOCALIZABLE_STRING), Dictionary()));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "privacy/address_book_usage_description", PROPERTY_HINT_PLACEHOLDER_TEXT, "Provide a message if you need to use the address book"), "", false, true));
@@ -689,10 +669,6 @@ void EditorExportPlatformMacOS::_fix_plist(const Ref<EditorExportPreset> &p_pres
 			if (!((String)p_preset->get("privacy/microphone_usage_description")).is_empty()) {
 				descriptions += "\t<key>NSMicrophoneUsageDescription</key>\n";
 				descriptions += "\t<string>" + (String)p_preset->get("privacy/microphone_usage_description") + "</string>\n";
-			}
-			if (!((String)p_preset->get("privacy/camera_usage_description")).is_empty()) {
-				descriptions += "\t<key>NSCameraUsageDescription</key>\n";
-				descriptions += "\t<string>" + (String)p_preset->get("privacy/camera_usage_description") + "</string>\n";
 			}
 			if (!((String)p_preset->get("privacy/location_usage_description")).is_empty()) {
 				descriptions += "\t<key>NSLocationUsageDescription</key>\n";
@@ -1405,7 +1381,6 @@ Error EditorExportPlatformMacOS::export_project(const Ref<EditorExportPreset> &p
 
 	Dictionary appnames = GLOBAL_GET("application/config/name_localized");
 	Dictionary microphone_usage_descriptions = p_preset->get("privacy/microphone_usage_description_localized");
-	Dictionary camera_usage_descriptions = p_preset->get("privacy/camera_usage_description_localized");
 	Dictionary location_usage_descriptions = p_preset->get("privacy/location_usage_description_localized");
 	Dictionary address_book_usage_descriptions = p_preset->get("privacy/address_book_usage_description_localized");
 	Dictionary calendar_usage_descriptions = p_preset->get("privacy/calendar_usage_description_localized");
@@ -1428,9 +1403,6 @@ Error EditorExportPlatformMacOS::export_project(const Ref<EditorExportPreset> &p
 			f->store_line("CFBundleDisplayName = \"" + GLOBAL_GET("application/config/name").operator String() + "\";");
 			if (!((String)p_preset->get("privacy/microphone_usage_description")).is_empty()) {
 				f->store_line("NSMicrophoneUsageDescription = \"" + p_preset->get("privacy/microphone_usage_description").operator String() + "\";");
-			}
-			if (!((String)p_preset->get("privacy/camera_usage_description")).is_empty()) {
-				f->store_line("NSCameraUsageDescription = \"" + p_preset->get("privacy/camera_usage_description").operator String() + "\";");
 			}
 			if (!((String)p_preset->get("privacy/location_usage_description")).is_empty()) {
 				f->store_line("NSLocationUsageDescription = \"" + p_preset->get("privacy/location_usage_description").operator String() + "\";");
@@ -1481,9 +1453,6 @@ Error EditorExportPlatformMacOS::export_project(const Ref<EditorExportPreset> &p
 			}
 			if (microphone_usage_descriptions.has(lang)) {
 				f->store_line("NSMicrophoneUsageDescription = \"" + microphone_usage_descriptions[lang].operator String() + "\";");
-			}
-			if (camera_usage_descriptions.has(lang)) {
-				f->store_line("NSCameraUsageDescription = \"" + camera_usage_descriptions[lang].operator String() + "\";");
 			}
 			if (location_usage_descriptions.has(lang)) {
 				f->store_line("NSLocationUsageDescription = \"" + location_usage_descriptions[lang].operator String() + "\";");
@@ -1732,27 +1701,18 @@ Error EditorExportPlatformMacOS::export_project(const Ref<EditorExportPreset> &p
 				ent_f->store_line("<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">");
 				ent_f->store_line("<plist version=\"1.0\">");
 				ent_f->store_line("<dict>");
-				if (Engine::get_singleton()->has_singleton("GodotSharp")) {
-					// These entitlements are required to run managed code, and are always enabled in Mono builds.
+
+				if ((bool)p_preset->get("codesign/entitlements/allow_jit_code_execution")) {
 					ent_f->store_line("<key>com.apple.security.cs.allow-jit</key>");
 					ent_f->store_line("<true/>");
+				}
+				if ((bool)p_preset->get("codesign/entitlements/allow_unsigned_executable_memory")) {
 					ent_f->store_line("<key>com.apple.security.cs.allow-unsigned-executable-memory</key>");
 					ent_f->store_line("<true/>");
+				}
+				if ((bool)p_preset->get("codesign/entitlements/allow_dyld_environment_variables")) {
 					ent_f->store_line("<key>com.apple.security.cs.allow-dyld-environment-variables</key>");
 					ent_f->store_line("<true/>");
-				} else {
-					if ((bool)p_preset->get("codesign/entitlements/allow_jit_code_execution")) {
-						ent_f->store_line("<key>com.apple.security.cs.allow-jit</key>");
-						ent_f->store_line("<true/>");
-					}
-					if ((bool)p_preset->get("codesign/entitlements/allow_unsigned_executable_memory")) {
-						ent_f->store_line("<key>com.apple.security.cs.allow-unsigned-executable-memory</key>");
-						ent_f->store_line("<true/>");
-					}
-					if ((bool)p_preset->get("codesign/entitlements/allow_dyld_environment_variables")) {
-						ent_f->store_line("<key>com.apple.security.cs.allow-dyld-environment-variables</key>");
-						ent_f->store_line("<true/>");
-					}
 				}
 
 				if (lib_validation) {
@@ -1761,10 +1721,6 @@ Error EditorExportPlatformMacOS::export_project(const Ref<EditorExportPreset> &p
 				}
 				if ((bool)p_preset->get("codesign/entitlements/audio_input")) {
 					ent_f->store_line("<key>com.apple.security.device.audio-input</key>");
-					ent_f->store_line("<true/>");
-				}
-				if ((bool)p_preset->get("codesign/entitlements/camera")) {
-					ent_f->store_line("<key>com.apple.security.device.camera</key>");
 					ent_f->store_line("<true/>");
 				}
 				if ((bool)p_preset->get("codesign/entitlements/location")) {

@@ -29,7 +29,6 @@
 /**************************************************************************/
 
 #include "code_edit.h"
-#include "code_edit.compat.inc"
 
 #include "core/os/keyboard.h"
 #include "core/string/string_builder.h"
@@ -3621,6 +3620,8 @@ CodeEdit::CodeEdit() {
 	connect("gutter_added", callable_mp(this, &CodeEdit::_update_gutter_indexes));
 	connect("gutter_removed", callable_mp(this, &CodeEdit::_update_gutter_indexes));
 	_update_gutter_indexes();
+
+	set_texture_filter(TEXTURE_FILTER_LINEAR);
 }
 
 CodeEdit::~CodeEdit() {

@@ -61,9 +61,6 @@ static const char *global_var_type_names[RS::GLOBAL_VAR_TYPE_MAX] = {
 	"transform_2d",
 	"transform",
 	"sampler2D",
-	"sampler2DArray",
-	"sampler3D",
-	"samplerCube",
 };
 
 class ShaderGlobalsEditorInterface : public Object {
@@ -217,21 +214,6 @@ protected:
 					pinfo.hint = PROPERTY_HINT_RESOURCE_TYPE;
 					pinfo.hint_string = "Texture2D";
 				} break;
-				case RS::GLOBAL_VAR_TYPE_SAMPLER2DARRAY: {
-					pinfo.type = Variant::OBJECT;
-					pinfo.hint = PROPERTY_HINT_RESOURCE_TYPE;
-					pinfo.hint_string = "Texture2DArray";
-				} break;
-				case RS::GLOBAL_VAR_TYPE_SAMPLER3D: {
-					pinfo.type = Variant::OBJECT;
-					pinfo.hint = PROPERTY_HINT_RESOURCE_TYPE;
-					pinfo.hint_string = "Texture3D";
-				} break;
-				case RS::GLOBAL_VAR_TYPE_SAMPLERCUBE: {
-					pinfo.type = Variant::OBJECT;
-					pinfo.hint = PROPERTY_HINT_RESOURCE_TYPE;
-					pinfo.hint_string = "Cubemap";
-				} break;
 				default: {
 				} break;
 			}
@@ -328,15 +310,6 @@ static Variant create_var(RS::GlobalShaderParameterType p_type) {
 			return Projection();
 		}
 		case RS::GLOBAL_VAR_TYPE_SAMPLER2D: {
-			return "";
-		}
-		case RS::GLOBAL_VAR_TYPE_SAMPLER2DARRAY: {
-			return "";
-		}
-		case RS::GLOBAL_VAR_TYPE_SAMPLER3D: {
-			return "";
-		}
-		case RS::GLOBAL_VAR_TYPE_SAMPLERCUBE: {
 			return "";
 		}
 		default: {

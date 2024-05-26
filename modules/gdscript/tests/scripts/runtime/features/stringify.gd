@@ -15,7 +15,6 @@ func test():
 
 	print(Transform2D.IDENTITY)
 	print(Plane(1, 2, 3, 4))
-	print(Quaternion(1, 2, 3, 4))
 	print(AABB(Vector3.ZERO, Vector3.ONE))
 	print(Basis.from_euler(Vector3(0, 0, 0)))
 	print(Transform3D.IDENTITY)

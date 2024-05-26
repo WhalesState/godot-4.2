@@ -450,7 +450,6 @@ Variant VariantUtilityFunctions::lerp(const Variant &from, const Variant &to, do
 		case Variant::VECTOR2:
 		case Variant::VECTOR3:
 		case Variant::VECTOR4:
-		case Variant::QUATERNION:
 		case Variant::BASIS:
 		case Variant::COLOR:
 			break;
@@ -458,7 +457,7 @@ Variant VariantUtilityFunctions::lerp(const Variant &from, const Variant &to, do
 			r_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
 			r_error.argument = 0;
 			r_error.expected = Variant::NIL;
-			return R"(Argument "from" must be "int", "float", "Vector2", "Vector3", "Vector4", "Quaternion", "Basis, or "Color".)";
+			return R"(Argument "from" must be "int", "float", "Vector2", "Vector3", "Vector4", "Basis, or "Color".)";
 	}
 
 	if (from.get_type() != to.get_type()) {
@@ -484,9 +483,6 @@ Variant VariantUtilityFunctions::lerp(const Variant &from, const Variant &to, do
 		} break;
 		case Variant::VECTOR4: {
 			return VariantInternalAccessor<Vector4>::get(&from).lerp(VariantInternalAccessor<Vector4>::get(&to), weight);
-		} break;
-		case Variant::QUATERNION: {
-			return VariantInternalAccessor<Quaternion>::get(&from).slerp(VariantInternalAccessor<Quaternion>::get(&to), weight);
 		} break;
 		case Variant::BASIS: {
 			return VariantInternalAccessor<Basis>::get(&from).slerp(VariantInternalAccessor<Basis>::get(&to), weight);
@@ -871,8 +867,6 @@ Variant VariantUtilityFunctions::type_convert(const Variant &p_variant, const Va
 			return p_variant.operator Vector4i();
 		case Variant::Type::PLANE:
 			return p_variant.operator Plane();
-		case Variant::Type::QUATERNION:
-			return p_variant.operator Quaternion();
 		case Variant::Type::AABB:
 			return p_variant.operator ::AABB();
 		case Variant::Type::BASIS:

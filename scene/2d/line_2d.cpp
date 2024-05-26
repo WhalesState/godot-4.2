@@ -305,7 +305,7 @@ void Line2D::_draw() {
 			lb.indices,
 			lb.vertices,
 			lb.colors,
-			lb.uvs, Vector<int>(), Vector<float>(),
+			lb.uvs,
 			texture_rid);
 
 	// DEBUG: Draw wireframe

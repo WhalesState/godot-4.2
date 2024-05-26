@@ -40,7 +40,7 @@ class CanvasItemEditorViewport;
 class ConfirmationDialog;
 class EditorData;
 class EditorSelection;
-class EditorZoomWidget;
+class ZoomWidget;
 class HScrollBar;
 class HSplitContainer;
 class MenuButton;
@@ -50,6 +50,8 @@ class ViewPanner;
 class VScrollBar;
 class VSeparator;
 class VSplitContainer;
+class OptionButton;
+class PopupMenu;
 
 class CanvasItemEditorSelectedItem : public Object {
 	GDCLASS(CanvasItemEditorSelectedItem, Object);
@@ -64,9 +66,6 @@ public:
 	Transform2D pre_drag_xform;
 	Rect2 pre_drag_rect;
 
-	List<real_t> pre_drag_bones_length;
-	List<Dictionary> pre_drag_bones_undo_state;
-
 	Dictionary undo_state;
 
 	CanvasItemEditorSelectedItem() {}
@@ -78,10 +77,10 @@ class CanvasItemEditor : public VBoxContainer {
 public:
 	enum Tool {
 		TOOL_SELECT,
-		TOOL_LIST_SELECT,
 		TOOL_MOVE,
-		TOOL_SCALE,
 		TOOL_ROTATE,
+		TOOL_SCALE,
+		TOOL_LIST_SELECT,
 		TOOL_EDIT_PIVOT,
 		TOOL_PAN,
 		TOOL_RULER,
@@ -137,15 +136,10 @@ private:
 		ANIM_INSERT_POS,
 		ANIM_INSERT_ROT,
 		ANIM_INSERT_SCALE,
-		ANIM_COPY_POSE,
-		ANIM_PASTE_POSE,
-		ANIM_CLEAR_POSE,
 		CLEAR_GUIDES,
 		VIEW_CENTER_TO_SELECTION,
 		VIEW_FRAME_TO_SELECTION,
-		PREVIEW_CANVAS_SCALE,
-		SKELETON_MAKE_BONES,
-		SKELETON_SHOW_BONES
+		PREVIEW_CANVAS_SCALE
 	};
 
 	enum DragType {
@@ -253,8 +247,6 @@ private:
 	Point2 ruler_tool_origin;
 	Point2 node_create_position;
 
-	MenuOption last_option;
-
 	struct _SelectResult {
 		CanvasItem *item = nullptr;
 		real_t z_index = 0;
@@ -273,47 +265,8 @@ private:
 	};
 	Vector<_HoverResult> hovering_results;
 
-	struct BoneList {
-		Transform2D xform;
-		real_t length = 0;
-		uint64_t last_pass = 0;
-	};
-
-	uint64_t bone_last_frame = 0;
-
-	struct BoneKey {
-		ObjectID from;
-		ObjectID to;
-		_FORCE_INLINE_ bool operator<(const BoneKey &p_key) const {
-			if (from == p_key.from) {
-				return to < p_key.to;
-			} else {
-				return from < p_key.from;
-			}
-		}
-	};
-
-	HashMap<BoneKey, BoneList> bone_list;
-
-	struct PoseClipboard {
-		Vector2 pos;
-		Vector2 scale;
-		real_t rot = 0;
-		ObjectID id;
-	};
-	List<PoseClipboard> pose_clipboard;
-
-	Button *select_button = nullptr;
-
-	Button *move_button = nullptr;
-	Button *scale_button = nullptr;
-	Button *rotate_button = nullptr;
-
-	Button *list_select_button = nullptr;
-	Button *pivot_button = nullptr;
-	Button *pan_button = nullptr;
-
-	Button *ruler_button = nullptr;
+	OptionButton *select_options = nullptr;
+	PopupMenu *select_popup = nullptr;
 
 	Button *smart_snap_button = nullptr;
 	Button *grid_snap_button = nullptr;
@@ -326,7 +279,6 @@ private:
 	Button *group_button = nullptr;
 	Button *ungroup_button = nullptr;
 
-	MenuButton *skeleton_menu = nullptr;
 	Button *override_camera_button = nullptr;
 	MenuButton *view_menu = nullptr;
 	PopupMenu *grid_menu = nullptr;
@@ -388,9 +340,9 @@ private:
 
 	CanvasItem *ref_item = nullptr;
 
-	void _save_canvas_item_state(List<CanvasItem *> p_canvas_items, bool save_bones = false);
-	void _restore_canvas_item_state(List<CanvasItem *> p_canvas_items, bool restore_bones = false);
-	void _commit_canvas_item_state(List<CanvasItem *> p_canvas_items, String action_name, bool commit_bones = false);
+	void _save_canvas_item_state(List<CanvasItem *> p_canvas_items);
+	void _restore_canvas_item_state(List<CanvasItem *> p_canvas_items);
+	void _commit_canvas_item_state(List<CanvasItem *> p_canvas_items, String action_name);
 
 	Vector2 _anchor_to_position(const Control *p_control, Vector2 anchor);
 	Vector2 _position_to_anchor(const Control *p_control, Vector2 position);
@@ -452,12 +404,13 @@ private:
 	void _draw_selection();
 	void _draw_axis();
 	void _draw_invisible_nodes_positions(Node *p_node, const Transform2D &p_parent_xform = Transform2D(), const Transform2D &p_canvas_xform = Transform2D());
-	void _draw_locks_and_groups(Node *p_node, const Transform2D &p_parent_xform = Transform2D(), const Transform2D &p_canvas_xform = Transform2D());
+	void _draw_locks_and_groups(Node *p_node);
 	void _draw_hover();
 	void _draw_transform_message();
 
 	void _draw_viewport();
 
+	void _is_hovering_guide(Point2 p_pos, bool p_is_pressed = false, bool p_ctrl_pressed = false);
 	bool _gui_input_anchors(const Ref<InputEvent> &p_event);
 	bool _gui_input_move(const Ref<InputEvent> &p_event);
 	bool _gui_input_open_scene_on_double_click(const Ref<InputEvent> &p_event);
@@ -469,7 +422,8 @@ private:
 	bool _gui_input_ruler_tool(const Ref<InputEvent> &p_event);
 	bool _gui_input_zoom_or_pan(const Ref<InputEvent> &p_event, bool p_already_accepted);
 	bool _gui_input_rulers_and_guides(const Ref<InputEvent> &p_event);
-	bool _gui_input_hover(const Ref<InputEvent> &p_event);
+	// TODO: Enable if is needed!
+	// bool _gui_input_hover(const Ref<InputEvent> &p_event);
 
 	void _gui_input_viewport(const Ref<InputEvent> &p_event);
 	void _update_cursor();
@@ -479,7 +433,9 @@ private:
 	void _reset_drag();
 
 	SnapTarget snap_target[2];
+	SnapTarget snap_target2[2];
 	Transform2D snap_transform;
+	Transform2D snap_transform2;
 	void _snap_if_closer_float(
 			const real_t p_value,
 			real_t &r_current_snap, SnapTarget &r_current_snap_target,
@@ -500,7 +456,8 @@ private:
 
 	VBoxContainer *controls_vb = nullptr;
 	Button *button_center_view = nullptr;
-	EditorZoomWidget *zoom_widget = nullptr;
+	Button *button_frame_view = nullptr;
+	ZoomWidget *zoom_widget = nullptr;
 	void _update_zoom(real_t p_zoom);
 	void _shortcut_zoom_set(real_t p_zoom);
 	void _zoom_on_position(real_t p_zoom, Point2 p_position = Point2());

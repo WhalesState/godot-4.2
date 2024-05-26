@@ -34,7 +34,6 @@
 #include "gdscript_cache.h"
 #include "gdscript_compiler.h"
 #include "gdscript_parser.h"
-#include "gdscript_rpc_callable.h"
 #include "gdscript_warning.h"
 
 #ifdef TOOLS_ENABLED
@@ -837,10 +836,6 @@ void GDScript::get_members(HashSet<StringName> *p_members) {
 	}
 }
 
-const Variant GDScript::get_rpc_config() const {
-	return rpc_config;
-}
-
 void GDScript::unload_static() const {
 	GDScriptCache::remove_script(fully_qualified_name);
 }
@@ -894,11 +889,7 @@ bool GDScript::_get(const StringName &p_name, Variant &r_ret) const {
 		{
 			HashMap<StringName, GDScriptFunction *>::ConstIterator E = top->member_functions.find(p_name);
 			if (E && E->value->is_static()) {
-				if (top->rpc_config.has(p_name)) {
-					r_ret = Callable(memnew(GDScriptRPCCallable(const_cast<GDScript *>(top), E->key)));
-				} else {
-					r_ret = Callable(const_cast<GDScript *>(top), E->key);
-				}
+				r_ret = Callable(const_cast<GDScript *>(top), E->key);
 				return true;
 			}
 		}
@@ -1674,11 +1665,7 @@ bool GDScriptInstance::get(const StringName &p_name, Variant &r_ret) const {
 		{
 			HashMap<StringName, GDScriptFunction *>::ConstIterator E = sptr->member_functions.find(p_name);
 			if (E) {
-				if (sptr->rpc_config.has(p_name)) {
-					r_ret = Callable(memnew(GDScriptRPCCallable(this->owner, E->key)));
-				} else {
-					r_ret = Callable(this->owner, E->key);
-				}
+				r_ret = Callable(this->owner, E->key);
 				return true;
 			}
 		}
@@ -1967,10 +1954,6 @@ Ref<Script> GDScriptInstance::get_script() const {
 
 ScriptLanguage *GDScriptInstance::get_language() {
 	return GDScriptLanguage::get_singleton();
-}
-
-const Variant GDScriptInstance::get_rpc_config() const {
-	return script->get_rpc_config();
 }
 
 void GDScriptInstance::reload_members() {

@@ -43,10 +43,6 @@
 #include "main/main.h"
 #include "scene/resources/atlas_texture.h"
 
-#if defined(VULKAN_ENABLED)
-#include "servers/rendering/renderer_rd/renderer_compositor_rd.h"
-#endif
-
 #if defined(GLES3_ENABLED)
 #include "drivers/gles3/rasterizer_gles3.h"
 #endif
@@ -1707,11 +1703,6 @@ void DisplayServerX11::delete_sub_window(WindowID p_id) {
 		window_set_transient(p_id, INVALID_WINDOW_ID);
 	}
 
-#ifdef VULKAN_ENABLED
-	if (context_vulkan) {
-		context_vulkan->window_destroy(p_id);
-	}
-#endif
 #ifdef GLES3_ENABLED
 	if (gl_manager) {
 		gl_manager->window_destroy(p_id);
@@ -1988,7 +1979,7 @@ void DisplayServerX11::window_set_transient(WindowID p_window, WindowID p_parent
 
 	DEBUG_LOG_X11("window_set_transient: %lu (%u), prev_parent=%u, parent=%u\n", wd_window.x11_window, p_window, prev_parent, p_parent);
 
-	ERR_FAIL_COND_MSG(wd_window.on_top, "Windows with the 'on top' can't become transient.");
+	// ERR_FAIL_COND_MSG(wd_window.on_top, "Windows with the 'on top' can't become transient.");
 	if (p_parent == INVALID_WINDOW_ID) {
 		//remove transient
 
@@ -2233,11 +2224,6 @@ void DisplayServerX11::window_set_size(const Size2i p_size, WindowID p_window) {
 	}
 
 	// Keep rendering context window size in sync
-#if defined(VULKAN_ENABLED)
-	if (context_vulkan) {
-		context_vulkan->window_resize(p_window, xwa.width, xwa.height);
-	}
-#endif
 #if defined(GLES3_ENABLED)
 	if (gl_manager) {
 		gl_manager->window_resize(p_window, xwa.width, xwa.height);
@@ -3945,11 +3931,6 @@ void DisplayServerX11::_window_changed(XEvent *event) {
 	wd.position = new_rect.position;
 	wd.size = new_rect.size;
 
-#if defined(VULKAN_ENABLED)
-	if (context_vulkan) {
-		context_vulkan->window_resize(window_id, wd.size.width, wd.size.height);
-	}
-#endif
 #if defined(GLES3_ENABLED)
 	if (gl_manager) {
 		gl_manager->window_resize(window_id, wd.size.width, wd.size.height);
@@ -4722,10 +4703,15 @@ void DisplayServerX11::process_events() {
 					event.xbutton.y = last_mouse_pos.y;
 				}
 
+				DisplayServer::WindowID receiving_window_id = get_window_at_screen_position(mouse_get_position());
+				if (receiving_window_id == DisplayServer::INVALID_WINDOW_ID) {
+					receiving_window_id = window_id;
+				}
+
 				Ref<InputEventMouseButton> mb;
 				mb.instantiate();
 
-				mb->set_window_id(window_id);
+				mb->set_window_id(receiving_window_id);
 				_get_key_modifier_state(event.xbutton.state, mb);
 				mb->set_button_index((MouseButton)event.xbutton.button);
 				if (mb->get_button_index() == MouseButton::RIGHT) {
@@ -4807,6 +4793,12 @@ void DisplayServerX11::process_events() {
 						mb->set_position(Vector2(x, y));
 						mb->set_global_position(mb->get_position());
 					}
+				}
+
+				if (receiving_window_id != window_id) {
+					// Adjust event position relative to window distance when event is sent to a different window.
+					mb->set_position(mb->get_position() - window_get_position(receiving_window_id) + window_get_position(window_id));
+					mb->set_global_position(mb->get_position());
 				}
 
 				Input::get_singleton()->parse_input_event(mb);
@@ -4904,10 +4896,15 @@ void DisplayServerX11::process_events() {
 					pos = Point2i(windows[focused_window_id].size.width / 2, windows[focused_window_id].size.height / 2);
 				}
 
+				DisplayServer::WindowID receiving_window_id = _get_focused_window_or_popup();
+				if (receiving_window_id == DisplayServer::INVALID_WINDOW_ID) {
+					receiving_window_id = window_id;
+				}
+
 				Ref<InputEventMouseMotion> mm;
 				mm.instantiate();
 
-				mm->set_window_id(window_id);
+				mm->set_window_id(receiving_window_id);
 				if (xi.pressure_supported) {
 					mm->set_pressure(xi.pressure);
 				} else {
@@ -4926,38 +4923,13 @@ void DisplayServerX11::process_events() {
 
 				last_mouse_pos = pos;
 
-				// printf("rel: %d,%d\n", rel.x, rel.y );
-				// Don't propagate the motion event unless we have focus
-				// this is so that the relative motion doesn't get messed up
-				// after we regain focus.
-				if (focused) {
-					Input::get_singleton()->parse_input_event(mm);
-				} else {
-					// Propagate the event to the focused window,
-					// because it's received only on the topmost window.
-					// Note: This is needed for drag & drop to work between windows,
-					// because the engine expects events to keep being processed
-					// on the same window dragging started.
-					for (const KeyValue<WindowID, WindowData> &E : windows) {
-						const WindowData &wd_other = E.value;
-						if (wd_other.focused) {
-							int x, y;
-							Window child;
-							XTranslateCoordinates(x11_display, wd.x11_window, wd_other.x11_window, event.xmotion.x, event.xmotion.y, &x, &y, &child);
-
-							Point2i pos_focused(x, y);
-
-							mm->set_window_id(E.key);
-							mm->set_position(pos_focused);
-							mm->set_global_position(pos_focused);
-							mm->set_velocity(Input::get_singleton()->get_last_mouse_velocity());
-							Input::get_singleton()->parse_input_event(mm);
-
-							break;
-						}
-					}
+				if (receiving_window_id != window_id) {
+					// Adjust event position relative to window distance when event is sent to a different window.
+					mm->set_position(mm->get_position() - window_get_position(receiving_window_id) + window_get_position(window_id));
+					mm->set_global_position(mm->get_position());
 				}
 
+				Input::get_singleton()->parse_input_event(mm);
 			} break;
 			case KeyPress:
 			case KeyRelease: {
@@ -5272,11 +5244,6 @@ void DisplayServerX11::set_icon(const Ref<Image> &p_icon) {
 
 void DisplayServerX11::window_set_vsync_mode(DisplayServer::VSyncMode p_vsync_mode, WindowID p_window) {
 	_THREAD_SAFE_METHOD_
-#if defined(VULKAN_ENABLED)
-	if (context_vulkan) {
-		context_vulkan->set_vsync_mode(p_window, p_vsync_mode);
-	}
-#endif
 
 #if defined(GLES3_ENABLED)
 	if (gl_manager) {
@@ -5290,11 +5257,6 @@ void DisplayServerX11::window_set_vsync_mode(DisplayServer::VSyncMode p_vsync_mo
 
 DisplayServer::VSyncMode DisplayServerX11::window_get_vsync_mode(WindowID p_window) const {
 	_THREAD_SAFE_METHOD_
-#if defined(VULKAN_ENABLED)
-	if (context_vulkan) {
-		return context_vulkan->get_vsync_mode(p_window);
-	}
-#endif
 #if defined(GLES3_ENABLED)
 	if (gl_manager) {
 		return gl_manager->is_using_vsync() ? DisplayServer::VSYNC_ENABLED : DisplayServer::VSYNC_DISABLED;
@@ -5309,9 +5271,6 @@ DisplayServer::VSyncMode DisplayServerX11::window_get_vsync_mode(WindowID p_wind
 Vector<String> DisplayServerX11::get_rendering_drivers_func() {
 	Vector<String> drivers;
 
-#ifdef VULKAN_ENABLED
-	drivers.push_back("vulkan");
-#endif
 #ifdef GLES3_ENABLED
 	drivers.push_back("opengl3");
 	drivers.push_back("opengl3_es");
@@ -5323,23 +5282,11 @@ Vector<String> DisplayServerX11::get_rendering_drivers_func() {
 DisplayServer *DisplayServerX11::create_func(const String &p_rendering_driver, WindowMode p_mode, VSyncMode p_vsync_mode, uint32_t p_flags, const Vector2i *p_position, const Vector2i &p_resolution, int p_screen, Error &r_error) {
 	DisplayServer *ds = memnew(DisplayServerX11(p_rendering_driver, p_mode, p_vsync_mode, p_flags, p_position, p_resolution, p_screen, r_error));
 	if (r_error != OK) {
-		if (p_rendering_driver == "vulkan") {
-			String executable_name = OS::get_singleton()->get_executable_path().get_file();
-			OS::get_singleton()->alert(
-					vformat("Your video card drivers seem not to support the required Vulkan version.\n\n"
-							"If possible, consider updating your video card drivers or using the OpenGL 3 driver.\n\n"
-							"You can enable the OpenGL 3 driver by starting the engine from the\n"
-							"command line with the command:\n\n    \"%s\" --rendering-driver opengl3\n\n"
-							"If you recently updated your video card drivers, try rebooting.",
-							executable_name),
-					"Unable to initialize Vulkan video driver");
-		} else {
-			OS::get_singleton()->alert(
-					"Your video card drivers seem not to support the required OpenGL 3.3 version.\n\n"
-					"If possible, consider updating your video card drivers.\n\n"
-					"If you recently updated your video card drivers, try rebooting.",
-					"Unable to initialize OpenGL video driver");
-		}
+		OS::get_singleton()->alert(
+				"Your video card drivers seem not to support the required OpenGL 3.3 version.\n\n"
+				"If possible, consider updating your video card drivers.\n\n"
+				"If you recently updated your video card drivers, try rebooting.",
+				"Unable to initialize OpenGL video driver");
 	}
 	return ds;
 }
@@ -5634,12 +5581,6 @@ DisplayServerX11::WindowID DisplayServerX11::_create_window(WindowMode p_mode, V
 
 		_update_size_hints(id);
 
-#if defined(VULKAN_ENABLED)
-		if (context_vulkan) {
-			Error err = context_vulkan->window_create(id, p_vsync_mode, wd.x11_window, x11_display, win_rect.size.width, win_rect.size.height);
-			ERR_FAIL_COND_V_MSG(err != OK, INVALID_WINDOW_ID, "Can't create a Vulkan window");
-		}
-#endif
 #ifdef GLES3_ENABLED
 		if (gl_manager) {
 			Error err = gl_manager->window_create(id, wd.x11_window, x11_display, win_rect.size.width, win_rect.size.height);
@@ -6032,22 +5973,10 @@ DisplayServerX11::DisplayServerX11(const String &p_rendering_driver, WindowMode 
 #endif
 
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//TODO - do Vulkan and OpenGL support checks, driver selection and fallback
+	//TODO - do OpenGL support checks, driver selection and fallback
 	rendering_driver = p_rendering_driver;
 
 	bool driver_found = false;
-#if defined(VULKAN_ENABLED)
-	if (rendering_driver == "vulkan") {
-		context_vulkan = memnew(VulkanContextX11);
-		if (context_vulkan->initialize() != OK) {
-			memdelete(context_vulkan);
-			context_vulkan = nullptr;
-			r_error = ERR_CANT_CREATE;
-			ERR_FAIL_MSG("Could not initialize Vulkan");
-		}
-		driver_found = true;
-	}
-#endif
 	// Initialize context and rendering device.
 #if defined(GLES3_ENABLED)
 	if (rendering_driver == "opengl3" || rendering_driver == "opengl3_es") {
@@ -6150,16 +6079,6 @@ DisplayServerX11::DisplayServerX11(const String &p_rendering_driver, WindowMode 
 		}
 	}
 	show_window(main_window);
-
-#if defined(VULKAN_ENABLED)
-	if (rendering_driver == "vulkan") {
-		//temporary
-		rendering_device_vulkan = memnew(RenderingDeviceVulkan);
-		rendering_device_vulkan->initialize(context_vulkan);
-
-		RendererCompositorRD::make_current();
-	}
-#endif
 
 	{
 		//set all event master mask
@@ -6329,11 +6248,6 @@ DisplayServerX11::~DisplayServerX11() {
 
 	//destroy all windows
 	for (KeyValue<WindowID, WindowData> &E : windows) {
-#ifdef VULKAN_ENABLED
-		if (context_vulkan) {
-			context_vulkan->window_destroy(E.key);
-		}
-#endif
 #ifdef GLES3_ENABLED
 		if (gl_manager) {
 			gl_manager->window_destroy(E.key);
@@ -6373,18 +6287,6 @@ DisplayServerX11::~DisplayServerX11() {
 #endif
 
 	//destroy drivers
-#if defined(VULKAN_ENABLED)
-	if (rendering_device_vulkan) {
-		rendering_device_vulkan->finalize();
-		memdelete(rendering_device_vulkan);
-		rendering_device_vulkan = nullptr;
-	}
-
-	if (context_vulkan) {
-		memdelete(context_vulkan);
-		context_vulkan = nullptr;
-	}
-#endif
 
 #ifdef GLES3_ENABLED
 	if (gl_manager) {

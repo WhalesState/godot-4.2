@@ -46,7 +46,6 @@ class EditorResourcePreview;
 class EditorSelection;
 class EditorSettings;
 class FileSystemDock;
-class Mesh;
 class Node;
 class ScriptEditor;
 class SubViewport;
@@ -59,10 +58,6 @@ class EditorInterface : public Object {
 	GDCLASS(EditorInterface, Object);
 
 	static EditorInterface *singleton;
-
-	// Editor tools.
-
-	TypedArray<Texture2D> _make_mesh_previews(const TypedArray<Mesh> &p_meshes, int p_preview_size);
 
 protected:
 	static void _bind_methods();
@@ -81,8 +76,6 @@ public:
 	EditorSelection *get_selection() const;
 	Ref<EditorSettings> get_editor_settings() const;
 
-	Vector<Ref<Texture2D>> make_mesh_previews(const Vector<Ref<Mesh>> &p_meshes, Vector<Transform3D> *p_transforms, int p_preview_size);
-
 	void set_plugin_enabled(const String &p_plugin, bool p_enabled);
 	bool is_plugin_enabled(const String &p_plugin) const;
 
@@ -94,7 +87,6 @@ public:
 	VBoxContainer *get_editor_main_screen() const;
 	ScriptEditor *get_script_editor() const;
 	SubViewport *get_editor_viewport_2d() const;
-	SubViewport *get_editor_viewport_3d(int p_idx = 0) const;
 
 	void set_main_screen_editor(const String &p_name);
 	void set_distraction_free_mode(bool p_enter);
@@ -146,9 +138,6 @@ public:
 	void stop_playing_scene();
 	bool is_playing_scene() const;
 	String get_playing_scene() const;
-
-	void set_movie_maker_enabled(bool p_enabled);
-	bool is_movie_maker_enabled() const;
 
 	// Base.
 

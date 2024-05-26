@@ -44,8 +44,6 @@ EtcpakType _determine_etc_type(Image::UsedChannels p_channels) {
 			return EtcpakType::ETCPAK_TYPE_ETC2_ALPHA;
 		case Image::USED_CHANNELS_R:
 			return EtcpakType::ETCPAK_TYPE_ETC2;
-		case Image::USED_CHANNELS_RG:
-			return EtcpakType::ETCPAK_TYPE_ETC2_RA_AS_RG;
 		case Image::USED_CHANNELS_RGB:
 			return EtcpakType::ETCPAK_TYPE_ETC2;
 		case Image::USED_CHANNELS_RGBA:
@@ -63,8 +61,6 @@ EtcpakType _determine_dxt_type(Image::UsedChannels p_channels) {
 			return EtcpakType::ETCPAK_TYPE_DXT5;
 		case Image::USED_CHANNELS_R:
 			return EtcpakType::ETCPAK_TYPE_DXT5;
-		case Image::USED_CHANNELS_RG:
-			return EtcpakType::ETCPAK_TYPE_DXT5_RA_AS_RG;
 		case Image::USED_CHANNELS_RGB:
 			return EtcpakType::ETCPAK_TYPE_DXT1;
 		case Image::USED_CHANNELS_RGBA:
@@ -113,18 +109,11 @@ void _compress_etcpak(EtcpakType p_compresstype, Image *r_img) {
 	} else if (p_compresstype == EtcpakType::ETCPAK_TYPE_ETC2) {
 		target_format = Image::FORMAT_ETC2_RGB8;
 		r_img->convert_rgba8_to_bgra8(); // It's badly documented but ETCPAK seems to be expected BGRA8 for ETC.
-	} else if (p_compresstype == EtcpakType::ETCPAK_TYPE_ETC2_RA_AS_RG) {
-		target_format = Image::FORMAT_ETC2_RA_AS_RG;
-		r_img->convert_rg_to_ra_rgba8();
-		r_img->convert_rgba8_to_bgra8(); // It's badly documented but ETCPAK seems to be expected BGRA8 for ETC.
 	} else if (p_compresstype == EtcpakType::ETCPAK_TYPE_ETC2_ALPHA) {
 		target_format = Image::FORMAT_ETC2_RGBA8;
 		r_img->convert_rgba8_to_bgra8(); // It's badly documented but ETCPAK seems to be expected BGRA8 for ETC.
 	} else if (p_compresstype == EtcpakType::ETCPAK_TYPE_DXT1) {
 		target_format = Image::FORMAT_DXT1;
-	} else if (p_compresstype == EtcpakType::ETCPAK_TYPE_DXT5_RA_AS_RG) {
-		target_format = Image::FORMAT_DXT5_RA_AS_RG;
-		r_img->convert_rg_to_ra_rgba8();
 	} else if (p_compresstype == EtcpakType::ETCPAK_TYPE_DXT5) {
 		target_format = Image::FORMAT_DXT5;
 	} else {
@@ -223,11 +212,11 @@ void _compress_etcpak(EtcpakType p_compresstype, Image *r_img) {
 			CompressEtc1RgbDither(src_mip_read, dest_mip_write, blocks, mip_w);
 		} else if (p_compresstype == EtcpakType::ETCPAK_TYPE_ETC2) {
 			CompressEtc2Rgb(src_mip_read, dest_mip_write, blocks, mip_w, true);
-		} else if (p_compresstype == EtcpakType::ETCPAK_TYPE_ETC2_ALPHA || p_compresstype == EtcpakType::ETCPAK_TYPE_ETC2_RA_AS_RG) {
+		} else if (p_compresstype == EtcpakType::ETCPAK_TYPE_ETC2_ALPHA) {
 			CompressEtc2Rgba(src_mip_read, dest_mip_write, blocks, mip_w, true);
 		} else if (p_compresstype == EtcpakType::ETCPAK_TYPE_DXT1) {
 			CompressDxt1Dither(src_mip_read, dest_mip_write, blocks, mip_w);
-		} else if (p_compresstype == EtcpakType::ETCPAK_TYPE_DXT5 || p_compresstype == EtcpakType::ETCPAK_TYPE_DXT5_RA_AS_RG) {
+		} else if (p_compresstype == EtcpakType::ETCPAK_TYPE_DXT5) {
 			CompressDxt5(src_mip_read, dest_mip_write, blocks, mip_w);
 		} else {
 			ERR_FAIL_MSG("etcpak: Invalid or unsupported compression format.");

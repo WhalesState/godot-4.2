@@ -38,7 +38,6 @@
 namespace TestTextEdit {
 
 TEST_CASE("[SceneTree][TextEdit] text entry") {
-	SceneTree::get_singleton()->get_root()->set_physics_object_picking(false);
 	TextEdit *text_edit = memnew(TextEdit);
 	SceneTree::get_singleton()->get_root()->add_child(text_edit);
 	text_edit->grab_focus();
@@ -3887,19 +3886,19 @@ TEST_CASE("[SceneTree][TextEdit] viewport") {
 
 	v_scroll = text_edit->get_v_scroll();
 	SEND_GUI_MOUSE_BUTTON_EVENT(Point2i(10, 10), MouseButton::WHEEL_DOWN, 0, Key::NONE);
-	text_edit->notification(TextEdit::NOTIFICATION_INTERNAL_PHYSICS_PROCESS);
+	text_edit->notification(TextEdit::NOTIFICATION_INTERNAL_PROCESS);
 	CHECK(text_edit->get_v_scroll() >= v_scroll);
 	SEND_GUI_MOUSE_BUTTON_EVENT(Point2i(10, 10), MouseButton::WHEEL_UP, 0, Key::NONE);
-	text_edit->notification(TextEdit::NOTIFICATION_INTERNAL_PHYSICS_PROCESS);
+	text_edit->notification(TextEdit::NOTIFICATION_INTERNAL_PROCESS);
 	CHECK(text_edit->get_v_scroll() == v_scroll);
 
 	v_scroll = text_edit->get_v_scroll();
 	text_edit->set_v_scroll_speed(10000);
 	SEND_GUI_MOUSE_BUTTON_EVENT(Point2i(10, 10), MouseButton::WHEEL_DOWN, 0, Key::NONE);
-	text_edit->notification(TextEdit::NOTIFICATION_INTERNAL_PHYSICS_PROCESS);
+	text_edit->notification(TextEdit::NOTIFICATION_INTERNAL_PROCESS);
 	CHECK(text_edit->get_v_scroll() >= v_scroll);
 	SEND_GUI_MOUSE_BUTTON_EVENT(Point2i(10, 10), MouseButton::WHEEL_UP, 0, Key::NONE);
-	text_edit->notification(TextEdit::NOTIFICATION_INTERNAL_PHYSICS_PROCESS);
+	text_edit->notification(TextEdit::NOTIFICATION_INTERNAL_PROCESS);
 	CHECK(text_edit->get_v_scroll() == v_scroll);
 
 	ERR_PRINT_OFF;

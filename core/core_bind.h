@@ -127,7 +127,6 @@ protected:
 
 public:
 	enum RenderingDriver {
-		RENDERING_DRIVER_VULKAN,
 		RENDERING_DRIVER_OPENGL3,
 	};
 
@@ -310,36 +309,6 @@ public:
 	Geometry2D() { singleton = this; }
 };
 
-class Geometry3D : public Object {
-	GDCLASS(Geometry3D, Object);
-
-	static Geometry3D *singleton;
-
-protected:
-	static void _bind_methods();
-
-public:
-	static Geometry3D *get_singleton();
-	Vector<Vector3> compute_convex_mesh_points(const TypedArray<Plane> &p_planes);
-	TypedArray<Plane> build_box_planes(const Vector3 &p_extents);
-	TypedArray<Plane> build_cylinder_planes(float p_radius, float p_height, int p_sides, Vector3::Axis p_axis = Vector3::AXIS_Z);
-	TypedArray<Plane> build_capsule_planes(float p_radius, float p_height, int p_sides, int p_lats, Vector3::Axis p_axis = Vector3::AXIS_Z);
-	Vector<Vector3> get_closest_points_between_segments(const Vector3 &p1, const Vector3 &p2, const Vector3 &q1, const Vector3 &q2);
-	Vector3 get_closest_point_to_segment(const Vector3 &p_point, const Vector3 &p_a, const Vector3 &p_b);
-	Vector3 get_closest_point_to_segment_uncapped(const Vector3 &p_point, const Vector3 &p_a, const Vector3 &p_b);
-	Vector3 get_triangle_barycentric_coords(const Vector3 &p_point, const Vector3 &p_v0, const Vector3 &p_v1, const Vector3 &p_v2);
-	Variant ray_intersects_triangle(const Vector3 &p_from, const Vector3 &p_dir, const Vector3 &p_v0, const Vector3 &p_v1, const Vector3 &p_v2);
-	Variant segment_intersects_triangle(const Vector3 &p_from, const Vector3 &p_to, const Vector3 &p_v0, const Vector3 &p_v1, const Vector3 &p_v2);
-
-	Vector<Vector3> segment_intersects_sphere(const Vector3 &p_from, const Vector3 &p_to, const Vector3 &p_sphere_pos, real_t p_sphere_radius);
-	Vector<Vector3> segment_intersects_cylinder(const Vector3 &p_from, const Vector3 &p_to, float p_height, float p_radius);
-	Vector<Vector3> segment_intersects_convex(const Vector3 &p_from, const Vector3 &p_to, const TypedArray<Plane> &p_planes);
-
-	Vector<Vector3> clip_polygon(const Vector<Vector3> &p_points, const Plane &p_plane);
-
-	Geometry3D() { singleton = this; }
-};
-
 class Marshalls : public Object {
 	GDCLASS(Marshalls, Object);
 
@@ -519,9 +488,6 @@ public:
 
 	void set_editor_hint(bool p_enabled);
 	bool is_editor_hint() const;
-
-	// `set_write_movie_path()` is not exposed to the scripting API as changing it at run-time has no effect.
-	String get_write_movie_path() const;
 
 	void set_print_error_messages(bool p_enabled);
 	bool is_printing_error_messages() const;

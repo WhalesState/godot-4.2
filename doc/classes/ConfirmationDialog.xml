@@ -10,9 +10,6 @@
 		[gdscript]
 		get_cancel_button().pressed.connect(self.canceled)
 		[/gdscript]
-		[csharp]
-		GetCancelButton().Pressed += Canceled;
-		[/csharp]
 		[/codeblocks]
 	</description>
 	<tutorials>

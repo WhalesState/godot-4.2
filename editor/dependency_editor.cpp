@@ -262,8 +262,8 @@ DependencyEditor::DependencyEditor() {
 	label->set_theme_type_variation("HeaderSmall");
 
 	hbc->add_child(label);
-	hbc->add_spacer();
 	fixdeps = memnew(Button(TTR("Fix Broken")));
+	fixdeps->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
 	hbc->add_child(fixdeps);
 	fixdeps->connect("pressed", callable_mp(this, &DependencyEditor::_fix_all));
 
@@ -582,14 +582,8 @@ void DependencyRemoveDialog::ok_pressed() {
 		if (files_to_delete[i] == String(GLOBAL_GET("application/config/icon"))) {
 			ProjectSettings::get_singleton()->set("application/config/icon", "");
 		}
-		if (files_to_delete[i] == String(GLOBAL_GET("application/run/main_scene"))) {
-			ProjectSettings::get_singleton()->set("application/run/main_scene", "");
-		}
 		if (files_to_delete[i] == String(GLOBAL_GET("application/boot_splash/image"))) {
 			ProjectSettings::get_singleton()->set("application/boot_splash/image", "");
-		}
-		if (files_to_delete[i] == String(GLOBAL_GET("rendering/environment/defaults/default_environment"))) {
-			ProjectSettings::get_singleton()->set("rendering/environment/defaults/default_environment", "");
 		}
 		if (files_to_delete[i] == String(GLOBAL_GET("display/mouse_cursor/custom_image"))) {
 			ProjectSettings::get_singleton()->set("display/mouse_cursor/custom_image", "");

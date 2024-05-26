@@ -39,7 +39,6 @@
 #include "instance_placeholder.h"
 #include "scene/animation/tween.h"
 #include "scene/debugger/scene_debugger.h"
-#include "scene/main/multiplayer_api.h"
 #include "scene/main/window.h"
 #include "scene/resources/packed_scene.h"
 #include "scene/scene_string_names.h"
@@ -632,121 +631,6 @@ void Node::_propagate_process_owner(Node *p_owner, int p_pause_notification, int
 	}
 	data.blocked--;
 }
-
-void Node::set_multiplayer_authority(int p_peer_id, bool p_recursive) {
-	ERR_THREAD_GUARD
-	data.multiplayer_authority = p_peer_id;
-
-	if (p_recursive) {
-		for (KeyValue<StringName, Node *> &K : data.children) {
-			K.value->set_multiplayer_authority(p_peer_id, true);
-		}
-	}
-}
-
-int Node::get_multiplayer_authority() const {
-	return data.multiplayer_authority;
-}
-
-bool Node::is_multiplayer_authority() const {
-	ERR_FAIL_COND_V(!is_inside_tree(), false);
-
-	Ref<MultiplayerAPI> api = get_multiplayer();
-	return api.is_valid() && (api->get_unique_id() == data.multiplayer_authority);
-}
-
-/***** RPC CONFIG ********/
-
-void Node::rpc_config(const StringName &p_method, const Variant &p_config) {
-	ERR_THREAD_GUARD
-	if (data.rpc_config.get_type() != Variant::DICTIONARY) {
-		data.rpc_config = Dictionary();
-	}
-	Dictionary node_config = data.rpc_config;
-	if (p_config.get_type() == Variant::NIL) {
-		node_config.erase(p_method);
-	} else {
-		ERR_FAIL_COND(p_config.get_type() != Variant::DICTIONARY);
-		node_config[p_method] = p_config;
-	}
-}
-
-const Variant Node::get_node_rpc_config() const {
-	return data.rpc_config;
-}
-
-/***** RPC FUNCTIONS ********/
-
-Error Node::_rpc_bind(const Variant **p_args, int p_argcount, Callable::CallError &r_error) {
-	if (p_argcount < 1) {
-		r_error.error = Callable::CallError::CALL_ERROR_TOO_FEW_ARGUMENTS;
-		r_error.expected = 1;
-		return ERR_INVALID_PARAMETER;
-	}
-
-	Variant::Type type = p_args[0]->get_type();
-	if (type != Variant::STRING_NAME && type != Variant::STRING) {
-		r_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
-		r_error.argument = 0;
-		r_error.expected = Variant::STRING_NAME;
-		return ERR_INVALID_PARAMETER;
-	}
-
-	StringName method = (*p_args[0]).operator StringName();
-
-	Error err = rpcp(0, method, &p_args[1], p_argcount - 1);
-	r_error.error = Callable::CallError::CALL_OK;
-	return err;
-}
-
-Error Node::_rpc_id_bind(const Variant **p_args, int p_argcount, Callable::CallError &r_error) {
-	if (p_argcount < 2) {
-		r_error.error = Callable::CallError::CALL_ERROR_TOO_FEW_ARGUMENTS;
-		r_error.expected = 2;
-		return ERR_INVALID_PARAMETER;
-	}
-
-	if (p_args[0]->get_type() != Variant::INT) {
-		r_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
-		r_error.argument = 0;
-		r_error.expected = Variant::INT;
-		return ERR_INVALID_PARAMETER;
-	}
-
-	Variant::Type type = p_args[1]->get_type();
-	if (type != Variant::STRING_NAME && type != Variant::STRING) {
-		r_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
-		r_error.argument = 1;
-		r_error.expected = Variant::STRING_NAME;
-		return ERR_INVALID_PARAMETER;
-	}
-
-	int peer_id = *p_args[0];
-	StringName method = (*p_args[1]).operator StringName();
-
-	Error err = rpcp(peer_id, method, &p_args[2], p_argcount - 2);
-	r_error.error = Callable::CallError::CALL_OK;
-	return err;
-}
-
-Error Node::rpcp(int p_peer_id, const StringName &p_method, const Variant **p_arg, int p_argcount) {
-	ERR_FAIL_COND_V(!is_inside_tree(), ERR_UNCONFIGURED);
-
-	Ref<MultiplayerAPI> api = get_multiplayer();
-	if (api.is_null()) {
-		return ERR_UNCONFIGURED;
-	}
-	return api->rpcp(this, p_peer_id, p_method, p_arg, p_argcount);
-}
-
-Ref<MultiplayerAPI> Node::get_multiplayer() const {
-	if (!is_inside_tree()) {
-		return Ref<MultiplayerAPI>();
-	}
-	return get_tree()->get_multiplayer(get_path());
-}
-
-//////////// end of rpc
 
 bool Node::can_process_notification(int p_what) const {
 	switch (p_what) {
@@ -2397,8 +2281,8 @@ StringName Node::get_property_store_alias(const StringName &p_property) const {
 }
 
 bool Node::is_part_of_edited_scene() const {
-	return Engine::get_singleton()->is_editor_hint() && is_inside_tree() && get_tree()->get_edited_scene_root() &&
-			(get_tree()->get_edited_scene_root() == this || get_tree()->get_edited_scene_root()->is_ancestor_of(this));
+	return Engine::get_singleton()->is_editor_hint() && is_inside_tree() && get_tree()->get_edited_scene_root() && 
+			get_tree()->get_edited_scene_root()->get_parent()->is_ancestor_of(this);
 }
 #endif
 
@@ -2510,11 +2394,6 @@ Node *Node::_duplicate(int p_flags, HashMap<const Node *, Node *> *r_duplimap) c
 		for (List<const Node *>::Element *N = node_tree.front(); N; N = N->next()) {
 			for (int i = 0; i < N->get()->get_child_count(); ++i) {
 				Node *descendant = N->get()->get_child(i);
-
-				if (!descendant->get_owner()) {
-					continue; // Internal nodes or nodes added by scripts.
-				}
-
 				// Skip nodes not really belonging to the instantiated hierarchy; they'll be processed normally later
 				// but remember non-instantiated nodes that are hidden below instantiated ones
 				if (!instance_roots.has(descendant->get_owner())) {
@@ -2834,24 +2713,17 @@ void Node::replace_by(Node *p_node, bool p_keep_groups) {
 		remove_child(child);
 		if (!child->is_owned_by_parent()) {
 			// add the custom children to the p_node
-			Node *child_owner = child->get_owner() == this ? p_node : child->get_owner();
-			child->set_owner(nullptr);
 			p_node->add_child(child);
-			child->set_owner(child_owner);
 		}
 	}
 
 	p_node->set_owner(owner);
-	for (Node *E : owned) {
-		if (E->data.owner != p_node) {
-			E->set_owner(p_node);
-		}
+	for (int i = 0; i < owned.size(); i++) {
+		owned[i]->set_owner(p_node);
 	}
 
-	for (Node *E : owned_by_owner) {
-		if (E->data.owner != owner) {
-			E->set_owner(owner);
-		}
+	for (int i = 0; i < owned_by_owner.size(); i++) {
+		owned_by_owner[i]->set_owner(owner);
 	}
 
 	p_node->set_scene_file_path(get_scene_file_path());
@@ -3388,14 +3260,6 @@ void Node::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("request_ready"), &Node::request_ready);
 	ClassDB::bind_method(D_METHOD("is_node_ready"), &Node::is_ready);
 
-	ClassDB::bind_method(D_METHOD("set_multiplayer_authority", "id", "recursive"), &Node::set_multiplayer_authority, DEFVAL(true));
-	ClassDB::bind_method(D_METHOD("get_multiplayer_authority"), &Node::get_multiplayer_authority);
-
-	ClassDB::bind_method(D_METHOD("is_multiplayer_authority"), &Node::is_multiplayer_authority);
-
-	ClassDB::bind_method(D_METHOD("get_multiplayer"), &Node::get_multiplayer);
-	ClassDB::bind_method(D_METHOD("rpc_config", "method", "config"), &Node::rpc_config);
-
 	ClassDB::bind_method(D_METHOD("set_editor_description", "editor_description"), &Node::set_editor_description);
 	ClassDB::bind_method(D_METHOD("get_editor_description"), &Node::get_editor_description);
 
@@ -3410,20 +3274,6 @@ void Node::_bind_methods() {
 #endif
 
 	ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "_import_path", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL), "_set_import_path", "_get_import_path");
-
-	{
-		MethodInfo mi;
-
-		mi.arguments.push_back(PropertyInfo(Variant::STRING_NAME, "method"));
-
-		mi.name = "rpc";
-		ClassDB::bind_vararg_method(METHOD_FLAGS_DEFAULT, "rpc", &Node::_rpc_bind, mi);
-
-		mi.arguments.push_front(PropertyInfo(Variant::INT, "peer_id"));
-
-		mi.name = "rpc_id";
-		ClassDB::bind_vararg_method(METHOD_FLAGS_DEFAULT, "rpc_id", &Node::_rpc_id_bind, mi);
-	}
 
 	ClassDB::bind_method(D_METHOD("update_configuration_warnings"), &Node::update_configuration_warnings);
 
@@ -3476,7 +3326,6 @@ void Node::_bind_methods() {
 	BIND_CONSTANT(NOTIFICATION_WM_WINDOW_FOCUS_IN);
 	BIND_CONSTANT(NOTIFICATION_WM_WINDOW_FOCUS_OUT);
 	BIND_CONSTANT(NOTIFICATION_WM_CLOSE_REQUEST);
-	BIND_CONSTANT(NOTIFICATION_WM_GO_BACK_REQUEST);
 	BIND_CONSTANT(NOTIFICATION_WM_SIZE_CHANGED);
 	BIND_CONSTANT(NOTIFICATION_WM_DPI_CHANGE);
 	BIND_CONSTANT(NOTIFICATION_VP_MOUSE_ENTER);
@@ -3530,7 +3379,6 @@ void Node::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "unique_name_in_owner", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR), "set_unique_name_in_owner", "is_unique_name_in_owner");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "scene_file_path", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NONE), "set_scene_file_path", "get_scene_file_path");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "owner", PROPERTY_HINT_RESOURCE_TYPE, "Node", PROPERTY_USAGE_NONE), "set_owner", "get_owner");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "multiplayer", PROPERTY_HINT_RESOURCE_TYPE, "MultiplayerAPI", PROPERTY_USAGE_NONE), "", "get_multiplayer");
 
 	ADD_GROUP("Process", "process_");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "process_mode", PROPERTY_HINT_ENUM, "Inherit,Pausable,When Paused,Always,Disabled"), "set_process_mode", "get_process_mode");

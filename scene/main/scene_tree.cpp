@@ -46,21 +46,14 @@
 #include "scene/animation/tween.h"
 #include "scene/debugger/scene_debugger.h"
 #include "scene/gui/control.h"
-#include "scene/main/multiplayer_api.h"
 #include "scene/main/viewport.h"
-#include "scene/resources/environment.h"
 #include "scene/resources/font.h"
 #include "scene/resources/image_texture.h"
 #include "scene/resources/material.h"
-#include "scene/resources/mesh.h"
 #include "scene/resources/packed_scene.h"
 #include "scene/resources/world_2d.h"
-#include "scene/resources/world_3d.h"
 #include "scene/scene_string_names.h"
 #include "servers/display_server.h"
-#include "servers/navigation_server_3d.h"
-#include "servers/physics_server_2d.h"
-#include "servers/physics_server_3d.h"
 #include "window.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -463,8 +456,6 @@ bool SceneTree::physics_process(double p_time) {
 
 	emit_signal(SNAME("physics_frame"));
 
-	call_group(SNAME("_picking_viewports"), SNAME("_process_picking"));
-
 	_process(true);
 
 	_flush_ugc();
@@ -491,13 +482,6 @@ bool SceneTree::process(double p_time) {
 	}
 
 	process_time = p_time;
-
-	if (multiplayer_poll) {
-		multiplayer->poll();
-		for (KeyValue<NodePath, Ref<MultiplayerAPI>> &E : custom_multiplayers) {
-			E.value->poll();
-		}
-	}
 
 	emit_signal(SNAME("process_frame"));
 
@@ -526,33 +510,6 @@ bool SceneTree::process(double p_time) {
 	flush_transform_notifications(); //additional transforms after timers update
 
 	_call_idle_callbacks();
-
-#ifdef TOOLS_ENABLED
-#ifndef _3D_DISABLED
-	if (Engine::get_singleton()->is_editor_hint()) {
-		//simple hack to reload fallback environment if it changed from editor
-		String env_path = GLOBAL_GET(SNAME("rendering/environment/defaults/default_environment"));
-		env_path = env_path.strip_edges(); //user may have added a space or two
-		String cpath;
-		Ref<Environment> fallback = get_root()->get_world_3d()->get_fallback_environment();
-		if (fallback.is_valid()) {
-			cpath = fallback->get_path();
-		}
-		if (cpath != env_path) {
-			if (!env_path.is_empty()) {
-				fallback = ResourceLoader::load(env_path);
-				if (fallback.is_null()) {
-					//could not load fallback, set as empty
-					ProjectSettings::get_singleton()->set("rendering/environment/defaults/default_environment", "");
-				}
-			} else {
-				fallback.unref();
-			}
-			get_root()->get_world_3d()->set_fallback_environment(fallback);
-		}
-	}
-#endif // _3D_DISABLED
-#endif // TOOLS_ENABLED
 
 	return _quit;
 }
@@ -661,12 +618,6 @@ void SceneTree::_main_window_close() {
 	}
 }
 
-void SceneTree::_main_window_go_back() {
-	if (quit_on_go_back) {
-		_quit = true;
-	}
-}
-
 void SceneTree::_main_window_focus_in() {
 	Input *id = Input::get_singleton();
 	if (id) {
@@ -704,30 +655,13 @@ void SceneTree::set_auto_accept_quit(bool p_enable) {
 	accept_quit = p_enable;
 }
 
-bool SceneTree::is_quit_on_go_back() const {
-	return quit_on_go_back;
-}
-
-void SceneTree::set_quit_on_go_back(bool p_enable) {
-	quit_on_go_back = p_enable;
-}
-
 #ifdef TOOLS_ENABLED
-
 bool SceneTree::is_node_being_edited(const Node *p_node) const {
 	return Engine::get_singleton()->is_editor_hint() && edited_scene_root && (edited_scene_root->is_ancestor_of(p_node) || edited_scene_root == p_node);
 }
-#endif
+#endif // TOOLS_ENABLED
 
 #ifdef DEBUG_ENABLED
-void SceneTree::set_debug_collisions_hint(bool p_enabled) {
-	debug_collisions_hint = p_enabled;
-}
-
-bool SceneTree::is_debugging_collisions_hint() const {
-	return debug_collisions_hint;
-}
-
 void SceneTree::set_debug_paths_hint(bool p_enabled) {
 	debug_paths_hint = p_enabled;
 }
@@ -736,30 +670,7 @@ bool SceneTree::is_debugging_paths_hint() const {
 	return debug_paths_hint;
 }
 
-void SceneTree::set_debug_navigation_hint(bool p_enabled) {
-	debug_navigation_hint = p_enabled;
-}
-
-bool SceneTree::is_debugging_navigation_hint() const {
-	return debug_navigation_hint;
-}
-#endif
-
-void SceneTree::set_debug_collisions_color(const Color &p_color) {
-	debug_collisions_color = p_color;
-}
-
-Color SceneTree::get_debug_collisions_color() const {
-	return debug_collisions_color;
-}
-
-void SceneTree::set_debug_collision_contact_color(const Color &p_color) {
-	debug_collision_contact_color = p_color;
-}
-
-Color SceneTree::get_debug_collision_contact_color() const {
-	return debug_collision_contact_color;
-}
+#endif // DEBUG_ENABLED
 
 void SceneTree::set_debug_paths_color(const Color &p_color) {
 	debug_paths_color = p_color;
@@ -777,106 +688,6 @@ float SceneTree::get_debug_paths_width() const {
 	return debug_paths_width;
 }
 
-Ref<Material> SceneTree::get_debug_paths_material() {
-	_THREAD_SAFE_METHOD_
-
-	if (debug_paths_material.is_valid()) {
-		return debug_paths_material;
-	}
-
-	Ref<StandardMaterial3D> _debug_material = Ref<StandardMaterial3D>(memnew(StandardMaterial3D));
-	_debug_material->set_shading_mode(StandardMaterial3D::SHADING_MODE_UNSHADED);
-	_debug_material->set_transparency(StandardMaterial3D::TRANSPARENCY_ALPHA);
-	_debug_material->set_flag(StandardMaterial3D::FLAG_SRGB_VERTEX_COLOR, true);
-	_debug_material->set_flag(StandardMaterial3D::FLAG_ALBEDO_FROM_VERTEX_COLOR, true);
-	_debug_material->set_flag(StandardMaterial3D::FLAG_DISABLE_FOG, true);
-	_debug_material->set_albedo(get_debug_paths_color());
-
-	debug_paths_material = _debug_material;
-
-	return debug_paths_material;
-}
-
-Ref<Material> SceneTree::get_debug_collision_material() {
-	_THREAD_SAFE_METHOD_
-
-	if (collision_material.is_valid()) {
-		return collision_material;
-	}
-
-	Ref<StandardMaterial3D> line_material = Ref<StandardMaterial3D>(memnew(StandardMaterial3D));
-	line_material->set_shading_mode(StandardMaterial3D::SHADING_MODE_UNSHADED);
-	line_material->set_transparency(StandardMaterial3D::TRANSPARENCY_ALPHA);
-	line_material->set_flag(StandardMaterial3D::FLAG_SRGB_VERTEX_COLOR, true);
-	line_material->set_flag(StandardMaterial3D::FLAG_ALBEDO_FROM_VERTEX_COLOR, true);
-	line_material->set_flag(StandardMaterial3D::FLAG_DISABLE_FOG, true);
-	line_material->set_albedo(get_debug_collisions_color());
-
-	collision_material = line_material;
-
-	return collision_material;
-}
-
-Ref<ArrayMesh> SceneTree::get_debug_contact_mesh() {
-	_THREAD_SAFE_METHOD_
-
-	if (debug_contact_mesh.is_valid()) {
-		return debug_contact_mesh;
-	}
-
-	debug_contact_mesh = Ref<ArrayMesh>(memnew(ArrayMesh));
-
-	Ref<StandardMaterial3D> mat = Ref<StandardMaterial3D>(memnew(StandardMaterial3D));
-	mat->set_shading_mode(StandardMaterial3D::SHADING_MODE_UNSHADED);
-	mat->set_transparency(StandardMaterial3D::TRANSPARENCY_ALPHA);
-	mat->set_flag(StandardMaterial3D::FLAG_SRGB_VERTEX_COLOR, true);
-	mat->set_flag(StandardMaterial3D::FLAG_ALBEDO_FROM_VERTEX_COLOR, true);
-	mat->set_flag(StandardMaterial3D::FLAG_DISABLE_FOG, true);
-	mat->set_albedo(get_debug_collision_contact_color());
-
-	Vector3 diamond[6] = {
-		Vector3(-1, 0, 0),
-		Vector3(1, 0, 0),
-		Vector3(0, -1, 0),
-		Vector3(0, 1, 0),
-		Vector3(0, 0, -1),
-		Vector3(0, 0, 1)
-	};
-
-	/* clang-format off */
-	int diamond_faces[8 * 3] = {
-		0, 2, 4,
-		0, 3, 4,
-		1, 2, 4,
-		1, 3, 4,
-		0, 2, 5,
-		0, 3, 5,
-		1, 2, 5,
-		1, 3, 5,
-	};
-	/* clang-format on */
-
-	Vector<int> indices;
-	for (int i = 0; i < 8 * 3; i++) {
-		indices.push_back(diamond_faces[i]);
-	}
-
-	Vector<Vector3> vertices;
-	for (int i = 0; i < 6; i++) {
-		vertices.push_back(diamond[i] * 0.1);
-	}
-
-	Array arr;
-	arr.resize(Mesh::ARRAY_MAX);
-	arr[Mesh::ARRAY_VERTEX] = vertices;
-	arr[Mesh::ARRAY_INDEX] = indices;
-
-	debug_contact_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arr);
-	debug_contact_mesh->surface_set_material(0, mat);
-
-	return debug_contact_mesh;
-}
-
 void SceneTree::set_pause(bool p_enabled) {
 	ERR_FAIL_COND_MSG(!Thread::is_main_thread(), "Pause can only be set from the main thread.");
 
@@ -884,8 +695,6 @@ void SceneTree::set_pause(bool p_enabled) {
 		return;
 	}
 	paused = p_enabled;
-	PhysicsServer3D::get_singleton()->set_active(!p_enabled);
-	PhysicsServer2D::get_singleton()->set_active(!p_enabled);
 	if (get_root()) {
 		get_root()->_propagate_pause_notification(p_enabled);
 	}
@@ -1484,99 +1293,15 @@ TypedArray<Tween> SceneTree::get_processed_tweens() {
 	return ret;
 }
 
-Ref<MultiplayerAPI> SceneTree::get_multiplayer(const NodePath &p_for_path) const {
-	ERR_FAIL_COND_V_MSG(!Thread::is_main_thread(), Ref<MultiplayerAPI>(), "Multiplayer can only be manipulated from the main thread.");
-	if (p_for_path.is_empty()) {
-		return multiplayer;
-	}
-
-	const Vector<StringName> tnames = p_for_path.get_names();
-	const StringName *nptr = tnames.ptr();
-	for (const KeyValue<NodePath, Ref<MultiplayerAPI>> &E : custom_multiplayers) {
-		const Vector<StringName> snames = E.key.get_names();
-		if (tnames.size() < snames.size()) {
-			continue;
-		}
-		const StringName *sptr = snames.ptr();
-		bool valid = true;
-		for (int i = 0; i < snames.size(); i++) {
-			if (sptr[i] != nptr[i]) {
-				valid = false;
-				break;
-			}
-		}
-		if (valid) {
-			return E.value;
-		}
-	}
-
-	return multiplayer;
-}
-
-void SceneTree::set_multiplayer(Ref<MultiplayerAPI> p_multiplayer, const NodePath &p_root_path) {
-	ERR_FAIL_COND_MSG(!Thread::is_main_thread(), "Multiplayer can only be manipulated from the main thread.");
-	if (p_root_path.is_empty()) {
-		ERR_FAIL_COND(!p_multiplayer.is_valid());
-		if (multiplayer.is_valid()) {
-			multiplayer->object_configuration_remove(nullptr, NodePath("/" + root->get_name()));
-		}
-		multiplayer = p_multiplayer;
-		multiplayer->object_configuration_add(nullptr, NodePath("/" + root->get_name()));
-	} else {
-		if (custom_multiplayers.has(p_root_path)) {
-			custom_multiplayers[p_root_path]->object_configuration_remove(nullptr, p_root_path);
-		} else if (p_multiplayer.is_valid()) {
-			const Vector<StringName> tnames = p_root_path.get_names();
-			const StringName *nptr = tnames.ptr();
-			for (const KeyValue<NodePath, Ref<MultiplayerAPI>> &E : custom_multiplayers) {
-				const Vector<StringName> snames = E.key.get_names();
-				if (tnames.size() < snames.size()) {
-					continue;
-				}
-				const StringName *sptr = snames.ptr();
-				bool valid = true;
-				for (int i = 0; i < snames.size(); i++) {
-					if (sptr[i] != nptr[i]) {
-						valid = false;
-						break;
-					}
-				}
-				ERR_FAIL_COND_MSG(valid, "Multiplayer is already configured for a parent of this path: '" + p_root_path + "' in '" + E.key + "'.");
-			}
-		}
-		if (p_multiplayer.is_valid()) {
-			custom_multiplayers[p_root_path] = p_multiplayer;
-			p_multiplayer->object_configuration_add(nullptr, p_root_path);
-		} else {
-			custom_multiplayers.erase(p_root_path);
-		}
-	}
-}
-
-void SceneTree::set_multiplayer_poll_enabled(bool p_enabled) {
-	ERR_FAIL_COND_MSG(!Thread::is_main_thread(), "Multiplayer can only be manipulated from the main thread.");
-	multiplayer_poll = p_enabled;
-}
-
-bool SceneTree::is_multiplayer_poll_enabled() const {
-	return multiplayer_poll;
-}
-
 void SceneTree::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_root"), &SceneTree::get_root);
 	ClassDB::bind_method(D_METHOD("has_group", "name"), &SceneTree::has_group);
 
 	ClassDB::bind_method(D_METHOD("is_auto_accept_quit"), &SceneTree::is_auto_accept_quit);
 	ClassDB::bind_method(D_METHOD("set_auto_accept_quit", "enabled"), &SceneTree::set_auto_accept_quit);
-	ClassDB::bind_method(D_METHOD("is_quit_on_go_back"), &SceneTree::is_quit_on_go_back);
-	ClassDB::bind_method(D_METHOD("set_quit_on_go_back", "enabled"), &SceneTree::set_quit_on_go_back);
 
-	ClassDB::bind_method(D_METHOD("set_debug_collisions_hint", "enable"), &SceneTree::set_debug_collisions_hint);
-	ClassDB::bind_method(D_METHOD("is_debugging_collisions_hint"), &SceneTree::is_debugging_collisions_hint);
 	ClassDB::bind_method(D_METHOD("set_debug_paths_hint", "enable"), &SceneTree::set_debug_paths_hint);
 	ClassDB::bind_method(D_METHOD("is_debugging_paths_hint"), &SceneTree::is_debugging_paths_hint);
-	ClassDB::bind_method(D_METHOD("set_debug_navigation_hint", "enable"), &SceneTree::set_debug_navigation_hint);
-	ClassDB::bind_method(D_METHOD("is_debugging_navigation_hint"), &SceneTree::is_debugging_navigation_hint);
 
 	ClassDB::bind_method(D_METHOD("set_edited_scene_root", "scene"), &SceneTree::set_edited_scene_root);
 	ClassDB::bind_method(D_METHOD("get_edited_scene_root"), &SceneTree::get_edited_scene_root);
@@ -1627,21 +1352,12 @@ void SceneTree::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("reload_current_scene"), &SceneTree::reload_current_scene);
 	ClassDB::bind_method(D_METHOD("unload_current_scene"), &SceneTree::unload_current_scene);
 
-	ClassDB::bind_method(D_METHOD("set_multiplayer", "multiplayer", "root_path"), &SceneTree::set_multiplayer, DEFVAL(NodePath()));
-	ClassDB::bind_method(D_METHOD("get_multiplayer", "for_path"), &SceneTree::get_multiplayer, DEFVAL(NodePath()));
-	ClassDB::bind_method(D_METHOD("set_multiplayer_poll_enabled", "enabled"), &SceneTree::set_multiplayer_poll_enabled);
-	ClassDB::bind_method(D_METHOD("is_multiplayer_poll_enabled"), &SceneTree::is_multiplayer_poll_enabled);
-
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "auto_accept_quit"), "set_auto_accept_quit", "is_auto_accept_quit");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "quit_on_go_back"), "set_quit_on_go_back", "is_quit_on_go_back");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "debug_collisions_hint"), "set_debug_collisions_hint", "is_debugging_collisions_hint");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "debug_paths_hint"), "set_debug_paths_hint", "is_debugging_paths_hint");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "debug_navigation_hint"), "set_debug_navigation_hint", "is_debugging_navigation_hint");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "paused"), "set_pause", "is_paused");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "edited_scene_root", PROPERTY_HINT_RESOURCE_TYPE, "Node", PROPERTY_USAGE_NONE), "set_edited_scene_root", "get_edited_scene_root");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "current_scene", PROPERTY_HINT_RESOURCE_TYPE, "Node", PROPERTY_USAGE_NONE), "set_current_scene", "get_current_scene");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "root", PROPERTY_HINT_RESOURCE_TYPE, "Node", PROPERTY_USAGE_NONE), "", "get_root");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "multiplayer_poll"), "set_multiplayer_poll_enabled", "is_multiplayer_poll_enabled");
 
 	ADD_SIGNAL(MethodInfo("tree_changed"));
 	ADD_SIGNAL(MethodInfo("tree_process_mode_changed")); //editor only signal, but due to API hash it can't be removed in run-time
@@ -1715,13 +1431,8 @@ SceneTree::SceneTree() {
 	if (singleton == nullptr) {
 		singleton = this;
 	}
-	debug_collisions_color = GLOBAL_DEF("debug/shapes/collision/shape_color", Color(0.0, 0.6, 0.7, 0.42));
-	debug_collision_contact_color = GLOBAL_DEF("debug/shapes/collision/contact_color", Color(1.0, 0.2, 0.1, 0.8));
 	debug_paths_color = GLOBAL_DEF("debug/shapes/paths/geometry_color", Color(0.1, 1.0, 0.7, 0.4));
 	debug_paths_width = GLOBAL_DEF("debug/shapes/paths/geometry_width", 2.0);
-	collision_debug_contacts = GLOBAL_DEF(PropertyInfo(Variant::INT, "debug/shapes/collision/max_contacts_displayed", PROPERTY_HINT_RANGE, "0,20000,1"), 10000);
-
-	GLOBAL_DEF("debug/shapes/collision/draw_2d_outlines", true);
 
 	process_group_call_queue_allocator = memnew(CallQueue::Allocator(64));
 	Math::randomize();
@@ -1738,127 +1449,26 @@ SceneTree::SceneTree() {
 		root->set_wrap_controls(true);
 	}
 
-#ifndef _3D_DISABLED
-	if (!root->get_world_3d().is_valid()) {
-		root->set_world_3d(Ref<World3D>(memnew(World3D)));
-	}
-	root->set_as_audio_listener_3d(true);
-#endif // _3D_DISABLED
-
-	// Initialize network state.
-	set_multiplayer(MultiplayerAPI::create_default_interface());
-
-	root->set_as_audio_listener_2d(true);
 	current_scene = nullptr;
 
 	const int msaa_mode_2d = GLOBAL_DEF_BASIC(PropertyInfo(Variant::INT, "rendering/anti_aliasing/quality/msaa_2d", PROPERTY_HINT_ENUM, String::utf8("Disabled (Fastest),2× (Average),4× (Slow),8× (Slowest)")), 0);
 	root->set_msaa_2d(Viewport::MSAA(msaa_mode_2d));
 
-	const int msaa_mode_3d = GLOBAL_DEF_BASIC(PropertyInfo(Variant::INT, "rendering/anti_aliasing/quality/msaa_3d", PROPERTY_HINT_ENUM, String::utf8("Disabled (Fastest),2× (Average),4× (Slow),8× (Slowest)")), 0);
-	root->set_msaa_3d(Viewport::MSAA(msaa_mode_3d));
-
 	const bool transparent_background = GLOBAL_DEF("rendering/viewport/transparent_background", false);
 	root->set_transparent_background(transparent_background);
 
-	const bool use_hdr_2d = GLOBAL_DEF_RST_BASIC("rendering/viewport/hdr_2d", false);
-	root->set_use_hdr_2d(use_hdr_2d);
-
-	const int ssaa_mode = GLOBAL_DEF_BASIC(PropertyInfo(Variant::INT, "rendering/anti_aliasing/quality/screen_space_aa", PROPERTY_HINT_ENUM, "Disabled (Fastest),FXAA (Fast)"), 0);
-	root->set_screen_space_aa(Viewport::ScreenSpaceAA(ssaa_mode));
-
-	const bool use_taa = GLOBAL_DEF_BASIC("rendering/anti_aliasing/quality/use_taa", false);
-	root->set_use_taa(use_taa);
-
-	const bool use_debanding = GLOBAL_DEF("rendering/anti_aliasing/quality/use_debanding", false);
-	root->set_use_debanding(use_debanding);
-
-	const bool use_occlusion_culling = GLOBAL_DEF("rendering/occlusion_culling/use_occlusion_culling", false);
-	root->set_use_occlusion_culling(use_occlusion_culling);
-
-	float mesh_lod_threshold = GLOBAL_DEF(PropertyInfo(Variant::FLOAT, "rendering/mesh_lod/lod_change/threshold_pixels", PROPERTY_HINT_RANGE, "0,1024,0.1"), 1.0);
-	root->set_mesh_lod_threshold(mesh_lod_threshold);
-
-	bool snap_2d_transforms = GLOBAL_DEF("rendering/2d/snap/snap_2d_transforms_to_pixel", false);
+	bool snap_2d_transforms = GLOBAL_DEF("rendering/2d/snap/snap_2d_transforms_to_pixel", true);
 	root->set_snap_2d_transforms_to_pixel(snap_2d_transforms);
 
-	bool snap_2d_vertices = GLOBAL_DEF("rendering/2d/snap/snap_2d_vertices_to_pixel", false);
+	bool snap_2d_vertices = GLOBAL_DEF("rendering/2d/snap/snap_2d_vertices_to_pixel", true);
 	root->set_snap_2d_vertices_to_pixel(snap_2d_vertices);
-
-	// We setup VRS for the main viewport here, in the editor this will have little effect.
-	const int vrs_mode = GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/vrs/mode", PROPERTY_HINT_ENUM, String::utf8("Disabled,Texture,XR")), 0);
-	root->set_vrs_mode(Viewport::VRSMode(vrs_mode));
-	const String vrs_texture_path = String(GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/vrs/texture", PROPERTY_HINT_FILE, "*.bmp,*.png,*.tga,*.webp"), String())).strip_edges();
-	if (vrs_mode == 1 && !vrs_texture_path.is_empty()) {
-		Ref<Image> vrs_image;
-		vrs_image.instantiate();
-		Error load_err = ImageLoader::load_image(vrs_texture_path, vrs_image);
-		if (load_err) {
-			ERR_PRINT("Non-existing or invalid VRS texture at '" + vrs_texture_path + "'.");
-		} else {
-			Ref<ImageTexture> vrs_texture;
-			vrs_texture.instantiate();
-			vrs_texture->create_from_image(vrs_image);
-			root->set_vrs_texture(vrs_texture);
-		}
-	}
-
-	int shadowmap_size = GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/lights_and_shadows/positional_shadow/atlas_size", PROPERTY_HINT_RANGE, "256,16384"), 4096);
-	GLOBAL_DEF("rendering/lights_and_shadows/positional_shadow/atlas_size.mobile", 2048);
-	bool shadowmap_16_bits = GLOBAL_DEF("rendering/lights_and_shadows/positional_shadow/atlas_16_bits", true);
-	int atlas_q0 = GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/lights_and_shadows/positional_shadow/atlas_quadrant_0_subdiv", PROPERTY_HINT_ENUM, "Disabled,1 Shadow,4 Shadows,16 Shadows,64 Shadows,256 Shadows,1024 Shadows"), 2);
-	int atlas_q1 = GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/lights_and_shadows/positional_shadow/atlas_quadrant_1_subdiv", PROPERTY_HINT_ENUM, "Disabled,1 Shadow,4 Shadows,16 Shadows,64 Shadows,256 Shadows,1024 Shadows"), 2);
-	int atlas_q2 = GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/lights_and_shadows/positional_shadow/atlas_quadrant_2_subdiv", PROPERTY_HINT_ENUM, "Disabled,1 Shadow,4 Shadows,16 Shadows,64 Shadows,256 Shadows,1024 Shadows"), 3);
-	int atlas_q3 = GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/lights_and_shadows/positional_shadow/atlas_quadrant_3_subdiv", PROPERTY_HINT_ENUM, "Disabled,1 Shadow,4 Shadows,16 Shadows,64 Shadows,256 Shadows,1024 Shadows"), 4);
-
-	root->set_positional_shadow_atlas_size(shadowmap_size);
-	root->set_positional_shadow_atlas_16_bits(shadowmap_16_bits);
-	root->set_positional_shadow_atlas_quadrant_subdiv(0, Viewport::PositionalShadowAtlasQuadrantSubdiv(atlas_q0));
-	root->set_positional_shadow_atlas_quadrant_subdiv(1, Viewport::PositionalShadowAtlasQuadrantSubdiv(atlas_q1));
-	root->set_positional_shadow_atlas_quadrant_subdiv(2, Viewport::PositionalShadowAtlasQuadrantSubdiv(atlas_q2));
-	root->set_positional_shadow_atlas_quadrant_subdiv(3, Viewport::PositionalShadowAtlasQuadrantSubdiv(atlas_q3));
 
 	Viewport::SDFOversize sdf_oversize = Viewport::SDFOversize(int(GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/2d/sdf/oversize", PROPERTY_HINT_ENUM, "100%,120%,150%,200%"), 1)));
 	root->set_sdf_oversize(sdf_oversize);
 	Viewport::SDFScale sdf_scale = Viewport::SDFScale(int(GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/2d/sdf/scale", PROPERTY_HINT_ENUM, "100%,50%,25%"), 1)));
 	root->set_sdf_scale(sdf_scale);
 
-#ifndef _3D_DISABLED
-	{ // Load default fallback environment.
-		// Get possible extensions.
-		List<String> exts;
-		ResourceLoader::get_recognized_extensions_for_type("Environment", &exts);
-		String ext_hint;
-		for (const String &E : exts) {
-			if (!ext_hint.is_empty()) {
-				ext_hint += ",";
-			}
-			ext_hint += "*." + E;
-		}
-		// Get path.
-		String env_path = GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/environment/defaults/default_environment", PROPERTY_HINT_FILE, ext_hint), "");
-		// Setup property.
-		env_path = env_path.strip_edges();
-		if (!env_path.is_empty()) {
-			Ref<Environment> env = ResourceLoader::load(env_path);
-			if (env.is_valid()) {
-				root->get_world_3d()->set_fallback_environment(env);
-			} else {
-				if (Engine::get_singleton()->is_editor_hint()) {
-					// File was erased, clear the field.
-					ProjectSettings::get_singleton()->set("rendering/environment/defaults/default_environment", "");
-				} else {
-					// File was erased, notify user.
-					ERR_PRINT("Default Environment as specified in the project setting \"rendering/environment/defaults/default_environment\" could not be loaded.");
-				}
-			}
-		}
-	}
-#endif // _3D_DISABLED
-
-	root->set_physics_object_picking(GLOBAL_DEF("physics/common/enable_object_picking", true));
-
 	root->connect("close_requested", callable_mp(this, &SceneTree::_main_window_close));
-	root->connect("go_back_requested", callable_mp(this, &SceneTree::_main_window_go_back));
 	root->connect("focus_entered", callable_mp(this, &SceneTree::_main_window_focus_in));
 
 #ifdef TOOLS_ENABLED

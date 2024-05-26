@@ -89,12 +89,6 @@ false
 true
 true
 true
-TYPE_QUATERNION
-true
-false
-false
-false
-true
 TYPE_AABB
 false
 false

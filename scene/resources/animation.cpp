@@ -31,7 +31,6 @@
 #include "animation.h"
 
 #include "core/io/marshalls.h"
-#include "core/math/geometry_3d.h"
 #include "scene/scene_string_names.h"
 
 bool Animation::_set(const StringName &p_name, const Variant &p_value) {
@@ -70,13 +69,7 @@ bool Animation::_set(const StringName &p_name, const Variant &p_value) {
 		if (tracks.size() == track && what == "type") {
 			String type = p_value;
 
-			if (type == "position_3d") {
-				add_track(TYPE_POSITION_3D);
-			} else if (type == "rotation_3d") {
-				add_track(TYPE_ROTATION_3D);
-			} else if (type == "scale_3d") {
-				add_track(TYPE_SCALE_3D);
-			} else if (type == "blend_shape") {
+			if (type == "blend_shape") {
 				add_track(TYPE_BLEND_SHAPE);
 			} else if (type == "value") {
 				add_track(TYPE_VALUE);
@@ -106,18 +99,6 @@ bool Animation::_set(const StringName &p_name, const Variant &p_value) {
 			Track *t = tracks[track];
 			t->interpolation = INTERPOLATION_LINEAR; //only linear supported
 			switch (t->type) {
-				case TYPE_POSITION_3D: {
-					PositionTrack *tt = static_cast<PositionTrack *>(t);
-					tt->compressed_track = index;
-				} break;
-				case TYPE_ROTATION_3D: {
-					RotationTrack *rt = static_cast<RotationTrack *>(t);
-					rt->compressed_track = index;
-				} break;
-				case TYPE_SCALE_3D: {
-					ScaleTrack *st = static_cast<ScaleTrack *>(t);
-					st->compressed_track = index;
-				} break;
 				case TYPE_BLEND_SHAPE: {
 					BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
 					bst->compressed_track = index;
@@ -140,74 +121,7 @@ bool Animation::_set(const StringName &p_name, const Variant &p_value) {
 		} else if (what == "enabled") {
 			track_set_enabled(track, p_value);
 		} else if (what == "keys" || what == "key_values") {
-			if (track_get_type(track) == TYPE_POSITION_3D) {
-				PositionTrack *tt = static_cast<PositionTrack *>(tracks[track]);
-				Vector<real_t> values = p_value;
-				int vcount = values.size();
-				ERR_FAIL_COND_V(vcount % POSITION_TRACK_SIZE, false);
-
-				const real_t *r = values.ptr();
-
-				int64_t count = vcount / POSITION_TRACK_SIZE;
-				tt->positions.resize(count);
-
-				TKey<Vector3> *tw = tt->positions.ptrw();
-				for (int i = 0; i < count; i++) {
-					TKey<Vector3> &tk = tw[i];
-					const real_t *ofs = &r[i * POSITION_TRACK_SIZE];
-					tk.time = ofs[0];
-					tk.transition = ofs[1];
-
-					tk.value.x = ofs[2];
-					tk.value.y = ofs[3];
-					tk.value.z = ofs[4];
-				}
-			} else if (track_get_type(track) == TYPE_ROTATION_3D) {
-				RotationTrack *rt = static_cast<RotationTrack *>(tracks[track]);
-				Vector<real_t> values = p_value;
-				int vcount = values.size();
-				ERR_FAIL_COND_V(vcount % ROTATION_TRACK_SIZE, false);
-
-				const real_t *r = values.ptr();
-
-				int64_t count = vcount / ROTATION_TRACK_SIZE;
-				rt->rotations.resize(count);
-
-				TKey<Quaternion> *rw = rt->rotations.ptrw();
-				for (int i = 0; i < count; i++) {
-					TKey<Quaternion> &rk = rw[i];
-					const real_t *ofs = &r[i * ROTATION_TRACK_SIZE];
-					rk.time = ofs[0];
-					rk.transition = ofs[1];
-
-					rk.value.x = ofs[2];
-					rk.value.y = ofs[3];
-					rk.value.z = ofs[4];
-					rk.value.w = ofs[5];
-				}
-			} else if (track_get_type(track) == TYPE_SCALE_3D) {
-				ScaleTrack *st = static_cast<ScaleTrack *>(tracks[track]);
-				Vector<real_t> values = p_value;
-				int vcount = values.size();
-				ERR_FAIL_COND_V(vcount % SCALE_TRACK_SIZE, false);
-
-				const real_t *r = values.ptr();
-
-				int64_t count = vcount / SCALE_TRACK_SIZE;
-				st->scales.resize(count);
-
-				TKey<Vector3> *sw = st->scales.ptrw();
-				for (int i = 0; i < count; i++) {
-					TKey<Vector3> &sk = sw[i];
-					const real_t *ofs = &r[i * SCALE_TRACK_SIZE];
-					sk.time = ofs[0];
-					sk.transition = ofs[1];
-
-					sk.value.x = ofs[2];
-					sk.value.y = ofs[3];
-					sk.value.z = ofs[4];
-				}
-			} else if (track_get_type(track) == TYPE_BLEND_SHAPE) {
+			if (track_get_type(track) == TYPE_BLEND_SHAPE) {
 				BlendShapeTrack *st = static_cast<BlendShapeTrack *>(tracks[track]);
 				Vector<real_t> values = p_value;
 				int vcount = values.size();
@@ -427,11 +341,6 @@ bool Animation::_set(const StringName &p_name, const Variant &p_value) {
 		} else {
 			return false;
 		}
-#ifndef DISABLE_DEPRECATED
-	} else if (prop_name == "loop" && p_value.operator bool()) { // Compatibility with Godot 3.x.
-		loop_mode = Animation::LoopMode::LOOP_LINEAR;
-		return true;
-#endif // DISABLE_DEPRECATED
 	} else {
 		return false;
 	}
@@ -477,15 +386,6 @@ bool Animation::_get(const StringName &p_name, Variant &r_ret) const {
 		ERR_FAIL_INDEX_V(track, tracks.size(), false);
 		if (what == "type") {
 			switch (track_get_type(track)) {
-				case TYPE_POSITION_3D:
-					r_ret = "position_3d";
-					break;
-				case TYPE_ROTATION_3D:
-					r_ret = "rotation_3d";
-					break;
-				case TYPE_SCALE_3D:
-					r_ret = "scale_3d";
-					break;
 				case TYPE_BLEND_SHAPE:
 					r_ret = "blend_shape";
 					break;
@@ -514,18 +414,6 @@ bool Animation::_get(const StringName &p_name, Variant &r_ret) const {
 			ERR_FAIL_COND_V(!compression.enabled, false);
 			Track *t = tracks[track];
 			switch (t->type) {
-				case TYPE_POSITION_3D: {
-					PositionTrack *tt = static_cast<PositionTrack *>(t);
-					r_ret = tt->compressed_track;
-				} break;
-				case TYPE_ROTATION_3D: {
-					RotationTrack *rt = static_cast<RotationTrack *>(t);
-					r_ret = rt->compressed_track;
-				} break;
-				case TYPE_SCALE_3D: {
-					ScaleTrack *st = static_cast<ScaleTrack *>(t);
-					r_ret = st->compressed_track;
-				} break;
 				case TYPE_BLEND_SHAPE: {
 					BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
 					r_ret = bst->compressed_track;
@@ -550,72 +438,7 @@ bool Animation::_get(const StringName &p_name, Variant &r_ret) const {
 		} else if (what == "enabled") {
 			r_ret = track_is_enabled(track);
 		} else if (what == "keys") {
-			if (track_get_type(track) == TYPE_POSITION_3D) {
-				Vector<real_t> keys;
-				int kk = track_get_key_count(track);
-				keys.resize(kk * POSITION_TRACK_SIZE);
-
-				real_t *w = keys.ptrw();
-
-				int idx = 0;
-				for (int i = 0; i < track_get_key_count(track); i++) {
-					Vector3 loc;
-					position_track_get_key(track, i, &loc);
-
-					w[idx++] = track_get_key_time(track, i);
-					w[idx++] = track_get_key_transition(track, i);
-					w[idx++] = loc.x;
-					w[idx++] = loc.y;
-					w[idx++] = loc.z;
-				}
-
-				r_ret = keys;
-				return true;
-			} else if (track_get_type(track) == TYPE_ROTATION_3D) {
-				Vector<real_t> keys;
-				int kk = track_get_key_count(track);
-				keys.resize(kk * ROTATION_TRACK_SIZE);
-
-				real_t *w = keys.ptrw();
-
-				int idx = 0;
-				for (int i = 0; i < track_get_key_count(track); i++) {
-					Quaternion rot;
-					rotation_track_get_key(track, i, &rot);
-
-					w[idx++] = track_get_key_time(track, i);
-					w[idx++] = track_get_key_transition(track, i);
-					w[idx++] = rot.x;
-					w[idx++] = rot.y;
-					w[idx++] = rot.z;
-					w[idx++] = rot.w;
-				}
-
-				r_ret = keys;
-				return true;
-
-			} else if (track_get_type(track) == TYPE_SCALE_3D) {
-				Vector<real_t> keys;
-				int kk = track_get_key_count(track);
-				keys.resize(kk * SCALE_TRACK_SIZE);
-
-				real_t *w = keys.ptrw();
-
-				int idx = 0;
-				for (int i = 0; i < track_get_key_count(track); i++) {
-					Vector3 scale;
-					scale_track_get_key(track, i, &scale);
-
-					w[idx++] = track_get_key_time(track, i);
-					w[idx++] = track_get_key_transition(track, i);
-					w[idx++] = scale.x;
-					w[idx++] = scale.y;
-					w[idx++] = scale.z;
-				}
-
-				r_ret = keys;
-				return true;
-			} else if (track_get_type(track) == TYPE_BLEND_SHAPE) {
+			if (track_get_type(track) == TYPE_BLEND_SHAPE) {
 				Vector<real_t> keys;
 				int kk = track_get_key_count(track);
 				keys.resize(kk * BLEND_SHAPE_TRACK_SIZE);
@@ -862,18 +685,6 @@ int Animation::add_track(TrackType p_type, int p_at_pos) {
 	}
 
 	switch (p_type) {
-		case TYPE_POSITION_3D: {
-			PositionTrack *tt = memnew(PositionTrack);
-			tracks.insert(p_at_pos, tt);
-		} break;
-		case TYPE_ROTATION_3D: {
-			RotationTrack *rt = memnew(RotationTrack);
-			tracks.insert(p_at_pos, rt);
-		} break;
-		case TYPE_SCALE_3D: {
-			ScaleTrack *st = memnew(ScaleTrack);
-			tracks.insert(p_at_pos, st);
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			BlendShapeTrack *bst = memnew(BlendShapeTrack);
 			tracks.insert(p_at_pos, bst);
@@ -911,24 +722,6 @@ void Animation::remove_track(int p_track) {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_POSITION_3D: {
-			PositionTrack *tt = static_cast<PositionTrack *>(t);
-			ERR_FAIL_COND_MSG(tt->compressed_track >= 0, "Compressed tracks can't be manually removed. Call clear() to get rid of compression first.");
-			_clear(tt->positions);
-
-		} break;
-		case TYPE_ROTATION_3D: {
-			RotationTrack *rt = static_cast<RotationTrack *>(t);
-			ERR_FAIL_COND_MSG(rt->compressed_track >= 0, "Compressed tracks can't be manually removed. Call clear() to get rid of compression first.");
-			_clear(rt->rotations);
-
-		} break;
-		case TYPE_SCALE_3D: {
-			ScaleTrack *st = static_cast<ScaleTrack *>(t);
-			ERR_FAIL_COND_MSG(st->compressed_track >= 0, "Compressed tracks can't be manually removed. Call clear() to get rid of compression first.");
-			_clear(st->scales);
-
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
 			ERR_FAIL_COND_MSG(bst->compressed_track >= 0, "Compressed tracks can't be manually removed. Call clear() to get rid of compression first.");
@@ -1049,246 +842,6 @@ void Animation::_clear(T &p_keys) {
 
 ////
 
-int Animation::position_track_insert_key(int p_track, double p_time, const Vector3 &p_position) {
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), -1);
-	Track *t = tracks[p_track];
-	ERR_FAIL_COND_V(t->type != TYPE_POSITION_3D, -1);
-
-	PositionTrack *tt = static_cast<PositionTrack *>(t);
-
-	ERR_FAIL_COND_V(tt->compressed_track >= 0, -1);
-
-	TKey<Vector3> tkey;
-	tkey.time = p_time;
-	tkey.value = p_position;
-
-	int ret = _insert(p_time, tt->positions, tkey);
-	emit_changed();
-	return ret;
-}
-
-Error Animation::position_track_get_key(int p_track, int p_key, Vector3 *r_position) const {
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), ERR_INVALID_PARAMETER);
-	Track *t = tracks[p_track];
-
-	PositionTrack *tt = static_cast<PositionTrack *>(t);
-	ERR_FAIL_COND_V(t->type != TYPE_POSITION_3D, ERR_INVALID_PARAMETER);
-
-	if (tt->compressed_track >= 0) {
-		Vector3i key;
-		double time;
-		bool fetch_success = _fetch_compressed_by_index<3>(tt->compressed_track, p_key, key, time);
-		if (!fetch_success) {
-			return ERR_INVALID_PARAMETER;
-		}
-
-		*r_position = _uncompress_pos_scale(tt->compressed_track, key);
-		return OK;
-	}
-
-	ERR_FAIL_INDEX_V(p_key, tt->positions.size(), ERR_INVALID_PARAMETER);
-
-	*r_position = tt->positions[p_key].value;
-
-	return OK;
-}
-
-Error Animation::try_position_track_interpolate(int p_track, double p_time, Vector3 *r_interpolation) const {
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), ERR_INVALID_PARAMETER);
-	Track *t = tracks[p_track];
-	ERR_FAIL_COND_V(t->type != TYPE_POSITION_3D, ERR_INVALID_PARAMETER);
-
-	PositionTrack *tt = static_cast<PositionTrack *>(t);
-
-	if (tt->compressed_track >= 0) {
-		if (_pos_scale_interpolate_compressed(tt->compressed_track, p_time, *r_interpolation)) {
-			return OK;
-		} else {
-			return ERR_UNAVAILABLE;
-		}
-	}
-
-	bool ok = false;
-
-	Vector3 tk = _interpolate(tt->positions, p_time, tt->interpolation, tt->loop_wrap, &ok);
-
-	if (!ok) {
-		return ERR_UNAVAILABLE;
-	}
-	*r_interpolation = tk;
-	return OK;
-}
-
-Vector3 Animation::position_track_interpolate(int p_track, double p_time) const {
-	Vector3 ret = Vector3(0, 0, 0);
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), ret);
-	bool err = try_position_track_interpolate(p_track, p_time, &ret);
-	ERR_FAIL_COND_V_MSG(err, ret, "3D Position Track: '" + tracks[p_track]->path + "' is unavailable.");
-	return ret;
-}
-
-////
-
-int Animation::rotation_track_insert_key(int p_track, double p_time, const Quaternion &p_rotation) {
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), -1);
-	Track *t = tracks[p_track];
-	ERR_FAIL_COND_V(t->type != TYPE_ROTATION_3D, -1);
-
-	RotationTrack *rt = static_cast<RotationTrack *>(t);
-
-	ERR_FAIL_COND_V(rt->compressed_track >= 0, -1);
-
-	TKey<Quaternion> tkey;
-	tkey.time = p_time;
-	tkey.value = p_rotation;
-
-	int ret = _insert(p_time, rt->rotations, tkey);
-	emit_changed();
-	return ret;
-}
-
-Error Animation::rotation_track_get_key(int p_track, int p_key, Quaternion *r_rotation) const {
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), ERR_INVALID_PARAMETER);
-	Track *t = tracks[p_track];
-
-	RotationTrack *rt = static_cast<RotationTrack *>(t);
-	ERR_FAIL_COND_V(t->type != TYPE_ROTATION_3D, ERR_INVALID_PARAMETER);
-
-	if (rt->compressed_track >= 0) {
-		Vector3i key;
-		double time;
-		bool fetch_success = _fetch_compressed_by_index<3>(rt->compressed_track, p_key, key, time);
-		if (!fetch_success) {
-			return ERR_INVALID_PARAMETER;
-		}
-
-		*r_rotation = _uncompress_quaternion(key);
-		return OK;
-	}
-
-	ERR_FAIL_INDEX_V(p_key, rt->rotations.size(), ERR_INVALID_PARAMETER);
-
-	*r_rotation = rt->rotations[p_key].value;
-
-	return OK;
-}
-
-Error Animation::try_rotation_track_interpolate(int p_track, double p_time, Quaternion *r_interpolation) const {
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), ERR_INVALID_PARAMETER);
-	Track *t = tracks[p_track];
-	ERR_FAIL_COND_V(t->type != TYPE_ROTATION_3D, ERR_INVALID_PARAMETER);
-
-	RotationTrack *rt = static_cast<RotationTrack *>(t);
-
-	if (rt->compressed_track >= 0) {
-		if (_rotation_interpolate_compressed(rt->compressed_track, p_time, *r_interpolation)) {
-			return OK;
-		} else {
-			return ERR_UNAVAILABLE;
-		}
-	}
-
-	bool ok = false;
-
-	Quaternion tk = _interpolate(rt->rotations, p_time, rt->interpolation, rt->loop_wrap, &ok);
-
-	if (!ok) {
-		return ERR_UNAVAILABLE;
-	}
-	*r_interpolation = tk;
-	return OK;
-}
-
-Quaternion Animation::rotation_track_interpolate(int p_track, double p_time) const {
-	Quaternion ret = Quaternion(0, 0, 0, 1);
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), ret);
-	bool err = try_rotation_track_interpolate(p_track, p_time, &ret);
-	ERR_FAIL_COND_V_MSG(err, ret, "3D Rotation Track: '" + tracks[p_track]->path + "' is unavailable.");
-	return ret;
-}
-
-////
-
-int Animation::scale_track_insert_key(int p_track, double p_time, const Vector3 &p_scale) {
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), -1);
-	Track *t = tracks[p_track];
-	ERR_FAIL_COND_V(t->type != TYPE_SCALE_3D, -1);
-
-	ScaleTrack *st = static_cast<ScaleTrack *>(t);
-
-	ERR_FAIL_COND_V(st->compressed_track >= 0, -1);
-
-	TKey<Vector3> tkey;
-	tkey.time = p_time;
-	tkey.value = p_scale;
-
-	int ret = _insert(p_time, st->scales, tkey);
-	emit_changed();
-	return ret;
-}
-
-Error Animation::scale_track_get_key(int p_track, int p_key, Vector3 *r_scale) const {
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), ERR_INVALID_PARAMETER);
-	Track *t = tracks[p_track];
-
-	ScaleTrack *st = static_cast<ScaleTrack *>(t);
-	ERR_FAIL_COND_V(t->type != TYPE_SCALE_3D, ERR_INVALID_PARAMETER);
-
-	if (st->compressed_track >= 0) {
-		Vector3i key;
-		double time;
-		bool fetch_success = _fetch_compressed_by_index<3>(st->compressed_track, p_key, key, time);
-		if (!fetch_success) {
-			return ERR_INVALID_PARAMETER;
-		}
-
-		*r_scale = _uncompress_pos_scale(st->compressed_track, key);
-		return OK;
-	}
-
-	ERR_FAIL_INDEX_V(p_key, st->scales.size(), ERR_INVALID_PARAMETER);
-
-	*r_scale = st->scales[p_key].value;
-
-	return OK;
-}
-
-Error Animation::try_scale_track_interpolate(int p_track, double p_time, Vector3 *r_interpolation) const {
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), ERR_INVALID_PARAMETER);
-	Track *t = tracks[p_track];
-	ERR_FAIL_COND_V(t->type != TYPE_SCALE_3D, ERR_INVALID_PARAMETER);
-
-	ScaleTrack *st = static_cast<ScaleTrack *>(t);
-
-	if (st->compressed_track >= 0) {
-		if (_pos_scale_interpolate_compressed(st->compressed_track, p_time, *r_interpolation)) {
-			return OK;
-		} else {
-			return ERR_UNAVAILABLE;
-		}
-	}
-
-	bool ok = false;
-
-	Vector3 tk = _interpolate(st->scales, p_time, st->interpolation, st->loop_wrap, &ok);
-
-	if (!ok) {
-		return ERR_UNAVAILABLE;
-	}
-	*r_interpolation = tk;
-	return OK;
-}
-
-Vector3 Animation::scale_track_interpolate(int p_track, double p_time) const {
-	Vector3 ret = Vector3(1, 1, 1);
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), ret);
-	bool err = try_scale_track_interpolate(p_track, p_time, &ret);
-	ERR_FAIL_COND_V_MSG(err, ret, "3D Scale Track: '" + tracks[p_track]->path + "' is unavailable.");
-	return ret;
-}
-
-////
-
 int Animation::blend_shape_track_insert_key(int p_track, double p_time, float p_blend_shape) {
 	ERR_FAIL_INDEX_V(p_track, tracks.size(), -1);
 	Track *t = tracks[p_track];
@@ -1380,33 +933,6 @@ void Animation::track_remove_key(int p_track, int p_idx) {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_POSITION_3D: {
-			PositionTrack *tt = static_cast<PositionTrack *>(t);
-
-			ERR_FAIL_COND(tt->compressed_track >= 0);
-
-			ERR_FAIL_INDEX(p_idx, tt->positions.size());
-			tt->positions.remove_at(p_idx);
-
-		} break;
-		case TYPE_ROTATION_3D: {
-			RotationTrack *rt = static_cast<RotationTrack *>(t);
-
-			ERR_FAIL_COND(rt->compressed_track >= 0);
-
-			ERR_FAIL_INDEX(p_idx, rt->rotations.size());
-			rt->rotations.remove_at(p_idx);
-
-		} break;
-		case TYPE_SCALE_3D: {
-			ScaleTrack *st = static_cast<ScaleTrack *>(t);
-
-			ERR_FAIL_COND(st->compressed_track >= 0);
-
-			ERR_FAIL_INDEX(p_idx, st->scales.size());
-			st->scales.remove_at(p_idx);
-
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
 
@@ -1456,87 +982,6 @@ int Animation::track_find_key(int p_track, double p_time, FindMode p_find_mode) 
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_POSITION_3D: {
-			PositionTrack *tt = static_cast<PositionTrack *>(t);
-
-			if (tt->compressed_track >= 0) {
-				double time;
-				double time_next;
-				Vector3i key;
-				Vector3i key_next;
-				uint32_t key_index;
-				bool fetch_compressed_success = _fetch_compressed<3>(tt->compressed_track, p_time, key, time, key_next, time_next, &key_index);
-				ERR_FAIL_COND_V(!fetch_compressed_success, -1);
-				if ((p_find_mode == FIND_MODE_APPROX && !Math::is_equal_approx(time, p_time)) || (p_find_mode == FIND_MODE_EXACT && time != p_time)) {
-					return -1;
-				}
-				return key_index;
-			}
-
-			int k = _find(tt->positions, p_time);
-			if (k < 0 || k >= tt->positions.size()) {
-				return -1;
-			}
-			if ((p_find_mode == FIND_MODE_APPROX && !Math::is_equal_approx(tt->positions[k].time, p_time)) || (p_find_mode == FIND_MODE_EXACT && tt->positions[k].time != p_time)) {
-				return -1;
-			}
-			return k;
-
-		} break;
-		case TYPE_ROTATION_3D: {
-			RotationTrack *rt = static_cast<RotationTrack *>(t);
-
-			if (rt->compressed_track >= 0) {
-				double time;
-				double time_next;
-				Vector3i key;
-				Vector3i key_next;
-				uint32_t key_index;
-				bool fetch_compressed_success = _fetch_compressed<3>(rt->compressed_track, p_time, key, time, key_next, time_next, &key_index);
-				ERR_FAIL_COND_V(!fetch_compressed_success, -1);
-				if ((p_find_mode == FIND_MODE_APPROX && !Math::is_equal_approx(time, p_time)) || (p_find_mode == FIND_MODE_EXACT && time != p_time)) {
-					return -1;
-				}
-				return key_index;
-			}
-
-			int k = _find(rt->rotations, p_time);
-			if (k < 0 || k >= rt->rotations.size()) {
-				return -1;
-			}
-			if ((p_find_mode == FIND_MODE_APPROX && !Math::is_equal_approx(rt->rotations[k].time, p_time)) || (p_find_mode == FIND_MODE_EXACT && rt->rotations[k].time != p_time)) {
-				return -1;
-			}
-			return k;
-
-		} break;
-		case TYPE_SCALE_3D: {
-			ScaleTrack *st = static_cast<ScaleTrack *>(t);
-
-			if (st->compressed_track >= 0) {
-				double time;
-				double time_next;
-				Vector3i key;
-				Vector3i key_next;
-				uint32_t key_index;
-				bool fetch_compressed_success = _fetch_compressed<3>(st->compressed_track, p_time, key, time, key_next, time_next, &key_index);
-				ERR_FAIL_COND_V(!fetch_compressed_success, -1);
-				if ((p_find_mode == FIND_MODE_APPROX && !Math::is_equal_approx(time, p_time)) || (p_find_mode == FIND_MODE_EXACT && time != p_time)) {
-					return -1;
-				}
-				return key_index;
-			}
-
-			int k = _find(st->scales, p_time);
-			if (k < 0 || k >= st->scales.size()) {
-				return -1;
-			}
-			if ((p_find_mode == FIND_MODE_APPROX && !Math::is_equal_approx(st->scales[k].time, p_time)) || (p_find_mode == FIND_MODE_EXACT && st->scales[k].time != p_time)) {
-				return -1;
-			}
-			return k;
-
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
 
@@ -1636,24 +1081,6 @@ int Animation::track_insert_key(int p_track, double p_time, const Variant &p_key
 	int ret = -1;
 
 	switch (t->type) {
-		case TYPE_POSITION_3D: {
-			ERR_FAIL_COND_V((p_key.get_type() != Variant::VECTOR3) && (p_key.get_type() != Variant::VECTOR3I), -1);
-			ret = position_track_insert_key(p_track, p_time, p_key);
-			track_set_key_transition(p_track, ret, p_transition);
-
-		} break;
-		case TYPE_ROTATION_3D: {
-			ERR_FAIL_COND_V((p_key.get_type() != Variant::QUATERNION) && (p_key.get_type() != Variant::BASIS), -1);
-			ret = rotation_track_insert_key(p_track, p_time, p_key);
-			track_set_key_transition(p_track, ret, p_transition);
-
-		} break;
-		case TYPE_SCALE_3D: {
-			ERR_FAIL_COND_V((p_key.get_type() != Variant::VECTOR3) && (p_key.get_type() != Variant::VECTOR3I), -1);
-			ret = scale_track_insert_key(p_track, p_time, p_key);
-			track_set_key_transition(p_track, ret, p_transition);
-
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			ERR_FAIL_COND_V((p_key.get_type() != Variant::FLOAT) && (p_key.get_type() != Variant::INT), -1);
 			ret = blend_shape_track_insert_key(p_track, p_time, p_key);
@@ -1751,27 +1178,6 @@ int Animation::track_get_key_count(int p_track) const {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_POSITION_3D: {
-			PositionTrack *tt = static_cast<PositionTrack *>(t);
-			if (tt->compressed_track >= 0) {
-				return _get_compressed_key_count(tt->compressed_track);
-			}
-			return tt->positions.size();
-		} break;
-		case TYPE_ROTATION_3D: {
-			RotationTrack *rt = static_cast<RotationTrack *>(t);
-			if (rt->compressed_track >= 0) {
-				return _get_compressed_key_count(rt->compressed_track);
-			}
-			return rt->rotations.size();
-		} break;
-		case TYPE_SCALE_3D: {
-			ScaleTrack *st = static_cast<ScaleTrack *>(t);
-			if (st->compressed_track >= 0) {
-				return _get_compressed_key_count(st->compressed_track);
-			}
-			return st->scales.size();
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
 			if (bst->compressed_track >= 0) {
@@ -1810,21 +1216,6 @@ Variant Animation::track_get_key_value(int p_track, int p_key_idx) const {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_POSITION_3D: {
-			Vector3 value;
-			position_track_get_key(p_track, p_key_idx, &value);
-			return value;
-		} break;
-		case TYPE_ROTATION_3D: {
-			Quaternion value;
-			rotation_track_get_key(p_track, p_key_idx, &value);
-			return value;
-		} break;
-		case TYPE_SCALE_3D: {
-			Vector3 value;
-			scale_track_get_key(p_track, p_key_idx, &value);
-			return value;
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			float value;
 			blend_shape_track_get_key(p_track, p_key_idx, &value);
@@ -1887,42 +1278,6 @@ double Animation::track_get_key_time(int p_track, int p_key_idx) const {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_POSITION_3D: {
-			PositionTrack *tt = static_cast<PositionTrack *>(t);
-			if (tt->compressed_track >= 0) {
-				Vector3i value;
-				double time;
-				bool fetch_compressed_success = _fetch_compressed_by_index<3>(tt->compressed_track, p_key_idx, value, time);
-				ERR_FAIL_COND_V(!fetch_compressed_success, false);
-				return time;
-			}
-			ERR_FAIL_INDEX_V(p_key_idx, tt->positions.size(), -1);
-			return tt->positions[p_key_idx].time;
-		} break;
-		case TYPE_ROTATION_3D: {
-			RotationTrack *rt = static_cast<RotationTrack *>(t);
-			if (rt->compressed_track >= 0) {
-				Vector3i value;
-				double time;
-				bool fetch_compressed_success = _fetch_compressed_by_index<3>(rt->compressed_track, p_key_idx, value, time);
-				ERR_FAIL_COND_V(!fetch_compressed_success, false);
-				return time;
-			}
-			ERR_FAIL_INDEX_V(p_key_idx, rt->rotations.size(), -1);
-			return rt->rotations[p_key_idx].time;
-		} break;
-		case TYPE_SCALE_3D: {
-			ScaleTrack *st = static_cast<ScaleTrack *>(t);
-			if (st->compressed_track >= 0) {
-				Vector3i value;
-				double time;
-				bool fetch_compressed_success = _fetch_compressed_by_index<3>(st->compressed_track, p_key_idx, value, time);
-				ERR_FAIL_COND_V(!fetch_compressed_success, false);
-				return time;
-			}
-			ERR_FAIL_INDEX_V(p_key_idx, st->scales.size(), -1);
-			return st->scales[p_key_idx].time;
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
 			if (bst->compressed_track >= 0) {
@@ -1975,36 +1330,6 @@ void Animation::track_set_key_time(int p_track, int p_key_idx, double p_time) {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_POSITION_3D: {
-			PositionTrack *tt = static_cast<PositionTrack *>(t);
-			ERR_FAIL_COND(tt->compressed_track >= 0);
-			ERR_FAIL_INDEX(p_key_idx, tt->positions.size());
-			TKey<Vector3> key = tt->positions[p_key_idx];
-			key.time = p_time;
-			tt->positions.remove_at(p_key_idx);
-			_insert(p_time, tt->positions, key);
-			return;
-		}
-		case TYPE_ROTATION_3D: {
-			RotationTrack *tt = static_cast<RotationTrack *>(t);
-			ERR_FAIL_COND(tt->compressed_track >= 0);
-			ERR_FAIL_INDEX(p_key_idx, tt->rotations.size());
-			TKey<Quaternion> key = tt->rotations[p_key_idx];
-			key.time = p_time;
-			tt->rotations.remove_at(p_key_idx);
-			_insert(p_time, tt->rotations, key);
-			return;
-		}
-		case TYPE_SCALE_3D: {
-			ScaleTrack *tt = static_cast<ScaleTrack *>(t);
-			ERR_FAIL_COND(tt->compressed_track >= 0);
-			ERR_FAIL_INDEX(p_key_idx, tt->scales.size());
-			TKey<Vector3> key = tt->scales[p_key_idx];
-			key.time = p_time;
-			tt->scales.remove_at(p_key_idx);
-			_insert(p_time, tt->scales, key);
-			return;
-		}
 		case TYPE_BLEND_SHAPE: {
 			BlendShapeTrack *tt = static_cast<BlendShapeTrack *>(t);
 			ERR_FAIL_COND(tt->compressed_track >= 0);
@@ -2070,30 +1395,6 @@ real_t Animation::track_get_key_transition(int p_track, int p_key_idx) const {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_POSITION_3D: {
-			PositionTrack *tt = static_cast<PositionTrack *>(t);
-			if (tt->compressed_track >= 0) {
-				return 1.0;
-			}
-			ERR_FAIL_INDEX_V(p_key_idx, tt->positions.size(), -1);
-			return tt->positions[p_key_idx].transition;
-		} break;
-		case TYPE_ROTATION_3D: {
-			RotationTrack *rt = static_cast<RotationTrack *>(t);
-			if (rt->compressed_track >= 0) {
-				return 1.0;
-			}
-			ERR_FAIL_INDEX_V(p_key_idx, rt->rotations.size(), -1);
-			return rt->rotations[p_key_idx].transition;
-		} break;
-		case TYPE_SCALE_3D: {
-			ScaleTrack *st = static_cast<ScaleTrack *>(t);
-			if (st->compressed_track >= 0) {
-				return 1.0;
-			}
-			ERR_FAIL_INDEX_V(p_key_idx, st->scales.size(), -1);
-			return st->scales[p_key_idx].transition;
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
 			if (bst->compressed_track >= 0) {
@@ -2133,18 +1434,6 @@ bool Animation::track_is_compressed(int p_track) const {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_POSITION_3D: {
-			PositionTrack *tt = static_cast<PositionTrack *>(t);
-			return tt->compressed_track >= 0;
-		} break;
-		case TYPE_ROTATION_3D: {
-			RotationTrack *rt = static_cast<RotationTrack *>(t);
-			return rt->compressed_track >= 0;
-		} break;
-		case TYPE_SCALE_3D: {
-			ScaleTrack *st = static_cast<ScaleTrack *>(t);
-			return st->compressed_track >= 0;
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
 			return bst->compressed_track >= 0;
@@ -2160,33 +1449,6 @@ void Animation::track_set_key_value(int p_track, int p_key_idx, const Variant &p
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_POSITION_3D: {
-			ERR_FAIL_COND((p_value.get_type() != Variant::VECTOR3) && (p_value.get_type() != Variant::VECTOR3I));
-			PositionTrack *tt = static_cast<PositionTrack *>(t);
-			ERR_FAIL_COND(tt->compressed_track >= 0);
-			ERR_FAIL_INDEX(p_key_idx, tt->positions.size());
-
-			tt->positions.write[p_key_idx].value = p_value;
-
-		} break;
-		case TYPE_ROTATION_3D: {
-			ERR_FAIL_COND((p_value.get_type() != Variant::QUATERNION) && (p_value.get_type() != Variant::BASIS));
-			RotationTrack *rt = static_cast<RotationTrack *>(t);
-			ERR_FAIL_COND(rt->compressed_track >= 0);
-			ERR_FAIL_INDEX(p_key_idx, rt->rotations.size());
-
-			rt->rotations.write[p_key_idx].value = p_value;
-
-		} break;
-		case TYPE_SCALE_3D: {
-			ERR_FAIL_COND((p_value.get_type() != Variant::VECTOR3) && (p_value.get_type() != Variant::VECTOR3I));
-			ScaleTrack *st = static_cast<ScaleTrack *>(t);
-			ERR_FAIL_COND(st->compressed_track >= 0);
-			ERR_FAIL_INDEX(p_key_idx, st->scales.size());
-
-			st->scales.write[p_key_idx].value = p_value;
-
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			ERR_FAIL_COND((p_value.get_type() != Variant::FLOAT) && (p_value.get_type() != Variant::INT));
 			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
@@ -2262,24 +1524,6 @@ void Animation::track_set_key_transition(int p_track, int p_key_idx, real_t p_tr
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_POSITION_3D: {
-			PositionTrack *tt = static_cast<PositionTrack *>(t);
-			ERR_FAIL_COND(tt->compressed_track >= 0);
-			ERR_FAIL_INDEX(p_key_idx, tt->positions.size());
-			tt->positions.write[p_key_idx].transition = p_transition;
-		} break;
-		case TYPE_ROTATION_3D: {
-			RotationTrack *rt = static_cast<RotationTrack *>(t);
-			ERR_FAIL_COND(rt->compressed_track >= 0);
-			ERR_FAIL_INDEX(p_key_idx, rt->rotations.size());
-			rt->rotations.write[p_key_idx].transition = p_transition;
-		} break;
-		case TYPE_SCALE_3D: {
-			ScaleTrack *st = static_cast<ScaleTrack *>(t);
-			ERR_FAIL_COND(st->compressed_track >= 0);
-			ERR_FAIL_INDEX(p_key_idx, st->scales.size());
-			st->scales.write[p_key_idx].transition = p_transition;
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
 			ERR_FAIL_COND(bst->compressed_track >= 0);
@@ -2358,10 +1602,6 @@ Vector3 Animation::_interpolate(const Vector3 &p_a, const Vector3 &p_b, real_t p
 	return p_a.lerp(p_b, p_c);
 }
 
-Quaternion Animation::_interpolate(const Quaternion &p_a, const Quaternion &p_b, real_t p_c) const {
-	return p_a.slerp(p_b, p_c);
-}
-
 Variant Animation::_interpolate(const Variant &p_a, const Variant &p_b, real_t p_c) const {
 	return interpolate_variant(p_a, p_b, p_c);
 }
@@ -2387,10 +1627,6 @@ Variant Animation::_interpolate_angle(const Variant &p_a, const Variant &p_b, re
 
 Vector3 Animation::_cubic_interpolate_in_time(const Vector3 &p_pre_a, const Vector3 &p_a, const Vector3 &p_b, const Vector3 &p_post_b, real_t p_c, real_t p_pre_a_t, real_t p_b_t, real_t p_post_b_t) const {
 	return p_a.cubic_interpolate_in_time(p_b, p_pre_a, p_post_b, p_c, p_b_t, p_pre_a_t, p_post_b_t);
-}
-
-Quaternion Animation::_cubic_interpolate_in_time(const Quaternion &p_pre_a, const Quaternion &p_a, const Quaternion &p_b, const Quaternion &p_post_b, real_t p_c, real_t p_pre_a_t, real_t p_b_t, real_t p_post_b_t) const {
-	return p_a.spherical_cubic_interpolate_in_time(p_b, p_pre_a, p_post_b, p_c, p_b_t, p_pre_a_t, p_post_b_t);
 }
 
 Variant Animation::_cubic_interpolate_in_time(const Variant &p_pre_a, const Variant &p_a, const Variant &p_b, const Variant &p_post_b, real_t p_c, real_t p_pre_a_t, real_t p_b_t, real_t p_post_b_t) const {
@@ -2444,14 +1680,6 @@ Variant Animation::_cubic_interpolate_in_time(const Variant &p_pre_a, const Vari
 			Vector3 pb = p_post_b;
 
 			return a.cubic_interpolate_in_time(b, pa, pb, p_c, p_b_t, p_pre_a_t, p_post_b_t);
-		}
-		case Variant::QUATERNION: {
-			Quaternion a = p_a;
-			Quaternion b = p_b;
-			Quaternion pa = p_pre_a;
-			Quaternion pb = p_post_b;
-
-			return a.spherical_cubic_interpolate_in_time(b, pa, pb, p_c, p_b_t, p_pre_a_t, p_post_b_t);
 		}
 		case Variant::AABB: {
 			AABB a = p_a;
@@ -2836,51 +2064,6 @@ void Animation::track_get_key_indices_in_range(int p_track, double p_time, doubl
 				double anim_start = -CMP_EPSILON;
 
 				switch (t->type) {
-					case TYPE_POSITION_3D: {
-						const PositionTrack *tt = static_cast<const PositionTrack *>(t);
-						if (tt->compressed_track >= 0) {
-							_get_compressed_key_indices_in_range<3>(tt->compressed_track, from_time, length, p_indices);
-							_get_compressed_key_indices_in_range<3>(tt->compressed_track, 0, to_time, p_indices);
-						} else {
-							if (!is_backward) {
-								_track_get_key_indices_in_range(tt->positions, from_time, anim_end, p_indices, is_backward);
-								_track_get_key_indices_in_range(tt->positions, anim_start, to_time, p_indices, is_backward);
-							} else {
-								_track_get_key_indices_in_range(tt->positions, anim_start, to_time, p_indices, is_backward);
-								_track_get_key_indices_in_range(tt->positions, from_time, anim_end, p_indices, is_backward);
-							}
-						}
-					} break;
-					case TYPE_ROTATION_3D: {
-						const RotationTrack *rt = static_cast<const RotationTrack *>(t);
-						if (rt->compressed_track >= 0) {
-							_get_compressed_key_indices_in_range<3>(rt->compressed_track, from_time, length, p_indices);
-							_get_compressed_key_indices_in_range<3>(rt->compressed_track, 0, to_time, p_indices);
-						} else {
-							if (!is_backward) {
-								_track_get_key_indices_in_range(rt->rotations, from_time, anim_end, p_indices, is_backward);
-								_track_get_key_indices_in_range(rt->rotations, anim_start, to_time, p_indices, is_backward);
-							} else {
-								_track_get_key_indices_in_range(rt->rotations, anim_start, to_time, p_indices, is_backward);
-								_track_get_key_indices_in_range(rt->rotations, from_time, anim_end, p_indices, is_backward);
-							}
-						}
-					} break;
-					case TYPE_SCALE_3D: {
-						const ScaleTrack *st = static_cast<const ScaleTrack *>(t);
-						if (st->compressed_track >= 0) {
-							_get_compressed_key_indices_in_range<3>(st->compressed_track, from_time, length, p_indices);
-							_get_compressed_key_indices_in_range<3>(st->compressed_track, 0, to_time, p_indices);
-						} else {
-							if (!is_backward) {
-								_track_get_key_indices_in_range(st->scales, from_time, anim_end, p_indices, is_backward);
-								_track_get_key_indices_in_range(st->scales, anim_start, to_time, p_indices, is_backward);
-							} else {
-								_track_get_key_indices_in_range(st->scales, anim_start, to_time, p_indices, is_backward);
-								_track_get_key_indices_in_range(st->scales, from_time, anim_end, p_indices, is_backward);
-							}
-						}
-					} break;
 					case TYPE_BLEND_SHAPE: {
 						const BlendShapeTrack *bst = static_cast<const BlendShapeTrack *>(t);
 						if (bst->compressed_track >= 0) {
@@ -2976,36 +2159,6 @@ void Animation::track_get_key_indices_in_range(int p_track, double p_time, doubl
 			if (p_looped_flag == Animation::LOOPED_FLAG_START) {
 				// Handle loop by splitting.
 				switch (t->type) {
-					case TYPE_POSITION_3D: {
-						const PositionTrack *tt = static_cast<const PositionTrack *>(t);
-						if (tt->compressed_track >= 0) {
-							_get_compressed_key_indices_in_range<3>(tt->compressed_track, 0, from_time, p_indices);
-							_get_compressed_key_indices_in_range<3>(tt->compressed_track, 0, to_time, p_indices);
-						} else {
-							_track_get_key_indices_in_range(tt->positions, 0, from_time, p_indices, true);
-							_track_get_key_indices_in_range(tt->positions, 0, to_time, p_indices, false);
-						}
-					} break;
-					case TYPE_ROTATION_3D: {
-						const RotationTrack *rt = static_cast<const RotationTrack *>(t);
-						if (rt->compressed_track >= 0) {
-							_get_compressed_key_indices_in_range<3>(rt->compressed_track, 0, from_time, p_indices);
-							_get_compressed_key_indices_in_range<3>(rt->compressed_track, 0, to_time, p_indices);
-						} else {
-							_track_get_key_indices_in_range(rt->rotations, 0, from_time, p_indices, true);
-							_track_get_key_indices_in_range(rt->rotations, 0, to_time, p_indices, false);
-						}
-					} break;
-					case TYPE_SCALE_3D: {
-						const ScaleTrack *st = static_cast<const ScaleTrack *>(t);
-						if (st->compressed_track >= 0) {
-							_get_compressed_key_indices_in_range<3>(st->compressed_track, 0, from_time, p_indices);
-							_get_compressed_key_indices_in_range<3>(st->compressed_track, 0, to_time, p_indices);
-						} else {
-							_track_get_key_indices_in_range(st->scales, 0, from_time, p_indices, true);
-							_track_get_key_indices_in_range(st->scales, 0, to_time, p_indices, false);
-						}
-					} break;
 					case TYPE_BLEND_SHAPE: {
 						const BlendShapeTrack *bst = static_cast<const BlendShapeTrack *>(t);
 						if (bst->compressed_track >= 0) {
@@ -3047,36 +2200,6 @@ void Animation::track_get_key_indices_in_range(int p_track, double p_time, doubl
 			if (p_looped_flag == Animation::LOOPED_FLAG_END) {
 				// Handle loop by splitting.
 				switch (t->type) {
-					case TYPE_POSITION_3D: {
-						const PositionTrack *tt = static_cast<const PositionTrack *>(t);
-						if (tt->compressed_track >= 0) {
-							_get_compressed_key_indices_in_range<3>(tt->compressed_track, from_time, length, p_indices);
-							_get_compressed_key_indices_in_range<3>(tt->compressed_track, to_time, length, p_indices);
-						} else {
-							_track_get_key_indices_in_range(tt->positions, from_time, length, p_indices, false);
-							_track_get_key_indices_in_range(tt->positions, to_time, length, p_indices, true);
-						}
-					} break;
-					case TYPE_ROTATION_3D: {
-						const RotationTrack *rt = static_cast<const RotationTrack *>(t);
-						if (rt->compressed_track >= 0) {
-							_get_compressed_key_indices_in_range<3>(rt->compressed_track, from_time, length, p_indices);
-							_get_compressed_key_indices_in_range<3>(rt->compressed_track, to_time, length, p_indices);
-						} else {
-							_track_get_key_indices_in_range(rt->rotations, from_time, length, p_indices, false);
-							_track_get_key_indices_in_range(rt->rotations, to_time, length, p_indices, true);
-						}
-					} break;
-					case TYPE_SCALE_3D: {
-						const ScaleTrack *st = static_cast<const ScaleTrack *>(t);
-						if (st->compressed_track >= 0) {
-							_get_compressed_key_indices_in_range<3>(st->compressed_track, from_time, length, p_indices);
-							_get_compressed_key_indices_in_range<3>(st->compressed_track, to_time, length, p_indices);
-						} else {
-							_track_get_key_indices_in_range(st->scales, from_time, length, p_indices, false);
-							_track_get_key_indices_in_range(st->scales, to_time, length, p_indices, true);
-						}
-					} break;
 					case TYPE_BLEND_SHAPE: {
 						const BlendShapeTrack *bst = static_cast<const BlendShapeTrack *>(t);
 						if (bst->compressed_track >= 0) {
@@ -3125,30 +2248,6 @@ void Animation::track_get_key_indices_in_range(int p_track, double p_time, doubl
 		} break;
 	}
 	switch (t->type) {
-		case TYPE_POSITION_3D: {
-			const PositionTrack *tt = static_cast<const PositionTrack *>(t);
-			if (tt->compressed_track >= 0) {
-				_get_compressed_key_indices_in_range<3>(tt->compressed_track, from_time, to_time - from_time, p_indices);
-			} else {
-				_track_get_key_indices_in_range(tt->positions, from_time, to_time, p_indices, is_backward);
-			}
-		} break;
-		case TYPE_ROTATION_3D: {
-			const RotationTrack *rt = static_cast<const RotationTrack *>(t);
-			if (rt->compressed_track >= 0) {
-				_get_compressed_key_indices_in_range<3>(rt->compressed_track, from_time, to_time - from_time, p_indices);
-			} else {
-				_track_get_key_indices_in_range(rt->rotations, from_time, to_time, p_indices, is_backward);
-			}
-		} break;
-		case TYPE_SCALE_3D: {
-			const ScaleTrack *st = static_cast<const ScaleTrack *>(t);
-			if (st->compressed_track >= 0) {
-				_get_compressed_key_indices_in_range<3>(st->compressed_track, from_time, to_time - from_time, p_indices);
-			} else {
-				_track_get_key_indices_in_range(st->scales, from_time, to_time, p_indices, is_backward);
-			}
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			const BlendShapeTrack *bst = static_cast<const BlendShapeTrack *>(t);
 			if (bst->compressed_track >= 0) {
@@ -3832,14 +2931,8 @@ void Animation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("track_set_enabled", "track_idx", "enabled"), &Animation::track_set_enabled);
 	ClassDB::bind_method(D_METHOD("track_is_enabled", "track_idx"), &Animation::track_is_enabled);
 
-	ClassDB::bind_method(D_METHOD("position_track_insert_key", "track_idx", "time", "position"), &Animation::position_track_insert_key);
-	ClassDB::bind_method(D_METHOD("rotation_track_insert_key", "track_idx", "time", "rotation"), &Animation::rotation_track_insert_key);
-	ClassDB::bind_method(D_METHOD("scale_track_insert_key", "track_idx", "time", "scale"), &Animation::scale_track_insert_key);
 	ClassDB::bind_method(D_METHOD("blend_shape_track_insert_key", "track_idx", "time", "amount"), &Animation::blend_shape_track_insert_key);
 
-	ClassDB::bind_method(D_METHOD("position_track_interpolate", "track_idx", "time_sec"), &Animation::position_track_interpolate);
-	ClassDB::bind_method(D_METHOD("rotation_track_interpolate", "track_idx", "time_sec"), &Animation::rotation_track_interpolate);
-	ClassDB::bind_method(D_METHOD("scale_track_interpolate", "track_idx", "time_sec"), &Animation::scale_track_interpolate);
 	ClassDB::bind_method(D_METHOD("blend_shape_track_interpolate", "track_idx", "time_sec"), &Animation::blend_shape_track_interpolate);
 
 	ClassDB::bind_method(D_METHOD("track_insert_key", "track_idx", "time", "key", "transition"), &Animation::track_insert_key, DEFVAL(1));
@@ -3916,9 +3009,6 @@ void Animation::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "step", PROPERTY_HINT_RANGE, "0,4096,0.001,suffix:s"), "set_step", "get_step");
 
 	BIND_ENUM_CONSTANT(TYPE_VALUE);
-	BIND_ENUM_CONSTANT(TYPE_POSITION_3D);
-	BIND_ENUM_CONSTANT(TYPE_ROTATION_3D);
-	BIND_ENUM_CONSTANT(TYPE_SCALE_3D);
 	BIND_ENUM_CONSTANT(TYPE_BLEND_SHAPE);
 	BIND_ENUM_CONSTANT(TYPE_METHOD);
 	BIND_ENUM_CONSTANT(TYPE_BEZIER);
@@ -4052,118 +3142,6 @@ bool Animation::_vector3_track_optimize_key(const TKey<Vector3> t0, const TKey<V
 	return false;
 }
 
-bool Animation::_quaternion_track_optimize_key(const TKey<Quaternion> t0, const TKey<Quaternion> t1, const TKey<Quaternion> t2, real_t p_allowed_velocity_err, real_t p_allowed_angular_error, real_t p_allowed_precision_error) {
-	// Remove overlapping keys.
-	if (Math::is_equal_approx(t0.time, t1.time) || Math::is_equal_approx(t1.time, t2.time)) {
-		return true;
-	}
-	if ((t0.value - t1.value).length() < p_allowed_precision_error && (t1.value - t2.value).length() < p_allowed_precision_error) {
-		return true;
-	}
-	// Check axis.
-	Quaternion q0 = t0.value * t1.value * t0.value.inverse();
-	Quaternion q1 = t1.value * t2.value * t1.value.inverse();
-	if (q0.get_axis().dot(q1.get_axis()) >= 1.0 - p_allowed_angular_error * 2.0) {
-		double a0 = Math::acos(t0.value.dot(t1.value));
-		double a1 = Math::acos(t1.value.dot(t2.value));
-		if (a0 + a1 >= Math_PI) {
-			return false; // Rotation is more than 180 deg, keep key.
-		}
-		// Calc velocities.
-		double v0 = a0 / (t1.time - t0.time);
-		double v1 = a1 / (t2.time - t1.time);
-		// Avoid zero div but check equality.
-		if (abs(v0 - v1) < p_allowed_precision_error) {
-			return true;
-		} else if (abs(v0) < p_allowed_precision_error || abs(v1) < p_allowed_precision_error) {
-			return false;
-		}
-		double ratio = v0 < v1 ? v0 / v1 : v1 / v0;
-		if (ratio >= 1.0 - p_allowed_velocity_err) {
-			return true;
-		}
-	}
-	return false;
-}
-
-void Animation::_position_track_optimize(int p_idx, real_t p_allowed_velocity_err, real_t p_allowed_angular_err, real_t p_allowed_precision_error) {
-	ERR_FAIL_INDEX(p_idx, tracks.size());
-	ERR_FAIL_COND(tracks[p_idx]->type != TYPE_POSITION_3D);
-	PositionTrack *tt = static_cast<PositionTrack *>(tracks[p_idx]);
-
-	int i = 0;
-	while (i < tt->positions.size() - 2) {
-		TKey<Vector3> t0 = tt->positions[i];
-		TKey<Vector3> t1 = tt->positions[i + 1];
-		TKey<Vector3> t2 = tt->positions[i + 2];
-
-		bool erase = _vector3_track_optimize_key(t0, t1, t2, p_allowed_velocity_err, p_allowed_angular_err, p_allowed_precision_error);
-		if (erase) {
-			tt->positions.remove_at(i + 1);
-		} else {
-			i++;
-		}
-	}
-
-	if (tt->positions.size() == 2) {
-		if ((tt->positions[0].value - tt->positions[1].value).length() < p_allowed_precision_error) {
-			tt->positions.remove_at(1);
-		}
-	}
-}
-
-void Animation::_rotation_track_optimize(int p_idx, real_t p_allowed_velocity_err, real_t p_allowed_angular_err, real_t p_allowed_precision_error) {
-	ERR_FAIL_INDEX(p_idx, tracks.size());
-	ERR_FAIL_COND(tracks[p_idx]->type != TYPE_ROTATION_3D);
-	RotationTrack *rt = static_cast<RotationTrack *>(tracks[p_idx]);
-
-	int i = 0;
-	while (i < rt->rotations.size() - 2) {
-		TKey<Quaternion> t0 = rt->rotations[i];
-		TKey<Quaternion> t1 = rt->rotations[i + 1];
-		TKey<Quaternion> t2 = rt->rotations[i + 2];
-
-		bool erase = _quaternion_track_optimize_key(t0, t1, t2, p_allowed_velocity_err, p_allowed_angular_err, p_allowed_precision_error);
-		if (erase) {
-			rt->rotations.remove_at(i + 1);
-		} else {
-			i++;
-		}
-	}
-
-	if (rt->rotations.size() == 2) {
-		if ((rt->rotations[0].value - rt->rotations[1].value).length() < p_allowed_precision_error) {
-			rt->rotations.remove_at(1);
-		}
-	}
-}
-
-void Animation::_scale_track_optimize(int p_idx, real_t p_allowed_velocity_err, real_t p_allowed_angular_err, real_t p_allowed_precision_error) {
-	ERR_FAIL_INDEX(p_idx, tracks.size());
-	ERR_FAIL_COND(tracks[p_idx]->type != TYPE_SCALE_3D);
-	ScaleTrack *st = static_cast<ScaleTrack *>(tracks[p_idx]);
-
-	int i = 0;
-	while (i < st->scales.size() - 2) {
-		TKey<Vector3> t0 = st->scales[i];
-		TKey<Vector3> t1 = st->scales[i + 1];
-		TKey<Vector3> t2 = st->scales[i + 2];
-
-		bool erase = _vector3_track_optimize_key(t0, t1, t2, p_allowed_velocity_err, p_allowed_angular_err, p_allowed_precision_error);
-		if (erase) {
-			st->scales.remove_at(i + 1);
-		} else {
-			i++;
-		}
-	}
-
-	if (st->scales.size() == 2) {
-		if ((st->scales[0].value - st->scales[1].value).length() < p_allowed_precision_error) {
-			st->scales.remove_at(1);
-		}
-	}
-}
-
 void Animation::_blend_shape_track_optimize(int p_idx, real_t p_allowed_velocity_err, real_t p_allowed_precision_error) {
 	ERR_FAIL_INDEX(p_idx, tracks.size());
 	ERR_FAIL_COND(tracks[p_idx]->type != TYPE_BLEND_SHAPE);
@@ -4250,18 +3228,6 @@ void Animation::_value_track_optimize(int p_idx, real_t p_allowed_velocity_err, 
 				t2.value = vt->values[i + 2].value;
 				erase = _vector3_track_optimize_key(t0, t1, t2, p_allowed_velocity_err, p_allowed_angular_err, p_allowed_precision_error);
 			} break;
-			case Variant::QUATERNION: {
-				TKey<Quaternion> t0;
-				TKey<Quaternion> t1;
-				TKey<Quaternion> t2;
-				t0.time = vt->values[i].time;
-				t1.time = vt->values[i + 1].time;
-				t2.time = vt->values[i + 2].time;
-				t0.value = vt->values[i].value;
-				t1.value = vt->values[i + 1].value;
-				t2.value = vt->values[i + 2].value;
-				erase = _quaternion_track_optimize_key(t0, t1, t2, p_allowed_velocity_err, p_allowed_angular_err, p_allowed_precision_error);
-			} break;
 			default: {
 			} break;
 		}
@@ -4295,11 +3261,6 @@ void Animation::_value_track_optimize(int p_idx, real_t p_allowed_velocity_err, 
 				Vector3 val_1 = vt->values[1].value;
 				single_key = (val_0 - val_1).length() < p_allowed_precision_error;
 			} break;
-			case Variant::QUATERNION: {
-				Quaternion val_0 = vt->values[0].value;
-				Quaternion val_1 = vt->values[1].value;
-				single_key = (val_0 - val_1).length() < p_allowed_precision_error;
-			} break;
 			default: {
 			} break;
 		}
@@ -4315,13 +3276,7 @@ void Animation::optimize(real_t p_allowed_velocity_err, real_t p_allowed_angular
 		if (track_is_compressed(i)) {
 			continue; //not possible to optimize compressed track
 		}
-		if (tracks[i]->type == TYPE_POSITION_3D) {
-			_position_track_optimize(i, p_allowed_velocity_err, p_allowed_angular_err, precision);
-		} else if (tracks[i]->type == TYPE_ROTATION_3D) {
-			_rotation_track_optimize(i, p_allowed_velocity_err, p_allowed_angular_err, precision);
-		} else if (tracks[i]->type == TYPE_SCALE_3D) {
-			_scale_track_optimize(i, p_allowed_velocity_err, p_allowed_angular_err, precision);
-		} else if (tracks[i]->type == TYPE_BLEND_SHAPE) {
+		if (tracks[i]->type == TYPE_BLEND_SHAPE) {
 			_blend_shape_track_optimize(i, p_allowed_velocity_err, precision);
 		} else if (tracks[i]->type == TYPE_VALUE) {
 			_value_track_optimize(i, p_allowed_velocity_err, p_allowed_angular_err, precision);
@@ -4592,47 +3547,6 @@ Vector3i Animation::_compress_key(uint32_t p_track, const AABB &p_bounds, int32_
 	Vector3i values;
 	TrackType tt = track_get_type(p_track);
 	switch (tt) {
-		case TYPE_POSITION_3D: {
-			Vector3 pos;
-			if (p_key >= 0) {
-				position_track_get_key(p_track, p_key, &pos);
-			} else {
-				try_position_track_interpolate(p_track, p_time, &pos);
-			}
-			pos = (pos - p_bounds.position) / p_bounds.size;
-			for (int j = 0; j < 3; j++) {
-				values[j] = CLAMP(int32_t(pos[j] * 65535.0), 0, 65535);
-			}
-		} break;
-		case TYPE_ROTATION_3D: {
-			Quaternion rot;
-			if (p_key >= 0) {
-				rotation_track_get_key(p_track, p_key, &rot);
-			} else {
-				try_rotation_track_interpolate(p_track, p_time, &rot);
-			}
-			Vector3 axis = rot.get_axis();
-			float angle = rot.get_angle();
-			angle = Math::fposmod(double(angle), double(Math_PI * 2.0));
-			Vector2 oct = axis.octahedron_encode();
-			Vector3 rot_norm(oct.x, oct.y, angle / (Math_PI * 2.0)); // high resolution rotation in 0-1 angle.
-
-			for (int j = 0; j < 3; j++) {
-				values[j] = CLAMP(int32_t(rot_norm[j] * 65535.0), 0, 65535);
-			}
-		} break;
-		case TYPE_SCALE_3D: {
-			Vector3 scale;
-			if (p_key >= 0) {
-				scale_track_get_key(p_track, p_key, &scale);
-			} else {
-				try_scale_track_interpolate(p_track, p_time, &scale);
-			}
-			scale = (scale - p_bounds.position) / p_bounds.size;
-			for (int j = 0; j < 3; j++) {
-				values[j] = CLAMP(int32_t(scale[j] * 65535.0), 0, 65535);
-			}
-		} break;
 		case TYPE_BLEND_SHAPE: {
 			float blend;
 			if (p_key >= 0) {
@@ -4692,7 +3606,7 @@ void Animation::compress(uint32_t p_page_size, uint32_t p_fps, float p_split_tol
 
 	for (int i = 0; i < get_track_count(); i++) {
 		TrackType type = track_get_type(i);
-		if (type != TYPE_POSITION_3D && type != TYPE_ROTATION_3D && type != TYPE_SCALE_3D && type != TYPE_BLEND_SHAPE) {
+		if (type != TYPE_BLEND_SHAPE) {
 			continue;
 		}
 		if (track_get_key_count(i) == 0) {
@@ -4704,47 +3618,6 @@ void Animation::compress(uint32_t p_page_size, uint32_t p_fps, float p_split_tol
 		tracks_to_compress.push_back(i);
 
 		AABB bounds;
-
-		if (type == TYPE_POSITION_3D) {
-			AABB aabb;
-			int kcount = track_get_key_count(i);
-			for (int j = 0; j < kcount; j++) {
-				Vector3 pos;
-				position_track_get_key(i, j, &pos);
-				if (j == 0) {
-					aabb.position = pos;
-				} else {
-					aabb.expand_to(pos);
-				}
-			}
-			for (int j = 0; j < 3; j++) {
-				// Can't have zero.
-				if (aabb.size[j] < CMP_EPSILON) {
-					aabb.size[j] = CMP_EPSILON;
-				}
-			}
-			bounds = aabb;
-		}
-		if (type == TYPE_SCALE_3D) {
-			AABB aabb;
-			int kcount = track_get_key_count(i);
-			for (int j = 0; j < kcount; j++) {
-				Vector3 scale;
-				scale_track_get_key(i, j, &scale);
-				if (j == 0) {
-					aabb.position = scale;
-				} else {
-					aabb.expand_to(scale);
-				}
-			}
-			for (int j = 0; j < 3; j++) {
-				// Can't have zero.
-				if (aabb.size[j] < CMP_EPSILON) {
-					aabb.size[j] = CMP_EPSILON;
-				}
-			}
-			bounds = aabb;
-		}
 
 		track_bounds.push_back(bounds);
 	}
@@ -5016,22 +3889,6 @@ void Animation::compress(uint32_t p_page_size, uint32_t p_fps, float p_split_tol
 		Track *t = tracks[tracks_to_compress[i]];
 		t->interpolation = INTERPOLATION_LINEAR; //only linear supported
 		switch (t->type) {
-			case TYPE_POSITION_3D: {
-				PositionTrack *tt = static_cast<PositionTrack *>(t);
-				tt->positions.clear();
-				tt->compressed_track = i;
-			} break;
-			case TYPE_ROTATION_3D: {
-				RotationTrack *rt = static_cast<RotationTrack *>(t);
-				rt->rotations.clear();
-				rt->compressed_track = i;
-			} break;
-			case TYPE_SCALE_3D: {
-				ScaleTrack *st = static_cast<ScaleTrack *>(t);
-				st->scales.clear();
-				st->compressed_track = i;
-				print_line("Scale Bounds " + itos(i) + ": " + track_bounds[i]);
-			} break;
 			case TYPE_BLEND_SHAPE: {
 				BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
 				bst->blend_shapes.clear();
@@ -5045,13 +3902,6 @@ void Animation::compress(uint32_t p_page_size, uint32_t p_fps, float p_split_tol
 	uint32_t orig_size = 0;
 	for (int i = 0; i < get_track_count(); i++) {
 		switch (track_get_type(i)) {
-			case TYPE_SCALE_3D:
-			case TYPE_POSITION_3D: {
-				orig_size += sizeof(TKey<Vector3>) * track_get_key_count(i);
-			} break;
-			case TYPE_ROTATION_3D: {
-				orig_size += sizeof(TKey<Quaternion>) * track_get_key_count(i);
-			} break;
 			case TYPE_BLEND_SHAPE: {
 				orig_size += sizeof(TKey<float>) * track_get_key_count(i);
 			} break;
@@ -5069,53 +3919,6 @@ void Animation::compress(uint32_t p_page_size, uint32_t p_fps, float p_split_tol
 #endif
 }
 
-bool Animation::_rotation_interpolate_compressed(uint32_t p_compressed_track, double p_time, Quaternion &r_ret) const {
-	Vector3i current;
-	Vector3i next;
-	double time_current;
-	double time_next;
-
-	if (!_fetch_compressed<3>(p_compressed_track, p_time, current, time_current, next, time_next)) {
-		return false; //some sort of problem
-	}
-
-	if (time_current >= p_time || time_current == time_next) {
-		r_ret = _uncompress_quaternion(current);
-	} else if (p_time >= time_next) {
-		r_ret = _uncompress_quaternion(next);
-	} else {
-		double c = (p_time - time_current) / (time_next - time_current);
-		Quaternion from = _uncompress_quaternion(current);
-		Quaternion to = _uncompress_quaternion(next);
-		r_ret = from.slerp(to, c);
-	}
-
-	return true;
-}
-
-bool Animation::_pos_scale_interpolate_compressed(uint32_t p_compressed_track, double p_time, Vector3 &r_ret) const {
-	Vector3i current;
-	Vector3i next;
-	double time_current;
-	double time_next;
-
-	if (!_fetch_compressed<3>(p_compressed_track, p_time, current, time_current, next, time_next)) {
-		return false; //some sort of problem
-	}
-
-	if (time_current >= p_time || time_current == time_next) {
-		r_ret = _uncompress_pos_scale(p_compressed_track, current);
-	} else if (p_time >= time_next) {
-		r_ret = _uncompress_pos_scale(p_compressed_track, next);
-	} else {
-		double c = (p_time - time_current) / (time_next - time_current);
-		Vector3 from = _uncompress_pos_scale(p_compressed_track, current);
-		Vector3 to = _uncompress_pos_scale(p_compressed_track, next);
-		r_ret = from.lerp(to, c);
-	}
-
-	return true;
-}
 bool Animation::_blend_shape_interpolate_compressed(uint32_t p_compressed_track, double p_time, float &r_ret) const {
 	Vector3i current;
 	Vector3i next;
@@ -5389,15 +4192,6 @@ int Animation::_get_compressed_key_count(uint32_t p_compressed_track) const {
 	return key_count;
 }
 
-Quaternion Animation::_uncompress_quaternion(const Vector3i &p_value) const {
-	Vector3 axis = Vector3::octahedron_decode(Vector2(float(p_value.x) / 65535.0, float(p_value.y) / 65535.0));
-	float angle = (float(p_value.z) / 65535.0) * 2.0 * Math_PI;
-	return Quaternion(axis, angle);
-}
-Vector3 Animation::_uncompress_pos_scale(uint32_t p_compressed_track, const Vector3i &p_value) const {
-	Vector3 pos_norm(float(p_value.x) / 65535.0, float(p_value.y) / 65535.0, float(p_value.z) / 65535.0);
-	return compression.bounds[p_compressed_track].position + pos_norm * compression.bounds[p_compressed_track].size;
-}
 float Animation::_uncompress_blend_shape(const Vector3i &p_value) const {
 	float bsn = float(p_value.x) / 65535.0;
 	return (bsn * 2.0 - 1.0) * float(Compression::BLEND_SHAPE_RANGE);
@@ -5627,9 +4421,6 @@ Variant Animation::add_variant(const Variant &a, const Variant &b) {
 		case Variant::BASIS: {
 			return (a.operator Basis()) * (b.operator Basis());
 		} break;
-		case Variant::QUATERNION: {
-			return (a.operator Quaternion()) * (b.operator Quaternion());
-		} break;
 		case Variant::TRANSFORM2D: {
 			return (a.operator Transform2D()) * (b.operator Transform2D());
 		} break;
@@ -5740,9 +4531,6 @@ Variant Animation::subtract_variant(const Variant &a, const Variant &b) {
 		} break;
 		case Variant::BASIS: {
 			return (b.operator Basis()).inverse() * (a.operator Basis());
-		} break;
-		case Variant::QUATERNION: {
-			return (b.operator Quaternion()).inverse() * (a.operator Quaternion());
 		} break;
 		case Variant::TRANSFORM2D: {
 			return (b.operator Transform2D()).affine_inverse() * (a.operator Transform2D());
@@ -5866,9 +4654,6 @@ Variant Animation::blend_variant(const Variant &a, const Variant &b, float c) {
 		} break;
 		case Variant::BASIS: {
 			return (a.operator Basis()) + (b.operator Basis()) * c;
-		} break;
-		case Variant::QUATERNION: {
-			return (a.operator Quaternion()) * Quaternion().slerp((b.operator Quaternion()), c);
 		} break;
 		case Variant::TRANSFORM2D: {
 			return (a.operator Transform2D()) * Transform2D().interpolate_with((b.operator Transform2D()), c);
@@ -6004,9 +4789,6 @@ Variant Animation::interpolate_variant(const Variant &a, const Variant &b, float
 		} break;
 		case Variant::BASIS: {
 			return (a.operator Basis()).lerp(b.operator Basis(), c);
-		} break;
-		case Variant::QUATERNION: {
-			return (a.operator Quaternion()).slerp(b.operator Quaternion(), c);
 		} break;
 		case Variant::TRANSFORM2D: {
 			return (a.operator Transform2D()).interpolate_with(b.operator Transform2D(), c);

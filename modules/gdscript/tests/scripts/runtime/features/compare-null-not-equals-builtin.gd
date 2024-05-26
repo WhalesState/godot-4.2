@@ -53,10 +53,6 @@ func test():
 	value = Plane()
 	print(null != value)
 
-	# Quaternion
-	value = Quaternion()
-	print(null != value)
-
 	# AABB
 	value = AABB()
 	print(null != value)

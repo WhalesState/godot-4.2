@@ -290,11 +290,6 @@ void EditorDebuggerNode::stop(bool p_force) {
 		server->stop();
 		EditorNode::get_log()->add_message("--- Debugging process stopped ---", EditorLog::MSG_TYPE_EDITOR);
 
-		if (EditorRunBar::get_singleton()->is_movie_maker_enabled()) {
-			// Request attention in case the user was doing something else when movie recording is finished.
-			DisplayServer::get_singleton()->window_request_attention();
-		}
-
 		server.unref();
 	}
 	// Also close all debugging sessions.
@@ -443,8 +438,11 @@ void EditorDebuggerNode::_debugger_stopped(int p_id) {
 		}
 	});
 	if (!found) {
-		EditorRunBar::get_singleton()->get_pause_button()->set_pressed(false);
-		EditorRunBar::get_singleton()->get_pause_button()->set_disabled(true);
+		Button *pause_btn = EditorRunBar::get_singleton()->get_pause_button();
+		pause_btn->set_pressed(false);
+		pause_btn->set_icon(get_editor_theme_icon(SNAME("Pause")));
+		pause_btn->set_tooltip_text(TTR("Pause the running project's execution for debugging."));
+		pause_btn->set_disabled(true);
 		SceneTreeDock::get_singleton()->hide_remote_tree();
 		SceneTreeDock::get_singleton()->hide_tab_buttons();
 		EditorNode::get_singleton()->notify_all_debug_sessions_exited();
@@ -563,7 +561,10 @@ void EditorDebuggerNode::_breaked(bool p_breaked, bool p_can_debug, String p_mes
 		tabs->set_current_tab(p_debugger);
 	}
 	_break_state_changed();
-	EditorRunBar::get_singleton()->get_pause_button()->set_pressed(p_breaked);
+	Button *pause_btn = EditorRunBar::get_singleton()->get_pause_button();
+	pause_btn->set_pressed(p_breaked);
+	pause_btn->set_icon(p_breaked ? get_editor_theme_icon(SNAME("PlayStart")) : get_editor_theme_icon(SNAME("Pause")));
+	pause_btn->set_tooltip_text(p_breaked ? TTR("Resume the running project's execution.") : TTR("Pause the running project's execution for debugging."));
 	emit_signal(SNAME("breaked"), p_breaked, p_can_debug);
 }
 

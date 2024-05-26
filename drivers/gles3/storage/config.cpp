@@ -69,14 +69,7 @@ Config::Config() {
 	} else {
 		float_texture_supported = extensions.has("GL_EXT_color_buffer_float");
 		etc2_supported = true;
-#if defined(ANDROID_ENABLED) || defined(IOS_ENABLED)
-		// Some Android devices report support for S3TC but we don't expect that and don't export the textures.
-		// This could be fixed but so few devices support it that it doesn't seem useful (and makes bigger APKs).
-		// For good measure we do the same hack for iOS, just in case.
-		s3tc_supported = false;
-#else
 		s3tc_supported = extensions.has("GL_EXT_texture_compression_dxt1") || extensions.has("GL_EXT_texture_compression_s3tc") || extensions.has("WEBGL_compressed_texture_s3tc");
-#endif
 		rgtc_supported = extensions.has("GL_EXT_texture_compression_rgtc") || extensions.has("GL_ARB_texture_compression_rgtc") || extensions.has("EXT_texture_compression_rgtc");
 	}
 
@@ -91,16 +84,6 @@ Config::Config() {
 		glGetFloatv(_GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &anisotropic_level);
 		anisotropic_level = MIN(float(1 << int(GLOBAL_GET("rendering/textures/default_filters/anisotropic_filtering_level"))), anisotropic_level);
 	}
-
-	multiview_supported = extensions.has("GL_OVR_multiview2") || extensions.has("GL_OVR_multiview");
-#ifdef ANDROID_ENABLED
-	if (multiview_supported) {
-		eglFramebufferTextureMultiviewOVR = (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)eglGetProcAddress("glFramebufferTextureMultiviewOVR");
-		if (eglFramebufferTextureMultiviewOVR == nullptr) {
-			multiview_supported = false;
-		}
-	}
-#endif
 
 	force_vertex_shading = false; //GLOBAL_GET("rendering/quality/shading/force_vertex_shading");
 	use_nearest_mip_filter = GLOBAL_GET("rendering/textures/default_filters/use_nearest_mipmap_filter");

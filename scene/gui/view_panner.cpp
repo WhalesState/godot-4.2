@@ -31,10 +31,18 @@
 #include "view_panner.h"
 
 #include "core/input/input.h"
-#include "core/input/shortcut.h"
 #include "core/os/keyboard.h"
 
 bool ViewPanner::gui_input(const Ref<InputEvent> &p_event, Rect2 p_canvas_rect) {
+	Ref<InputEventKey> k = p_event;
+	if (k.is_valid() && k->get_keycode() == pan_key && !k->is_echo()) {
+		pan_key_pressed = k->is_pressed();
+		if (simple_panning_enabled || Input::get_singleton()->get_mouse_button_mask().has_flag(MouseButtonMask::LEFT)) {
+			is_dragging = pan_key_pressed;
+		}
+		return true;
+	}
+
 	Ref<InputEventMouseButton> mb = p_event;
 	if (mb.is_valid()) {
 		Vector2 scroll_vec = Vector2((mb->get_button_index() == MouseButton::WHEEL_RIGHT) - (mb->get_button_index() == MouseButton::WHEEL_LEFT), (mb->get_button_index() == MouseButton::WHEEL_DOWN) - (mb->get_button_index() == MouseButton::WHEEL_UP));
@@ -82,11 +90,6 @@ bool ViewPanner::gui_input(const Ref<InputEvent> &p_event, Rect2 p_canvas_rect) 
 					return true;
 				}
 			}
-		}
-
-		// Alt is not used for button presses, so ignore it.
-		if (mb->is_alt_pressed()) {
-			return false;
 		}
 
 		bool is_drag_event = mb->get_button_index() == MouseButton::MIDDLE ||
@@ -148,18 +151,6 @@ bool ViewPanner::gui_input(const Ref<InputEvent> &p_event, Rect2 p_canvas_rect) 
 			pan_callback.call(screen_drag->get_relative(), p_event);
 		}
 	}
-
-	Ref<InputEventKey> k = p_event;
-	if (k.is_valid()) {
-		if (pan_view_shortcut.is_valid() && pan_view_shortcut->matches_event(k)) {
-			pan_key_pressed = k->is_pressed();
-			if (simple_panning_enabled || Input::get_singleton()->get_mouse_button_mask().has_flag(MouseButtonMask::LEFT)) {
-				is_dragging = pan_key_pressed;
-			}
-			return true;
-		}
-	}
-
 	return false;
 }
 
@@ -181,9 +172,13 @@ void ViewPanner::set_enable_rmb(bool p_enable) {
 	enable_rmb = p_enable;
 }
 
-void ViewPanner::set_pan_shortcut(Ref<Shortcut> p_shortcut) {
-	pan_view_shortcut = p_shortcut;
+void ViewPanner::set_pan_key(Key p_key) {
+	pan_key = p_key;
 	pan_key_pressed = false;
+}
+
+Key ViewPanner::get_pan_key() const {
+	return pan_key;
 }
 
 void ViewPanner::set_simple_panning_enabled(bool p_enabled) {
@@ -204,9 +199,8 @@ void ViewPanner::set_pan_axis(PanAxis p_pan_axis) {
 	pan_axis = p_pan_axis;
 }
 
-void ViewPanner::setup(ControlScheme p_scheme, Ref<Shortcut> p_shortcut, bool p_simple_panning) {
+void ViewPanner::setup(ControlScheme p_scheme, bool p_simple_panning) {
 	set_control_scheme(p_scheme);
-	set_pan_shortcut(p_shortcut);
 	set_simple_panning_enabled(p_simple_panning);
 }
 
@@ -219,9 +213,5 @@ void ViewPanner::set_force_drag(bool p_force) {
 }
 
 ViewPanner::ViewPanner() {
-	Array inputs;
-	inputs.append(InputEventKey::create_reference(Key::SPACE));
-
-	pan_view_shortcut.instantiate();
-	pan_view_shortcut->set_events(inputs);
+	pan_key = Key::SPACE;
 }

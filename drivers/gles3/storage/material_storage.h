@@ -43,10 +43,6 @@
 #include "servers/rendering/storage/utilities.h"
 
 #include "drivers/gles3/shaders/canvas.glsl.gen.h"
-#include "drivers/gles3/shaders/cubemap_filter.glsl.gen.h"
-#include "drivers/gles3/shaders/particles.glsl.gen.h"
-#include "drivers/gles3/shaders/scene.glsl.gen.h"
-#include "drivers/gles3/shaders/sky.glsl.gen.h"
 
 namespace GLES3 {
 
@@ -91,8 +87,6 @@ struct MaterialData {
 	void update_uniform_buffer(const HashMap<StringName, ShaderLanguage::ShaderNode::Uniform> &p_uniforms, const uint32_t *p_uniform_offsets, const HashMap<StringName, Variant> &p_parameters, uint8_t *p_buffer, uint32_t p_buffer_size);
 	void update_textures(const HashMap<StringName, Variant> &p_parameters, const HashMap<StringName, HashMap<int, RID>> &p_default_textures, const Vector<ShaderCompiler::GeneratedCode::Texture> &p_texture_uniforms, RID *p_textures, bool p_use_linear_color);
 
-	virtual void set_render_priority(int p_priority) = 0;
-	virtual void set_next_pass(RID p_pass) = 0;
 	virtual void update_parameters(const HashMap<StringName, Variant> &p_parameters, bool p_uniform_dirty, bool p_textures_dirty) = 0;
 	virtual void bind_uniforms() = 0;
 	virtual ~MaterialData();
@@ -127,7 +121,6 @@ struct Material {
 	bool texture_dirty = false;
 	HashMap<StringName, Variant> params;
 	int32_t priority = 0;
-	RID next_pass;
 	SelfList<Material> update_element;
 
 	Dependency dependency;
@@ -183,226 +176,12 @@ ShaderData *_create_canvas_shader_func();
 struct CanvasMaterialData : public MaterialData {
 	CanvasShaderData *shader_data = nullptr;
 
-	virtual void set_render_priority(int p_priority) {}
-	virtual void set_next_pass(RID p_pass) {}
 	virtual void update_parameters(const HashMap<StringName, Variant> &p_parameters, bool p_uniform_dirty, bool p_textures_dirty);
 	virtual void bind_uniforms();
 	virtual ~CanvasMaterialData();
 };
 
 MaterialData *_create_canvas_material_func(ShaderData *p_shader);
-
-/* Sky Materials */
-
-struct SkyShaderData : public ShaderData {
-	// All these members are (re)initialized in `set_code`.
-	// Make sure to add the init to `set_code` whenever adding new members.
-
-	bool valid;
-	RID version;
-
-	Vector<ShaderCompiler::GeneratedCode::Texture> texture_uniforms;
-
-	Vector<uint32_t> ubo_offsets;
-	uint32_t ubo_size;
-
-	String code;
-
-	bool uses_time;
-	bool uses_position;
-	bool uses_half_res;
-	bool uses_quarter_res;
-	bool uses_light;
-
-	virtual void set_code(const String &p_Code);
-	virtual bool is_animated() const;
-	virtual bool casts_shadows() const;
-	virtual RS::ShaderNativeSourceCode get_native_source_code() const;
-	SkyShaderData();
-	virtual ~SkyShaderData();
-};
-
-ShaderData *_create_sky_shader_func();
-
-struct SkyMaterialData : public MaterialData {
-	SkyShaderData *shader_data = nullptr;
-	bool uniform_set_updated = false;
-
-	virtual void set_render_priority(int p_priority) {}
-	virtual void set_next_pass(RID p_pass) {}
-	virtual void update_parameters(const HashMap<StringName, Variant> &p_parameters, bool p_uniform_dirty, bool p_textures_dirty);
-	virtual void bind_uniforms();
-	virtual ~SkyMaterialData();
-};
-
-MaterialData *_create_sky_material_func(ShaderData *p_shader);
-
-/* Scene Materials */
-
-struct SceneShaderData : public ShaderData {
-	enum BlendMode { // Used internally.
-		BLEND_MODE_MIX,
-		BLEND_MODE_ADD,
-		BLEND_MODE_SUB,
-		BLEND_MODE_MUL,
-		BLEND_MODE_ALPHA_TO_COVERAGE
-	};
-
-	enum DepthDraw {
-		DEPTH_DRAW_DISABLED,
-		DEPTH_DRAW_OPAQUE,
-		DEPTH_DRAW_ALWAYS
-	};
-
-	enum DepthTest {
-		DEPTH_TEST_DISABLED,
-		DEPTH_TEST_ENABLED
-	};
-
-	enum Cull {
-		CULL_DISABLED,
-		CULL_FRONT,
-		CULL_BACK
-	};
-
-	enum AlphaAntiAliasing {
-		ALPHA_ANTIALIASING_OFF,
-		ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE,
-		ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
-	};
-
-	// All these members are (re)initialized in `set_code`.
-	// Make sure to add the init to `set_code` whenever adding new members.
-
-	bool valid;
-	RID version;
-
-	Vector<ShaderCompiler::GeneratedCode::Texture> texture_uniforms;
-
-	Vector<uint32_t> ubo_offsets;
-	uint32_t ubo_size;
-
-	String code;
-
-	BlendMode blend_mode;
-	AlphaAntiAliasing alpha_antialiasing_mode;
-	DepthDraw depth_draw;
-	DepthTest depth_test;
-	Cull cull_mode;
-
-	bool uses_point_size;
-	bool uses_alpha;
-	bool uses_alpha_clip;
-	bool uses_blend_alpha;
-	bool uses_depth_prepass_alpha;
-	bool uses_discard;
-	bool uses_roughness;
-	bool uses_normal;
-	bool uses_particle_trails;
-	bool wireframe;
-
-	bool unshaded;
-	bool uses_vertex;
-	bool uses_position;
-	bool uses_sss;
-	bool uses_transmittance;
-	bool uses_screen_texture;
-	bool uses_screen_texture_mipmaps;
-	bool uses_depth_texture;
-	bool uses_normal_texture;
-	bool uses_time;
-	bool uses_vertex_time;
-	bool uses_fragment_time;
-	bool writes_modelview_or_projection;
-	bool uses_world_coordinates;
-	bool uses_tangent;
-	bool uses_color;
-	bool uses_uv;
-	bool uses_uv2;
-	bool uses_custom0;
-	bool uses_custom1;
-	bool uses_custom2;
-	bool uses_custom3;
-	bool uses_bones;
-	bool uses_weights;
-
-	uint64_t vertex_input_mask;
-
-	virtual void set_code(const String &p_Code);
-	virtual bool is_animated() const;
-	virtual bool casts_shadows() const;
-	virtual RS::ShaderNativeSourceCode get_native_source_code() const;
-
-	SceneShaderData();
-	virtual ~SceneShaderData();
-};
-
-ShaderData *_create_scene_shader_func();
-
-struct SceneMaterialData : public MaterialData {
-	SceneShaderData *shader_data = nullptr;
-	uint64_t last_pass = 0;
-	uint32_t index = 0;
-	RID next_pass;
-	uint8_t priority = 0;
-	virtual void set_render_priority(int p_priority);
-	virtual void set_next_pass(RID p_pass);
-	virtual void update_parameters(const HashMap<StringName, Variant> &p_parameters, bool p_uniform_dirty, bool p_textures_dirty);
-	virtual void bind_uniforms();
-	virtual ~SceneMaterialData();
-};
-
-MaterialData *_create_scene_material_func(ShaderData *p_shader);
-
-/* Particle Shader */
-
-enum {
-	PARTICLES_MAX_USERDATAS = 6
-};
-
-struct ParticlesShaderData : public ShaderData {
-	// All these members are (re)initialized in `set_code`.
-	// Make sure to add the init to `set_code` whenever adding new members.
-
-	bool valid;
-	RID version;
-
-	Vector<ShaderCompiler::GeneratedCode::Texture> texture_uniforms;
-
-	Vector<uint32_t> ubo_offsets;
-	uint32_t ubo_size;
-
-	String code;
-
-	bool uses_collision;
-	bool uses_time;
-
-	bool userdatas_used[PARTICLES_MAX_USERDATAS] = {};
-	uint32_t userdata_count;
-
-	virtual void set_code(const String &p_Code);
-	virtual bool is_animated() const;
-	virtual bool casts_shadows() const;
-	virtual RS::ShaderNativeSourceCode get_native_source_code() const;
-
-	ParticlesShaderData() {}
-	virtual ~ParticlesShaderData();
-};
-
-ShaderData *_create_particles_shader_func();
-
-struct ParticleProcessMaterialData : public MaterialData {
-	ParticlesShaderData *shader_data = nullptr;
-	RID uniform_set;
-
-	virtual void set_render_priority(int p_priority) {}
-	virtual void set_next_pass(RID p_pass) {}
-	virtual void update_parameters(const HashMap<StringName, Variant> &p_parameters, bool p_uniform_dirty, bool p_textures_dirty);
-	virtual void bind_uniforms();
-	virtual ~ParticleProcessMaterialData();
-};
-
-MaterialData *_create_particles_material_func(ShaderData *p_shader);
 
 /* Global shader uniform structs */
 struct GlobalShaderUniforms {
@@ -537,15 +316,8 @@ public:
 
 	struct Shaders {
 		CanvasShaderGLES3 canvas_shader;
-		SkyShaderGLES3 sky_shader;
-		SceneShaderGLES3 scene_shader;
-		CubemapFilterShaderGLES3 cubemap_filter_shader;
-		ParticlesShaderGLES3 particles_process_shader;
 
 		ShaderCompiler compiler_canvas;
-		ShaderCompiler compiler_scene;
-		ShaderCompiler compiler_particles;
-		ShaderCompiler compiler_sky;
 	} shaders;
 
 	/* GLOBAL SHADER UNIFORM API */
@@ -609,9 +381,6 @@ public:
 
 	virtual void material_set_param(RID p_material, const StringName &p_param, const Variant &p_value) override;
 	virtual Variant material_get_param(RID p_material, const StringName &p_param) const override;
-
-	virtual void material_set_next_pass(RID p_material, RID p_next_material) override;
-	virtual void material_set_render_priority(RID p_material, int priority) override;
 
 	virtual bool material_is_animated(RID p_material) override;
 	virtual bool material_casts_shadows(RID p_material) override;

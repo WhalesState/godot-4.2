@@ -63,7 +63,7 @@ void PortableCompressedTexture2D::_set_data(const Vector<uint8_t> &p_data) {
 				uint32_t mipsize = decode_uint32(data);
 				data += 4;
 				data_size -= 4;
-				ERR_FAIL_COND(mipsize > data_size);
+				ERR_FAIL_COND(mipsize < data_size);
 				Ref<Image> img = memnew(Image(data, data_size));
 				ERR_FAIL_COND(img->is_empty());
 				if (img->get_format() != format) { // May happen due to webp/png in the tiny mipmaps.
@@ -75,18 +75,7 @@ void PortableCompressedTexture2D::_set_data(const Vector<uint8_t> &p_data) {
 				data_size -= mipsize;
 			}
 
-			image = Ref<Image>(memnew(Image(size.width, size.height, mipmaps, format, image_data)));
-
-		} break;
-		case COMPRESSION_MODE_BASIS_UNIVERSAL: {
-			ERR_FAIL_NULL(Image::basis_universal_unpacker_ptr);
-			image = Image::basis_universal_unpacker_ptr(data, data_size);
-
-		} break;
-		case COMPRESSION_MODE_S3TC:
-		case COMPRESSION_MODE_ETC2:
-		case COMPRESSION_MODE_BPTC: {
-			image = Ref<Image>(memnew(Image(size.width, size.height, mipmaps, format, p_data.slice(20))));
+			image = Ref<Image>(memnew(Image(size.width, size.height, mipmap_count > 1, format, image_data)));
 		} break;
 	}
 	ERR_FAIL_COND(image.is_null());
@@ -143,12 +132,6 @@ void PortableCompressedTexture2D::create_from_image(const Ref<Image> &p_image, C
 				encode_uint32(data_len, buffer.ptrw() + buffer.size() - 4);
 				buffer.append_array(data);
 			}
-		} break;
-		case COMPRESSION_MODE_BASIS_UNIVERSAL: {
-			Image::UsedChannels uc = p_image->detect_used_channels(p_normal_map ? Image::COMPRESS_SOURCE_NORMAL : Image::COMPRESS_SOURCE_GENERIC);
-			Vector<uint8_t> budata = Image::basis_universal_packer(p_image, uc);
-			buffer.append_array(budata);
-
 		} break;
 		case COMPRESSION_MODE_S3TC:
 		case COMPRESSION_MODE_ETC2:
@@ -323,7 +306,6 @@ void PortableCompressedTexture2D::_bind_methods() {
 
 	BIND_ENUM_CONSTANT(COMPRESSION_MODE_LOSSLESS);
 	BIND_ENUM_CONSTANT(COMPRESSION_MODE_LOSSY);
-	BIND_ENUM_CONSTANT(COMPRESSION_MODE_BASIS_UNIVERSAL);
 	BIND_ENUM_CONSTANT(COMPRESSION_MODE_S3TC);
 	BIND_ENUM_CONSTANT(COMPRESSION_MODE_ETC2);
 	BIND_ENUM_CONSTANT(COMPRESSION_MODE_BPTC);

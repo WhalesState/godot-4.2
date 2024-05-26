@@ -50,15 +50,6 @@ void GDExtensionExportPlugin::_export_file(const String &p_path, const String &p
 	Error err = config->load(p_path);
 	ERR_FAIL_COND_MSG(err, "Failed to load GDExtension file: " + p_path);
 
-	// Check whether this GDExtension should be exported.
-	bool android_aar_plugin = config->get_value("configuration", "android_aar_plugin", false);
-	if (android_aar_plugin && p_features.has("android")) {
-		// The gdextension configuration and Android .so files will be provided by the Android aar
-		// plugin it's part of, so we abort here.
-		skip();
-		return;
-	}
-
 	ERR_FAIL_COND_MSG(!config->has_section_key("configuration", "entry_symbol"), "Failed to export GDExtension file, missing entry symbol: " + p_path);
 
 	String entry_symbol = config->get_value("configuration", "entry_symbol");
@@ -100,27 +91,6 @@ void GDExtensionExportPlugin::_export_file(const String &p_path, const String &p
 		if (!library_path.is_empty()) {
 			libs_added.insert(library_path);
 			add_shared_object(library_path, tags);
-
-			if (p_features.has("ios") && (library_path.ends_with(".a") || library_path.ends_with(".xcframework"))) {
-				String additional_code = "extern void register_dynamic_symbol(char *name, void *address);\n"
-										 "extern void add_ios_init_callback(void (*cb)());\n"
-										 "\n"
-										 "extern \"C\" void $ENTRY();\n"
-										 "void $ENTRY_init() {\n"
-										 "  if (&$ENTRY) register_dynamic_symbol((char *)\"$ENTRY\", (void *)$ENTRY);\n"
-										 "}\n"
-										 "struct $ENTRY_struct {\n"
-										 "  $ENTRY_struct() {\n"
-										 "    add_ios_init_callback($ENTRY_init);\n"
-										 "  }\n"
-										 "};\n"
-										 "$ENTRY_struct $ENTRY_struct_instance;\n\n";
-				additional_code = additional_code.replace("$ENTRY", entry_symbol);
-				add_ios_cpp_code(additional_code);
-
-				String linker_flags = "-Wl,-U,_" + entry_symbol;
-				add_ios_linker_flags(linker_flags);
-			}
 		} else {
 			Vector<String> features_vector;
 			for (const String &E : p_features) {

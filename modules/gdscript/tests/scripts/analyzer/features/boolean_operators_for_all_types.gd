@@ -139,15 +139,6 @@ func test():
 	prints(x or false)
 	prints(x or true)
 
-	# TYPE_QUATERNION
-	x = Quaternion.IDENTITY
-	prints("TYPE_QUATERNION")
-	prints(not x)
-	prints(x and false)
-	prints(x and true)
-	prints(x or false)
-	prints(x or true)
-
 	# TYPE_AABB
 	x = AABB(Vector3.ONE, Vector3.ONE)
 	prints("TYPE_AABB")

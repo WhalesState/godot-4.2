@@ -44,9 +44,6 @@
 #include "scene/resources/theme.h"
 #include "scene/theme/theme_db.h"
 
-// Used for a hack preserving Mono properties on non-Mono builds.
-#include "modules/modules_enabled.gen.h" // For mono.
-
 static String _get_indent(const String &p_text) {
 	String indent;
 	bool has_text = false;
@@ -287,23 +284,6 @@ void DocTools::merge_from(const DocTools &p_data) {
 				break;
 			}
 		}
-
-#ifndef MODULE_MONO_ENABLED
-		// The Mono module defines some properties that we want to keep when
-		// re-generating docs with a non-Mono build, to prevent pointless diffs
-		// (and loss of descriptions) depending on the config of the doc writer.
-		// We use a horrible hack to force keeping the relevant properties,
-		// hardcoded below. At least it's an ad hoc hack... ¯\_(ツ)_/¯
-		// Don't show this to your kids.
-		if (c.name == "@GlobalScope") {
-			// Retrieve GodotSharp singleton.
-			for (int j = 0; j < cf.properties.size(); j++) {
-				if (cf.properties[j].name == "GodotSharp") {
-					c.properties.push_back(cf.properties[j]);
-				}
-			}
-		}
-#endif
 	}
 }
 

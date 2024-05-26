@@ -1502,22 +1502,9 @@
 				# Set region, using Path2D node.
 				DisplayServer.window_set_mouse_passthrough($Path2D.curve.get_baked_points())
 
-				# Set region, using Polygon2D node.
-				DisplayServer.window_set_mouse_passthrough($Polygon2D.polygon)
-
 				# Reset region to default.
 				DisplayServer.window_set_mouse_passthrough([])
 				[/gdscript]
-				[csharp]
-				// Set region, using Path2D node.
-				DisplayServer.WindowSetMousePassthrough(GetNode&lt;Path2D&gt;("Path2D").Curve.GetBakedPoints());
-
-				// Set region, using Polygon2D node.
-				DisplayServer.WindowSetMousePassthrough(GetNode&lt;Polygon2D&gt;("Polygon2D").Polygon);
-
-				// Reset region to default.
-				DisplayServer.WindowSetMousePassthrough(new Vector2[] {});
-				[/csharp]
 				[/codeblocks]
 				[b]Note:[/b] On Windows, the portion of a window that lies outside the region is not drawn, while on Linux (X11) and macOS it is.
 				[b]Note:[/b] This method is implemented on Linux (X11), macOS and Windows.
@@ -1646,7 +1633,7 @@
 			Display server supports setting the mouse cursor shape to a custom image. [b]Windows, macOS, Linux (X11), Web[/b]
 		</constant>
 		<constant name="FEATURE_NATIVE_DIALOG" value="9" enum="Feature">
-			Display server supports spawning dialogs using the operating system's native look-and-feel. [b]Windows, macOS, Linux (X11)[/b]
+			Display server supports spawning dialogs using the operating system's native look-and-feel. [b]macOS[/b]
 		</constant>
 		<constant name="FEATURE_IME" value="10" enum="Feature">
 			Display server supports [url=https://en.wikipedia.org/wiki/Input_method]Input Method Editor[/url], which is commonly used for inputting Chinese/Japanese/Korean text. This is handled by the operating system, rather than by Godot. [b]Windows, macOS, Linux (X11)[/b]
@@ -1901,15 +1888,11 @@
 		<constant name="WINDOW_EVENT_CLOSE_REQUEST" value="4" enum="WindowEvent">
 			Sent when the user has attempted to close the window (e.g. close button is pressed).
 		</constant>
-		<constant name="WINDOW_EVENT_GO_BACK_REQUEST" value="5" enum="WindowEvent">
-			Sent when the device "Back" button is pressed.
-			[b]Note:[/b] This event is implemented only on Android.
-		</constant>
-		<constant name="WINDOW_EVENT_DPI_CHANGE" value="6" enum="WindowEvent">
+		<constant name="WINDOW_EVENT_DPI_CHANGE" value="5" enum="WindowEvent">
 			Sent when the window is moved to the display with different DPI, or display DPI is changed.
 			[b]Note:[/b] This flag is implemented only on macOS.
 		</constant>
-		<constant name="WINDOW_EVENT_TITLEBAR_CHANGE" value="7" enum="WindowEvent">
+		<constant name="WINDOW_EVENT_TITLEBAR_CHANGE" value="6" enum="WindowEvent">
 			Sent when the window title bar decoration is changed (e.g. [constant WINDOW_FLAG_EXTEND_TO_TITLE] is set or window entered/exited full screen mode).
 			[b]Note:[/b] This flag is implemented only on macOS.
 		</constant>

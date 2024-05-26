@@ -37,7 +37,6 @@
 #include "core/io/resource_loader.h"
 #include "core/templates/local_vector.h"
 #include "scene/2d/node_2d.h"
-#include "scene/3d/node_3d.h"
 #include "scene/gui/control.h"
 #include "scene/main/instance_placeholder.h"
 #include "scene/main/missing_node.h"
@@ -257,10 +256,6 @@ Node *SceneState::instantiate(GenEditState p_edit_state) const {
 							obj = memnew(Control);
 						} else if (Object::cast_to<Node2D>(ret_nodes[n.parent])) {
 							obj = memnew(Node2D);
-#ifndef _3D_DISABLED
-						} else if (Object::cast_to<Node3D>(ret_nodes[n.parent])) {
-							obj = memnew(Node3D);
-#endif // _3D_DISABLED
 						}
 					}
 

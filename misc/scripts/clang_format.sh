@@ -8,11 +8,11 @@ set -uo pipefail
 if [ $# -eq 0 ]; then
     # Loop through all code files tracked by Git.
     files=$(git ls-files -- '*.c' '*.h' '*.cpp' '*.hpp' '*.cc' '*.hh' '*.cxx' '*.m' '*.mm' '*.inc' '*.java' '*.glsl' \
-                ':!:.git/*' ':!:thirdparty/*' ':!:*/thirdparty/*' ':!:platform/android/java/lib/src/com/google/*' \
+                ':!:.git/*' ':!:thirdparty/*' ':!:*/thirdparty/*' \
                 ':!:*-so_wrap.*' ':!:tests/python_build/*')
 else
     # $1 should be a file listing file paths to process. Used in CI.
-    files=$(cat "$1" | grep -v "thirdparty/" | grep -E "\.(c|h|cpp|hpp|cc|hh|cxx|m|mm|inc|java|glsl)$" | grep -v "platform/android/java/lib/src/com/google/" | grep -v "\-so_wrap\." | grep -v "tests/python_build/")
+    files=$(cat "$1" | grep -v "thirdparty/" | grep -E "\.(c|h|cpp|hpp|cc|hh|cxx|m|mm|inc|java|glsl)$" | grep -v "\-so_wrap\." | grep -v "tests/python_build/")
 fi
 
 if [ ! -z "$files" ]; then
@@ -22,14 +22,6 @@ fi
 # Fix copyright headers, but not all files get them.
 for f in $files; do
     if [[ "$f" == *"inc" && "$f" != *"compat.inc" ]]; then
-        continue
-    elif [[ "$f" == *"glsl" ]]; then
-        continue
-    elif [[ "$f" == "platform/android/java/lib/src/org/godotengine/godot/gl/GLSurfaceView"* ]]; then
-        continue
-    elif [[ "$f" == "platform/android/java/lib/src/org/godotengine/godot/gl/EGLLogWrapper"* ]]; then
-        continue
-    elif [[ "$f" == "platform/android/java/lib/src/org/godotengine/godot/utils/ProcessPhoenix"* ]]; then
         continue
     fi
 

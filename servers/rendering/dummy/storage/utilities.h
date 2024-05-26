@@ -31,8 +31,6 @@
 #ifndef UTILITIES_DUMMY_H
 #define UTILITIES_DUMMY_H
 
-#include "material_storage.h"
-#include "mesh_storage.h"
 #include "servers/rendering/storage/utilities.h"
 #include "texture_storage.h"
 
@@ -51,26 +49,12 @@ public:
 	/* INSTANCES */
 
 	virtual RS::InstanceType get_base_type(RID p_rid) const override {
-		if (RendererDummy::MeshStorage::get_singleton()->owns_mesh(p_rid)) {
-			return RS::INSTANCE_MESH;
-		} else if (RendererDummy::MeshStorage::get_singleton()->owns_multimesh(p_rid)) {
-			return RS::INSTANCE_MULTIMESH;
-		}
 		return RS::INSTANCE_NONE;
 	}
 
 	virtual bool free(RID p_rid) override {
 		if (RendererDummy::TextureStorage::get_singleton()->owns_texture(p_rid)) {
 			RendererDummy::TextureStorage::get_singleton()->texture_free(p_rid);
-			return true;
-		} else if (RendererDummy::MeshStorage::get_singleton()->owns_mesh(p_rid)) {
-			RendererDummy::MeshStorage::get_singleton()->mesh_free(p_rid);
-			return true;
-		} else if (RendererDummy::MeshStorage::get_singleton()->owns_multimesh(p_rid)) {
-			RendererDummy::MeshStorage::get_singleton()->multimesh_free(p_rid);
-			return true;
-		} else if (RendererDummy::MaterialStorage::get_singleton()->owns_shader(p_rid)) {
-			RendererDummy::MaterialStorage::get_singleton()->shader_free(p_rid);
 			return true;
 		}
 		return false;
@@ -79,18 +63,6 @@ public:
 	/* DEPENDENCIES */
 
 	virtual void base_update_dependency(RID p_base, DependencyTracker *p_instance) override {}
-
-	/* VISIBILITY NOTIFIER */
-
-	virtual RID visibility_notifier_allocate() override { return RID(); }
-	virtual void visibility_notifier_initialize(RID p_notifier) override {}
-	virtual void visibility_notifier_free(RID p_notifier) override {}
-
-	virtual void visibility_notifier_set_aabb(RID p_notifier, const AABB &p_aabb) override {}
-	virtual void visibility_notifier_set_callbacks(RID p_notifier, const Callable &p_enter_callbable, const Callable &p_exit_callable) override {}
-
-	virtual AABB visibility_notifier_get_aabb(RID p_notifier) const override { return AABB(); }
-	virtual void visibility_notifier_call(RID p_notifier, bool p_enter, bool p_deferred) override {}
 
 	/* TIMING */
 
@@ -116,7 +88,6 @@ public:
 	virtual uint64_t get_rendering_info(RS::RenderingInfo p_info) override { return 0; }
 	virtual String get_video_adapter_name() const override { return String(); }
 	virtual String get_video_adapter_vendor() const override { return String(); }
-	virtual RenderingDevice::DeviceType get_video_adapter_type() const override { return RenderingDevice::DeviceType::DEVICE_TYPE_OTHER; }
 	virtual String get_video_adapter_api_version() const override { return String(); }
 
 	virtual Size2i get_maximum_viewport_size() const override { return Size2i(); };

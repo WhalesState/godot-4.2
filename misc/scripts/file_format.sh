@@ -41,8 +41,6 @@ for f in "${files[@]}"; do
         continue
     elif [[ "$f" == *"/thirdparty/"* ]]; then
         continue
-    elif [[ "$f" == "platform/android/java/lib/src/com/google"* ]]; then
-        continue
     elif [[ "$f" == *"-so_wrap."* ]]; then
         continue
     elif [[ "$f" == *".test.txt" ]]; then

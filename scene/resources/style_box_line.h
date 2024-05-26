@@ -61,6 +61,9 @@ public:
 	void set_grow_end(float p_grow);
 	float get_grow_end() const;
 
+	Point2 get_expand_margin_begin() const override;
+	Point2 get_expand_margin_end() const override;
+
 	virtual void draw(RID p_canvas_item, const Rect2 &p_rect) const override;
 
 	StyleBoxLine();

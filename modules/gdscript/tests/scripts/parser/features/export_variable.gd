@@ -7,7 +7,7 @@ extends Node
 
 @export var color: Color
 @export_color_no_alpha var color_no_alpha: Color
-@export_node_path("Sprite2D", "Sprite3D", "Control", "Node") var nodepath := ^"hello"
+@export_node_path("Sprite2D", "Control", "Node") var nodepath := ^"hello"
 @export var node: Node
 @export var node_array: Array[Node]
 

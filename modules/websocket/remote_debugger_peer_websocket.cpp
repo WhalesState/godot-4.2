@@ -112,11 +112,7 @@ void RemoteDebuggerPeerWebSocket::close() {
 }
 
 bool RemoteDebuggerPeerWebSocket::can_block() const {
-#ifdef WEB_ENABLED
-	return false;
-#else
 	return true;
-#endif
 }
 
 RemoteDebuggerPeerWebSocket::RemoteDebuggerPeerWebSocket(Ref<WebSocketPeer> p_peer) {

@@ -374,9 +374,14 @@
 	}
 	ds->mouse_set_button_state(last_button_state);
 
+	DisplayServer::WindowID receiving_window_id = ds->get_window_at_screen_position(ds->mouse_get_position());
+	if (receiving_window_id == DisplayServer::INVALID_WINDOW_ID) {
+		receiving_window_id = window_id;
+	}
+
 	Ref<InputEventMouseButton> mb;
 	mb.instantiate();
-	mb->set_window_id(window_id);
+	mb->set_window_id(receiving_window_id);
 	ds->update_mouse_pos(wd, [event locationInWindow]);
 	ds->get_key_modifier_state([event modifierFlags], mb);
 	mb->set_button_index(index);
@@ -386,6 +391,12 @@
 	mb->set_button_mask(last_button_state);
 	if (index == MouseButton::LEFT && pressed) {
 		mb->set_double_click([event clickCount] == 2);
+	}
+
+	if (receiving_window_id != window_id) {
+		// Adjust event position relative to window distance when event is sent to a different window.
+		mb->set_position(mb->get_position() - ds->window_get_position(receiving_window_id) + ds->window_get_position(window_id));
+		mb->set_global_position(mb->get_position());
 	}
 
 	Input::get_singleton()->parse_input_event(mb);
@@ -428,10 +439,15 @@
 		return;
 	}
 
+	DisplayServer::WindowID receiving_window_id = ds->get_window_at_screen_position(ds->mouse_get_position());
+	if (receiving_window_id == DisplayServer::INVALID_WINDOW_ID) {
+		receiving_window_id = window_id;
+	}
+
 	Ref<InputEventMouseMotion> mm;
 	mm.instantiate();
 
-	mm->set_window_id(window_id);
+	mm->set_window_id(receiving_window_id);
 	mm->set_button_mask(ds->mouse_get_button_state());
 	ds->update_mouse_pos(wd, mpos);
 	mm->set_position(wd.mouse_pos);
@@ -451,6 +467,12 @@
 	const Vector2i relativeMotion = Vector2i(delta.x, delta.y) * ds->screen_get_max_scale();
 	mm->set_relative(relativeMotion);
 	ds->get_key_modifier_state([event modifierFlags], mm);
+
+	if (receiving_window_id != window_id) {
+		// Adjust event position relative to window distance when event is sent to a different window.
+		mm->set_position(mm->get_position() - ds->window_get_position(receiving_window_id) + ds->window_get_position(window_id));
+		mm->set_global_position(mm->get_position());
+	}
 
 	Input::get_singleton()->parse_input_event(mm);
 }
@@ -714,10 +736,15 @@
 	MouseButtonMask mask = mouse_button_to_mask(button);
 	BitField<MouseButtonMask> last_button_state = ds->mouse_get_button_state();
 
+	DisplayServer::WindowID receiving_window_id = ds->get_window_at_screen_position(ds->mouse_get_position());
+	if (receiving_window_id == DisplayServer::INVALID_WINDOW_ID) {
+		receiving_window_id = window_id;
+	}
+
 	Ref<InputEventMouseButton> sc;
 	sc.instantiate();
 
-	sc->set_window_id(window_id);
+	sc->set_window_id(receiving_window_id);
 	ds->get_key_modifier_state([event modifierFlags], sc);
 	sc->set_button_index(button);
 	sc->set_factor(factor);
@@ -728,18 +755,16 @@
 	sc->set_button_mask(last_button_state);
 	ds->mouse_set_button_state(last_button_state);
 
+	if (receiving_window_id != window_id) {
+		// Adjust event position relative to window distance when event is sent to a different window.
+		sc->set_position(sc->get_position() - ds->window_get_position(receiving_window_id) + ds->window_get_position(window_id));
+		sc->set_global_position(sc->get_position());
+	}
+
 	Input::get_singleton()->parse_input_event(sc);
 
-	sc.instantiate();
-	sc->set_window_id(window_id);
-	sc->set_button_index(button);
-	sc->set_factor(factor);
+	sc = sc->duplicate();
 	sc->set_pressed(false);
-	sc->set_position(wd.mouse_pos);
-	sc->set_global_position(wd.mouse_pos);
-	last_button_state.clear_flag(mask);
-	sc->set_button_mask(last_button_state);
-	ds->mouse_set_button_state(last_button_state);
 
 	Input::get_singleton()->parse_input_event(sc);
 }

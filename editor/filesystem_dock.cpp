@@ -47,7 +47,6 @@
 #include "editor/editor_string_names.h"
 #include "editor/gui/editor_dir_dialog.h"
 #include "editor/gui/editor_scene_tabs.h"
-#include "editor/import/resource_importer_scene.h"
 #include "editor/import_dock.h"
 #include "editor/plugins/editor_resource_tooltip_plugins.h"
 #include "editor/scene_create_dialog.h"
@@ -125,11 +124,11 @@ bool FileSystemList::edit_selected() {
 
 	String name = get_item_text(s);
 	line_editor->set_text(name);
+	line_editor->edit();
 	line_editor->select(0, name.rfind("."));
 
 	popup_editor->popup();
 	popup_editor->child_controls_changed();
-	line_editor->grab_focus();
 	return true;
 }
 
@@ -243,8 +242,6 @@ bool FileSystemDock::_create_tree(TreeItem *p_parent, EditorFileSystemDirectory 
 
 	// Create all items for the files in the subdirectory.
 	if (display_mode == DISPLAY_MODE_TREE_ONLY) {
-		String main_scene = GLOBAL_GET("application/run/main_scene");
-
 		// Build the list of the files to display.
 		List<FileInfo> file_list;
 		for (int i = 0; i < p_dir->get_file_count(); i++) {
@@ -294,9 +291,6 @@ bool FileSystemDock::_create_tree(TreeItem *p_parent, EditorFileSystemDirectory 
 			if (!p_select_in_favorites && current_path == file_metadata) {
 				file_item->select(0);
 				file_item->set_as_cursor(0);
-			}
-			if (main_scene == file_metadata) {
-				file_item->set_custom_color(0, get_theme_color(SNAME("accent_color"), EditorStringName(Editor)));
 			}
 			Array udata;
 			udata.push_back(tree_update_id);
@@ -466,7 +460,14 @@ void FileSystemDock::_update_display_mode(bool p_force) {
 				_update_tree(get_uncollapsed_paths());
 				file_list_vb->hide();
 				break;
+			case DISPLAY_MODE_FILE_LIST:
+				button_toggle_display_mode->set_icon(get_editor_theme_icon(SNAME("Panels1")));
+				tree->hide();
+				toolbar2_hbc->hide();
 
+				file_list_vb->show();
+				_update_file_list(true);
+				break;
 			case DISPLAY_MODE_HSPLIT:
 			case DISPLAY_MODE_VSPLIT:
 				const bool is_vertical = display_mode == DISPLAY_MODE_VSPLIT;
@@ -1084,7 +1085,6 @@ void FileSystemDock::_update_file_list(bool p_keep_selection) {
 	_sort_file_info_list(file_list);
 
 	// Fills the ItemList control node from the FileInfos.
-	String main_scene = GLOBAL_GET("application/run/main_scene");
 	for (FileInfo &E : file_list) {
 		FileInfo *finfo = &(E);
 		String fname = finfo->name;
@@ -1118,10 +1118,6 @@ void FileSystemDock::_update_file_list(bool p_keep_selection) {
 			files->add_item(fname, type_icon, true);
 			item_index = files->get_item_count() - 1;
 			files->set_item_metadata(item_index, fpath);
-		}
-
-		if (fpath == main_scene) {
-			files->set_item_custom_fg_color(item_index, get_theme_color(SNAME("accent_color"), EditorStringName(Editor)));
 		}
 
 		// Generate the preview.
@@ -1182,45 +1178,9 @@ void FileSystemDock::_select_file(const String &p_path, bool p_select_in_favorit
 		String resource_type = ResourceLoader::get_resource_type(fpath);
 
 		if (resource_type == "PackedScene") {
-			bool is_imported = false;
-
-			{
-				List<String> importer_exts;
-				ResourceImporterScene::get_scene_singleton()->get_recognized_extensions(&importer_exts);
-				String extension = fpath.get_extension();
-				for (const String &E : importer_exts) {
-					if (extension.nocasecmp_to(E) == 0) {
-						is_imported = true;
-						break;
-					}
-				}
-			}
-
-			if (is_imported) {
-				ResourceImporterScene::get_scene_singleton()->show_advanced_options(fpath);
-			} else {
-				EditorNode::get_singleton()->open_request(fpath);
-			}
+			EditorNode::get_singleton()->open_request(fpath);
 		} else if (resource_type == "AnimationLibrary") {
-			bool is_imported = false;
-
-			{
-				List<String> importer_exts;
-				ResourceImporterScene::get_animation_singleton()->get_recognized_extensions(&importer_exts);
-				String extension = fpath.get_extension();
-				for (const String &E : importer_exts) {
-					if (extension.nocasecmp_to(E) == 0) {
-						is_imported = true;
-						break;
-					}
-				}
-			}
-
-			if (is_imported) {
-				ResourceImporterScene::get_animation_singleton()->show_advanced_options(fpath);
-			} else {
-				EditorNode::get_singleton()->open_request(fpath);
-			}
+			EditorNode::get_singleton()->open_request(fpath);
 		} else if (ResourceLoader::is_imported(fpath)) {
 			// If the importer has advanced settings, show them.
 			int order;
@@ -2159,16 +2119,6 @@ void FileSystemDock::_file_option(int p_option, const Vector<String> &p_selected
 			}
 		} break;
 
-		case FILE_MAIN_SCENE: {
-			// Set as main scene with selected scene file.
-			if (p_selected.size() == 1) {
-				ProjectSettings::get_singleton()->set("application/run/main_scene", p_selected[0]);
-				ProjectSettings::get_singleton()->save();
-				_update_tree(get_uncollapsed_paths());
-				_update_file_list(true);
-			}
-		} break;
-
 		case FILE_INSTANTIATE: {
 			// Instantiate all selected scenes.
 			Vector<String> paths;
@@ -2300,15 +2250,15 @@ void FileSystemDock::_file_option(int p_option, const Vector<String> &p_selected
 					String name = to_duplicate.path.get_file();
 					duplicate_dialog->set_title(TTR("Duplicating file:") + " " + name);
 					duplicate_dialog_text->set_text(name);
+					duplicate_dialog_text->edit();
 					duplicate_dialog_text->select(0, name.rfind("."));
 				} else {
 					String name = to_duplicate.path.substr(0, to_duplicate.path.length() - 1).get_file();
 					duplicate_dialog->set_title(TTR("Duplicating folder:") + " " + name);
 					duplicate_dialog_text->set_text(name);
-					duplicate_dialog_text->select(0, name.length());
+					duplicate_dialog_text->edit(true);
 				}
 				duplicate_dialog->popup_centered(Size2(250, 80) * EDSCALE);
-				duplicate_dialog_text->grab_focus();
 			}
 		} break;
 
@@ -2388,12 +2338,8 @@ void FileSystemDock::_resource_created() {
 		make_shader_dialog->config(fpath.path_join("new_shader"), false, false, 0);
 		make_shader_dialog->popup_centered();
 		return;
-	} else if (type_name == "VisualShader") {
-		make_shader_dialog->config(fpath.path_join("new_shader"), false, false, 1);
-		make_shader_dialog->popup_centered();
-		return;
 	} else if (type_name == "ShaderInclude") {
-		make_shader_dialog->config(fpath.path_join("new_shader_include"), false, false, 2);
+		make_shader_dialog->config(fpath.path_join("new_shader_include"), false, false, 1);
 		make_shader_dialog->popup_centered();
 		return;
 	}
@@ -2435,6 +2381,9 @@ void FileSystemDock::_search_changed(const String &p_text, const Control *p_from
 		case DISPLAY_MODE_TREE_ONLY: {
 			_update_tree(searched_string.length() == 0 ? uncollapsed_paths_before_search : Vector<String>(), false, false, unfold_path);
 		} break;
+		case DISPLAY_MODE_FILE_LIST: {
+			_update_file_list(false);
+		} break;
 		case DISPLAY_MODE_HSPLIT:
 		case DISPLAY_MODE_VSPLIT: {
 			_update_file_list(false);
@@ -2452,8 +2401,10 @@ void FileSystemDock::_change_split_mode() {
 	DisplayMode next_mode = DISPLAY_MODE_TREE_ONLY;
 	if (display_mode == DISPLAY_MODE_VSPLIT) {
 		next_mode = DISPLAY_MODE_HSPLIT;
-	} else if (display_mode == DISPLAY_MODE_TREE_ONLY) {
+	} else if (display_mode == DISPLAY_MODE_FILE_LIST) {
 		next_mode = DISPLAY_MODE_VSPLIT;
+	} else if (display_mode == DISPLAY_MODE_TREE_ONLY) {
+		next_mode = DISPLAY_MODE_FILE_LIST;
 	}
 
 	set_display_mode(next_mode);
@@ -2473,8 +2424,7 @@ void FileSystemDock::focus_on_filter() {
 	}
 
 	if (current_search_box) {
-		current_search_box->grab_focus();
-		current_search_box->select_all();
+		current_search_box->edit(true);
 	}
 }
 
@@ -2921,9 +2871,6 @@ void FileSystemDock::_file_and_folders_fill_popup(PopupMenu *p_popup, Vector<Str
 			if (filenames.size() == 1) {
 				p_popup->add_icon_item(get_editor_theme_icon(SNAME("Load")), TTR("Open Scene"), FILE_OPEN);
 				p_popup->add_icon_item(get_editor_theme_icon(SNAME("CreateNewSceneFrom")), TTR("New Inherited Scene"), FILE_INHERIT);
-				if (GLOBAL_GET("application/run/main_scene") != filenames[0]) {
-					p_popup->add_icon_item(get_editor_theme_icon(SNAME("PlayScene")), TTR("Set as Main Scene"), FILE_MAIN_SCENE);
-				}
 			} else {
 				p_popup->add_icon_item(get_editor_theme_icon(SNAME("Load")), TTR("Open Scenes"), FILE_OPEN);
 			}
@@ -3051,7 +2998,6 @@ void FileSystemDock::_file_and_folders_fill_popup(PopupMenu *p_popup, Vector<Str
 	if (p_paths.size() == 1) {
 		const String fpath = p_paths[0];
 
-#if !defined(ANDROID_ENABLED) && !defined(WEB_ENABLED)
 		p_popup->add_separator();
 
 		// Opening the system file manager is not supported on the Android and web editors.
@@ -3062,8 +3008,6 @@ void FileSystemDock::_file_and_folders_fill_popup(PopupMenu *p_popup, Vector<Str
 		if (!is_directory) {
 			p_popup->add_icon_shortcut(get_editor_theme_icon(SNAME("ExternalLink")), ED_GET_SHORTCUT("filesystem_dock/open_in_external_program"), FILE_OPEN_EXTERNAL);
 		}
-#endif
-
 		current_path = fpath;
 	}
 }
@@ -3102,11 +3046,9 @@ void FileSystemDock::_tree_empty_click(const Vector2 &p_pos, MouseButton p_butto
 	tree_popup->add_icon_item(get_editor_theme_icon(SNAME("Script")), TTR("New Script..."), FILE_NEW_SCRIPT);
 	tree_popup->add_icon_item(get_editor_theme_icon(SNAME("Object")), TTR("New Resource..."), FILE_NEW_RESOURCE);
 	tree_popup->add_icon_item(get_editor_theme_icon(SNAME("TextFile")), TTR("New TextFile..."), FILE_NEW_TEXTFILE);
-#if !defined(ANDROID_ENABLED) && !defined(WEB_ENABLED)
 	// Opening the system file manager is not supported on the Android and web editors.
 	tree_popup->add_separator();
 	tree_popup->add_icon_shortcut(get_editor_theme_icon(SNAME("Filesystem")), ED_GET_SHORTCUT("filesystem_dock/show_in_explorer"), FILE_SHOW_IN_EXPLORER);
-#endif
 
 	tree_popup->set_position(tree->get_screen_position() + p_pos);
 	tree_popup->reset_size();
@@ -3536,11 +3478,9 @@ FileSystemDock::FileSystemDock() {
 	ED_SHORTCUT("filesystem_dock/delete", TTR("Delete"), Key::KEY_DELETE);
 	ED_SHORTCUT("filesystem_dock/rename", TTR("Rename..."), Key::F2);
 	ED_SHORTCUT_OVERRIDE("filesystem_dock/rename", "macos", Key::ENTER);
-#if !defined(ANDROID_ENABLED) && !defined(WEB_ENABLED)
 	// Opening the system file manager or opening in an external program is not supported on the Android and web editors.
 	ED_SHORTCUT("filesystem_dock/show_in_explorer", TTR("Open in File Manager"));
 	ED_SHORTCUT("filesystem_dock/open_in_external_program", TTR("Open in External Program"));
-#endif
 
 	// Properly translating color names would require a separate HashMap, so for simplicity they are provided as comments.
 	folder_colors["red"] = Color(1.0, 0.271, 0.271); // TTR("Red")

@@ -738,10 +738,6 @@ void Window::_event_callback(DisplayServer::WindowEvent p_event) {
 			_propagate_window_notification(this, NOTIFICATION_WM_CLOSE_REQUEST);
 			emit_signal(SNAME("close_requested"));
 		} break;
-		case DisplayServer::WINDOW_EVENT_GO_BACK_REQUEST: {
-			_propagate_window_notification(this, NOTIFICATION_WM_GO_BACK_REQUEST);
-			emit_signal(SNAME("go_back_requested"));
-		} break;
 		case DisplayServer::WINDOW_EVENT_DPI_CHANGE: {
 			_update_viewport_size();
 			_propagate_window_notification(this, NOTIFICATION_WM_DPI_CHANGE);
@@ -2882,7 +2878,6 @@ void Window::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("focus_entered"));
 	ADD_SIGNAL(MethodInfo("focus_exited"));
 	ADD_SIGNAL(MethodInfo("close_requested"));
-	ADD_SIGNAL(MethodInfo("go_back_requested"));
 	ADD_SIGNAL(MethodInfo("visibility_changed"));
 	ADD_SIGNAL(MethodInfo("about_to_popup"));
 	ADD_SIGNAL(MethodInfo("theme_changed"));

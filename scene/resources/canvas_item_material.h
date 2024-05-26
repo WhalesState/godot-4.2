@@ -57,7 +57,6 @@ private:
 		struct {
 			uint32_t blend_mode : 4;
 			uint32_t light_mode : 4;
-			uint32_t particles_animation : 1;
 			uint32_t invalid_key : 1;
 		};
 
@@ -70,14 +69,6 @@ private:
 			return key == p_key.key;
 		}
 	};
-
-	struct ShaderNames {
-		StringName particles_anim_h_frames;
-		StringName particles_anim_v_frames;
-		StringName particles_anim_loop;
-	};
-
-	static ShaderNames *shader_names;
 
 	struct ShaderData {
 		RID shader;
@@ -93,7 +84,6 @@ private:
 		mk.key = 0;
 		mk.blend_mode = blend_mode;
 		mk.light_mode = light_mode;
-		mk.particles_animation = particles_animation;
 		return mk;
 	}
 
@@ -107,16 +97,9 @@ private:
 
 	BlendMode blend_mode = BLEND_MODE_MIX;
 	LightMode light_mode = LIGHT_MODE_NORMAL;
-	bool particles_animation = false;
-
-	// Proper values set in constructor.
-	int particles_anim_h_frames = 0;
-	int particles_anim_v_frames = 0;
-	bool particles_anim_loop = false;
 
 protected:
 	static void _bind_methods();
-	void _validate_property(PropertyInfo &p_property) const;
 
 public:
 	void set_blend_mode(BlendMode p_blend_mode);
@@ -124,17 +107,6 @@ public:
 
 	void set_light_mode(LightMode p_light_mode);
 	LightMode get_light_mode() const;
-
-	void set_particles_animation(bool p_particles_anim);
-	bool get_particles_animation() const;
-
-	void set_particles_anim_h_frames(int p_frames);
-	int get_particles_anim_h_frames() const;
-	void set_particles_anim_v_frames(int p_frames);
-	int get_particles_anim_v_frames() const;
-
-	void set_particles_anim_loop(bool p_loop);
-	bool get_particles_anim_loop() const;
 
 	static void init_shaders();
 	static void finish_shaders();

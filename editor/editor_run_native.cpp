@@ -87,11 +87,6 @@ Error EditorRunNative::start_run_native(int p_id) {
 	int platform = p_id / 10000;
 	int idx = p_id % 10000;
 
-	if (!EditorNode::get_singleton()->ensure_main_scene(true)) {
-		resume_id = p_id;
-		return OK;
-	}
-
 	Ref<EditorExportPlatform> eep = EditorExport::get_singleton()->get_export_platform(platform);
 	ERR_FAIL_COND_V(eep.is_null(), ERR_UNAVAILABLE);
 
@@ -116,20 +111,12 @@ Error EditorRunNative::start_run_native(int p_id) {
 
 	bool deploy_debug_remote = is_deploy_debug_remote_enabled();
 	bool deploy_dumb = EditorSettings::get_singleton()->get_project_metadata("debug_options", "run_file_server", false);
-	bool debug_collisions = EditorSettings::get_singleton()->get_project_metadata("debug_options", "run_debug_collisions", false);
-	bool debug_navigation = EditorSettings::get_singleton()->get_project_metadata("debug_options", "run_debug_navigation", false);
 
 	if (deploy_debug_remote) {
 		flags |= EditorExportPlatform::DEBUG_FLAG_REMOTE_DEBUG;
 	}
 	if (deploy_dumb) {
 		flags |= EditorExportPlatform::DEBUG_FLAG_DUMB_CLIENT;
-	}
-	if (debug_collisions) {
-		flags |= EditorExportPlatform::DEBUG_FLAG_VIEW_COLLISIONS;
-	}
-	if (debug_navigation) {
-		flags |= EditorExportPlatform::DEBUG_FLAG_VIEW_NAVIGATION;
 	}
 
 	eep->clear_messages();

@@ -190,14 +190,6 @@ public:
 
 	EXBIND0RC(bool, is_placeholder_fallback_enabled)
 
-	GDVIRTUAL0RC(Variant, _get_rpc_config)
-
-	virtual const Variant get_rpc_config() const override {
-		Variant ret;
-		GDVIRTUAL_REQUIRED_CALL(_get_rpc_config, ret);
-		return ret;
-	}
-
 	ScriptExtension() {}
 };
 
@@ -364,9 +356,6 @@ public:
 		GDVIRTUAL_REQUIRED_CALL(_create_script, ret);
 		return Object::cast_to<Script>(ret);
 	}
-#ifndef DISABLE_DEPRECATED
-	EXBIND0RC(bool, has_named_classes)
-#endif
 	EXBIND0RC(bool, supports_builtin_mode)
 	EXBIND0RC(bool, supports_documentation)
 	EXBIND0RC(bool, can_inherit_from_file)
@@ -654,9 +643,6 @@ class ScriptInstanceExtension : public ScriptInstance {
 public:
 	const GDExtensionScriptInstanceInfo2 *native_info;
 	bool free_native_info = false;
-	struct {
-		GDExtensionScriptInstanceNotification notification_func = nullptr;
-	} deprecated_native_info;
 
 	GDExtensionScriptInstanceDataPtr instance = nullptr;
 
@@ -804,10 +790,6 @@ public:
 	virtual void notification(int p_notification, bool p_reversed = false) override {
 		if (native_info->notification_func) {
 			native_info->notification_func(instance, p_notification, p_reversed);
-#ifndef DISABLE_DEPRECATED
-		} else if (deprecated_native_info.notification_func) {
-			deprecated_native_info.notification_func(instance, p_notification);
-#endif // DISABLE_DEPRECATED
 		}
 	}
 

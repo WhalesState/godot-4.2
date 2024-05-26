@@ -34,6 +34,7 @@
 #include "core/io/marshalls.h"
 #include "core/io/resource_saver.h"
 #include "scene/resources/audio_stream_wav.h"
+#include "servers/audio/effects/audio_effect_record.h"
 
 const float TRIM_DB_LIMIT = -50;
 const int TRIM_FADE_OUT_FRAMES = 500;
@@ -470,7 +471,7 @@ Error ResourceImporterWAV::import(const String &p_source_file, const String &p_s
 	if (compression == 1) {
 		dst_format = AudioStreamWAV::FORMAT_IMA_ADPCM;
 		if (format_channels == 1) {
-			_compress_ima_adpcm(data, dst_data);
+			AudioEffectRecord::_compress_ima_adpcm(data, dst_data);
 		} else {
 			//byte interleave
 			Vector<float> left;
@@ -488,8 +489,8 @@ Error ResourceImporterWAV::import(const String &p_source_file, const String &p_s
 			Vector<uint8_t> bleft;
 			Vector<uint8_t> bright;
 
-			_compress_ima_adpcm(left, bleft);
-			_compress_ima_adpcm(right, bright);
+			AudioEffectRecord::_compress_ima_adpcm(left, bleft);
+			AudioEffectRecord::_compress_ima_adpcm(right, bright);
 
 			int dl = bleft.size();
 			dst_data.resize(dl * 2);

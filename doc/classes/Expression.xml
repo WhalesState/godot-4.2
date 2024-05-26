@@ -23,29 +23,6 @@
 		    if not expression.has_execute_failed():
 		        $LineEdit.text = str(result)
 		[/gdscript]
-		[csharp]
-		private Expression _expression = new Expression();
-
-		public override void _Ready()
-		{
-		    GetNode&lt;LineEdit&gt;("LineEdit").TextSubmitted += OnTextEntered;
-		}
-
-		private void OnTextEntered(string command)
-		{
-		    Error error = _expression.Parse(command);
-		    if (error != Error.Ok)
-		    {
-		        GD.Print(_expression.GetErrorText());
-		        return;
-		    }
-		    Variant result = _expression.Execute();
-		    if (!_expression.HasExecuteFailed())
-		    {
-		        GetNode&lt;LineEdit&gt;("LineEdit").Text = result.ToString();
-		    }
-		}
-		[/csharp]
 		[/codeblocks]
 	</description>
 	<tutorials>

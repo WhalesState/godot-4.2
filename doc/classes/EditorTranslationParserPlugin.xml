@@ -25,30 +25,6 @@
 		func _get_recognized_extensions():
 		    return ["csv"]
 		[/gdscript]
-		[csharp]
-		using Godot;
-
-		[Tool]
-		public partial class CustomParser : EditorTranslationParserPlugin
-		{
-		    public override void _ParseFile(string path, Godot.Collections.Array&lt;string&gt; msgids, Godot.Collections.Array&lt;Godot.Collections.Array&gt; msgidsContextPlural)
-		    {
-		        using var file = FileAccess.Open(path, FileAccess.ModeFlags.Read);
-		        string text = file.GetAsText();
-		        string[] splitStrs = text.Split(",", allowEmpty: false);
-		        foreach (string s in splitStrs)
-		        {
-		            msgids.Add(s);
-		            //GD.Print($"Extracted string: {s}");
-		        }
-		    }
-
-		    public override string[] _GetRecognizedExtensions()
-		    {
-		        return new string[] { "csv" };
-		    }
-		}
-		[/csharp]
 		[/codeblocks]
 		To add a translatable string associated with context or plural, add it to [code]msgids_context_plural[/code]:
 		[codeblocks]
@@ -60,14 +36,6 @@
 		# This will add a message with msgid "Only with context" and msgctxt "a friendly context".
 		msgids_context_plural.append(["Only with context", "a friendly context", ""])
 		[/gdscript]
-		[csharp]
-		// This will add a message with msgid "Test 1", msgctxt "context", and msgid_plural "test 1 plurals".
-		msgidsContextPlural.Add(new Godot.Collections.Array{"Test 1", "context", "test 1 Plurals"});
-		// This will add a message with msgid "A test without context" and msgid_plural "plurals".
-		msgidsContextPlural.Add(new Godot.Collections.Array{"A test without context", "", "plurals"});
-		// This will add a message with msgid "Only with context" and msgctxt "a friendly context".
-		msgidsContextPlural.Add(new Godot.Collections.Array{"Only with context", "a friendly context", ""});
-		[/csharp]
 		[/codeblocks]
 		[b]Note:[/b] If you override parsing logic for standard script types (GDScript, C#, etc.), it would be better to load the [code]path[/code] argument using [method ResourceLoader.load]. This is because built-in scripts are loaded as [Resource] type, not [FileAccess] type.
 		For example:
@@ -81,19 +49,6 @@
 		func _get_recognized_extensions():
 		    return ["gd"]
 		[/gdscript]
-		[csharp]
-		public override void _ParseFile(string path, Godot.Collections.Array&lt;string&gt; msgids, Godot.Collections.Array&lt;Godot.Collections.Array&gt; msgidsContextPlural)
-		{
-		    var res = ResourceLoader.Load&lt;Script&gt;(path, "Script");
-		    string text = res.SourceCode;
-		    // Parsing logic.
-		}
-
-		public override string[] _GetRecognizedExtensions()
-		{
-		    return new string[] { "gd" };
-		}
-		[/csharp]
 		[/codeblocks]
 		To use [EditorTranslationParserPlugin], register it using the [method EditorPlugin.add_translation_parser_plugin] method first.
 	</description>

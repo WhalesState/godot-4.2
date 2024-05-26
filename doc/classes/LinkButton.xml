@@ -39,11 +39,6 @@
 			uri = "C:\SomeFolder"  # Opens the file explorer at the given path.
 			uri = "C:\SomeImage.png"  # Opens the given image in the default viewing app.
 			[/gdscript]
-			[csharp]
-			Uri = "https://godotengine.org"; // Opens the URL in the default web browser.
-			Uri = "C:\SomeFolder"; // Opens the file explorer at the given path.
-			Uri = "C:\SomeImage.png"; // Opens the given image in the default viewing app.
-			[/csharp]
 			[/codeblocks]
 		</member>
 	</members>

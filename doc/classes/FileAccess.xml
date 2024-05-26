@@ -17,20 +17,6 @@
 		    var content = file.get_as_text()
 		    return content
 		[/gdscript]
-		[csharp]
-		public void Save(string content)
-		{
-		    using var file = FileAccess.Open("user://save_game.dat", FileAccess.ModeFlags.Write);
-		    file.StoreString(content);
-		}
-
-		public string Load()
-		{
-		    using var file = FileAccess.Open("user://save_game.dat", FileAccess.ModeFlags.Read);
-		    string content = file.GetAsText();
-		    return content;
-		}
-		[/csharp]
 		[/codeblocks]
 		In the example above, the file will be saved in the user data folder as specified in the [url=$DOCS_URL/tutorials/io/data_paths.html]Data paths[/url] documentation.
 		[FileAccess] will close when it's freed, which happens when it goes out of scope or when it gets assigned with [code]null[/code]. [method close] can be used to close it before then explicitly. In C# the reference must be disposed manually, which can be done with the [code]using[/code] statement or by calling the [code]Dispose[/code] method directly.
@@ -60,12 +46,6 @@
 				while file.get_position() &lt; file.get_length():
 				    # Read data
 				[/gdscript]
-				[csharp]
-				while (file.GetPosition() &lt; file.GetLength())
-				{
-				    // Read data
-				}
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -400,19 +380,6 @@
 				    var converted1 = unsigned16_to_signed(read1) # -42
 				    var converted2 = unsigned16_to_signed(read2) # 121
 				[/gdscript]
-				[csharp]
-				public override void _Ready()
-				{
-				    using var f = FileAccess.Open("user://file.dat", FileAccess.ModeFlags.WriteRead);
-				    f.Store16(unchecked((ushort)-42)); // This wraps around and stores 65494 (2^16 - 42).
-				    f.Store16(121); // In bounds, will store 121.
-				    f.Seek(0); // Go back to start to read the stored value.
-				    ushort read1 = f.Get16(); // 65494
-				    ushort read2 = f.Get16(); // 121
-				    short converted1 = (short)read1; // -42
-				    short converted2 = (short)read2; // 121
-				}
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -517,14 +484,12 @@
 		</constant>
 		<constant name="WRITE" value="2" enum="ModeFlags">
 			Opens the file for write operations. The file is created if it does not exist, and truncated if it does.
-			[b]Note:[/b] When creating a file it must be in an already existing directory. To recursively create directories for a file path, see [method DirAccess.make_dir_recursive]).
 		</constant>
 		<constant name="READ_WRITE" value="3" enum="ModeFlags">
 			Opens the file for read and write operations. Does not truncate the file. The cursor is positioned at the beginning of the file.
 		</constant>
 		<constant name="WRITE_READ" value="7" enum="ModeFlags">
 			Opens the file for read and write operations. The file is created if it does not exist, and truncated if it does. The cursor is positioned at the beginning of the file.
-			[b]Note:[/b] When creating a file it must be in an already existing directory. To recursively create directories for a file path, see [method DirAccess.make_dir_recursive]).
 		</constant>
 		<constant name="COMPRESSION_FASTLZ" value="0" enum="CompressionMode">
 			Uses the [url=https://fastlz.org/]FastLZ[/url] compression method.

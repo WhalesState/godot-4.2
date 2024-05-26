@@ -10,6 +10,12 @@
 		<link title="Instancing Demo">https://godotengine.org/asset-library/asset/148</link>
 	</tutorials>
 	<methods>
+		<method name="get_max_frames" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns vertical frames multiplied by horizontal frames.
+			</description>
+		</method>
 		<method name="get_rect" qualifiers="const">
 			<return type="Rect2" />
 			<description>
@@ -22,21 +28,6 @@
 				        if get_rect().has_point(to_local(event.position)):
 				            print("A click!")
 				[/gdscript]
-				[csharp]
-				public override void _Input(InputEvent @event)
-				{
-				    if (@event is InputEventMouseButton inputEventMouse)
-				    {
-				        if (inputEventMouse.Pressed &amp;&amp; inputEventMouse.ButtonIndex == MouseButton.Left)
-				        {
-				            if (GetRect().HasPoint(ToLocal(inputEventMouse.Position)))
-				            {
-				                GD.Print("A click!");
-				            }
-				        }
-				    }
-				}
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -50,7 +41,7 @@
 		</method>
 	</methods>
 	<members>
-		<member name="centered" type="bool" setter="set_centered" getter="is_centered" default="true">
+		<member name="centered" type="bool" setter="set_centered" getter="is_centered" default="false">
 			If [code]true[/code], texture is centered.
 		</member>
 		<member name="flip_h" type="bool" setter="set_flip_h" getter="is_flipped_h" default="false">

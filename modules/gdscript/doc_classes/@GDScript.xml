@@ -58,23 +58,6 @@
 				[/codeblock]
 			</description>
 		</method>
-		<method name="convert" is_deprecated="true">
-			<return type="Variant" />
-			<param index="0" name="what" type="Variant" />
-			<param index="1" name="type" type="int" />
-			<description>
-				[i]Deprecated.[/i] Use [method @GlobalScope.type_convert] instead.
-				Converts [param what] to [param type] in the best way possible. The [param type] uses the [enum Variant.Type] values.
-				[codeblock]
-				var a = [4, 2.5, 1.2]
-				print(a is Array) # Prints true
-
-				var b = convert(a, TYPE_PACKED_BYTE_ARRAY)
-				print(b)          # Prints [4, 2, 1]
-				print(b is Array) # Prints false
-				[/codeblock]
-			</description>
-		</method>
 		<method name="dict_to_inst">
 			<return type="Object" />
 			<param index="0" name="dictionary" type="Dictionary" />
@@ -426,26 +409,6 @@
 				[/codeblock]
 			</description>
 		</annotation>
-		<annotation name="@export_flags_2d_navigation">
-			<return type="void" />
-			<description>
-				Export an integer property as a bit flag field for 2D navigation layers. The widget in the Inspector dock will use the layer names defined in [member ProjectSettings.layer_names/2d_navigation/layer_1].
-				See also [constant PROPERTY_HINT_LAYERS_2D_NAVIGATION].
-				[codeblock]
-				@export_flags_2d_navigation var navigation_layers: int
-				[/codeblock]
-			</description>
-		</annotation>
-		<annotation name="@export_flags_2d_physics">
-			<return type="void" />
-			<description>
-				Export an integer property as a bit flag field for 2D physics layers. The widget in the Inspector dock will use the layer names defined in [member ProjectSettings.layer_names/2d_physics/layer_1].
-				See also [constant PROPERTY_HINT_LAYERS_2D_PHYSICS].
-				[codeblock]
-				@export_flags_2d_physics var physics_layers: int
-				[/codeblock]
-			</description>
-		</annotation>
 		<annotation name="@export_flags_2d_render">
 			<return type="void" />
 			<description>
@@ -453,46 +416,6 @@
 				See also [constant PROPERTY_HINT_LAYERS_2D_RENDER].
 				[codeblock]
 				@export_flags_2d_render var render_layers: int
-				[/codeblock]
-			</description>
-		</annotation>
-		<annotation name="@export_flags_3d_navigation">
-			<return type="void" />
-			<description>
-				Export an integer property as a bit flag field for 3D navigation layers. The widget in the Inspector dock will use the layer names defined in [member ProjectSettings.layer_names/3d_navigation/layer_1].
-				See also [constant PROPERTY_HINT_LAYERS_3D_NAVIGATION].
-				[codeblock]
-				@export_flags_3d_navigation var navigation_layers: int
-				[/codeblock]
-			</description>
-		</annotation>
-		<annotation name="@export_flags_3d_physics">
-			<return type="void" />
-			<description>
-				Export an integer property as a bit flag field for 3D physics layers. The widget in the Inspector dock will use the layer names defined in [member ProjectSettings.layer_names/3d_physics/layer_1].
-				See also [constant PROPERTY_HINT_LAYERS_3D_PHYSICS].
-				[codeblock]
-				@export_flags_3d_physics var physics_layers: int
-				[/codeblock]
-			</description>
-		</annotation>
-		<annotation name="@export_flags_3d_render">
-			<return type="void" />
-			<description>
-				Export an integer property as a bit flag field for 3D render layers. The widget in the Inspector dock will use the layer names defined in [member ProjectSettings.layer_names/3d_render/layer_1].
-				See also [constant PROPERTY_HINT_LAYERS_3D_RENDER].
-				[codeblock]
-				@export_flags_3d_render var render_layers: int
-				[/codeblock]
-			</description>
-		</annotation>
-		<annotation name="@export_flags_avoidance">
-			<return type="void" />
-			<description>
-				Export an integer property as a bit flag field for navigation avoidance layers. The widget in the Inspector dock will use the layer names defined in [member ProjectSettings.layer_names/avoidance/layer_1].
-				See also [constant PROPERTY_HINT_LAYERS_AVOIDANCE].
-				[codeblock]
-				@export_flags_avoidance var avoidance_layers: int
 				[/codeblock]
 			</description>
 		</annotation>
@@ -559,7 +482,7 @@
 				Export a [NodePath] property with a filter for allowed node types.
 				See also [constant PROPERTY_HINT_NODE_PATH_VALID_TYPES].
 				[codeblock]
-				@export_node_path("Button", "TouchScreenButton") var some_button
+				@export_node_path("Button", "TextureButton") var some_button
 				[/codeblock]
 				[b]Note:[/b] The type must be a native class or a globally registered script (using the [code]class_name[/code] keyword) that inherits [Node].
 			</description>
@@ -638,31 +561,6 @@
 				Mark the following property as assigned when the [Node] is ready. Values for these properties are not assigned immediately when the node is initialized ([method Object._init]), and instead are computed and stored right before [method Node._ready].
 				[codeblock]
 				@onready var character_name: Label = $Label
-				[/codeblock]
-			</description>
-		</annotation>
-		<annotation name="@rpc">
-			<return type="void" />
-			<param index="0" name="mode" type="String" default="&quot;authority&quot;" />
-			<param index="1" name="sync" type="String" default="&quot;call_remote&quot;" />
-			<param index="2" name="transfer_mode" type="String" default="&quot;unreliable&quot;" />
-			<param index="3" name="transfer_channel" type="int" default="0" />
-			<description>
-				Mark the following method for remote procedure calls. See [url=$DOCS_URL/tutorials/networking/high_level_multiplayer.html]High-level multiplayer[/url].
-				If [param mode] is set as [code]"any_peer"[/code], allows any peer to call this RPC function. Otherwise, only the authority peer is allowed to call it and [param mode] should be kept as [code]"authority"[/code]. When configuring functions as RPCs with [method Node.rpc_config], each of these modes respectively corresponds to the [constant MultiplayerAPI.RPC_MODE_AUTHORITY] and [constant MultiplayerAPI.RPC_MODE_ANY_PEER] RPC modes. See [enum MultiplayerAPI.RPCMode]. If a peer that is not the authority tries to call a function that is only allowed for the authority, the function will not be executed. If the error can be detected locally (when the RPC configuration is consistent between the local and the remote peer), an error message will be displayed on the sender peer. Otherwise, the remote peer will detect the error and print an error there.
-				If [param sync] is set as [code]"call_remote"[/code], the function will only be executed on the remote peer, but not locally. To run this function locally too, set [param sync] to [code]"call_local"[/code]. When configuring functions as RPCs with [method Node.rpc_config], this is equivalent to setting [code]call_local[/code] to [code]true[/code].
-				The [param transfer_mode] accepted values are [code]"unreliable"[/code], [code]"unreliable_ordered"[/code], or [code]"reliable"[/code]. It sets the transfer mode of the underlying [MultiplayerPeer]. See [member MultiplayerPeer.transfer_mode].
-				The [param transfer_channel] defines the channel of the underlying [MultiplayerPeer]. See [member MultiplayerPeer.transfer_channel].
-				The order of [param mode], [param sync] and [param transfer_mode] does not matter, but values related to the same argument must not be used more than once. [param transfer_channel] always has to be the 4th argument (you must specify 3 preceding arguments).
-				[codeblock]
-				@rpc
-				func fn(): pass
-
-				@rpc("any_peer", "unreliable_ordered")
-				func fn_update_pos(): pass
-
-				@rpc("authority", "call_remote", "unreliable", 0) # Equivalent to @rpc
-				func fn_default(): pass
 				[/codeblock]
 			</description>
 		</annotation>

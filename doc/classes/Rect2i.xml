@@ -63,10 +63,6 @@
 				var rect = Rect2i(25, 25, -100, -50)
 				var absolute = rect.abs() # absolute is Rect2i(-75, -25, 100, 50)
 				[/gdscript]
-				[csharp]
-				var rect = new Rect2I(25, 25, -100, -50);
-				var absolute = rect.Abs(); // absolute is Rect2I(-75, -25, 100, 50)
-				[/csharp]
 				[/codeblocks]
 				[b]Note:[/b] It's recommended to use this method when [member size] is negative, as most other methods in Godot assume that the [member position] is the top-left corner, and the [member end] is the bottom-right corner.
 			</description>
@@ -90,12 +86,6 @@
 				rect = rect.expand(Vector2i(10, 0)) # rect is Rect2i(0, 0, 10, 2)
 				rect = rect.expand(Vector2i(-5, 5)) # rect is Rect2i(-5, 0, 10, 5)
 				[/gdscript]
-				[csharp]
-				var rect = new Rect2I(0, 0, 5, 2);
-
-				rect = rect.Expand(new Vector2I(10, 0)); // rect is Rect2I(0, 0, 10, 2)
-				rect = rect.Expand(new Vector2I(-5, 5)); // rect is Rect2I(-5, 0, 10, 5)
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -122,10 +112,6 @@
 				var a = Rect2i(4, 4, 8, 8).grow(4) # a is Rect2i(0, 0, 16, 16)
 				var b = Rect2i(0, 0, 8, 4).grow(2) # b is Rect2i(-2, -2, 12, 8)
 				[/gdscript]
-				[csharp]
-				var a = new Rect2I(4, 4, 8, 8).Grow(4); // a is Rect2I(0, 0, 16, 16)
-				var b = new Rect2I(0, 0, 8, 4).Grow(2); // b is Rect2I(-2, -2, 12, 8)
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -173,12 +159,6 @@
 
 				var c = a.intersection(b) # c is Rect2i(2, 0, 3, 4)
 				[/gdscript]
-				[csharp]
-				var a = new Rect2I(0, 0, 5, 10);
-				var b = new Rect2I(2, 0, 8, 4);
-
-				var c = rect1.Intersection(rect2); // c is Rect2I(2, 0, 3, 4)
-				[/csharp]
 				[/codeblocks]
 				[b]Note:[/b] If you only need to know whether two rectangles are overlapping, use [method intersects], instead.
 			</description>

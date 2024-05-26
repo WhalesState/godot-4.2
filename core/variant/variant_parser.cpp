@@ -257,9 +257,6 @@ Error VariantParser::get_token(Stream *p_stream, Token &r_token, int &line, Stri
 				r_token.type = TK_COLOR;
 				return OK;
 			}
-#ifndef DISABLE_DEPRECATED
-			case '@': // Compatibility with 3.x StringNames.
-#endif
 			case '&': { // StringName.
 				cchar = p_stream->get_char();
 				if (cchar != '"') {
@@ -760,19 +757,6 @@ Error VariantParser::parse_value(Token &token, Variant &value, Stream *p_stream,
 			}
 
 			value = Plane(args[0], args[1], args[2], args[3]);
-		} else if (id == "Quaternion" || id == "Quat") { // "Quat" kept for compatibility
-			Vector<real_t> args;
-			Error err = _parse_construct<real_t>(p_stream, args, line, r_err_str);
-			if (err) {
-				return err;
-			}
-
-			if (args.size() != 4) {
-				r_err_str = "Expected 4 arguments for constructor";
-				return ERR_PARSE_ERROR;
-			}
-
-			value = Quaternion(args[0], args[1], args[2], args[3]);
 		} else if (id == "AABB" || id == "Rect3") {
 			Vector<real_t> args;
 			Error err = _parse_construct<real_t>(p_stream, args, line, r_err_str);
@@ -1778,10 +1762,6 @@ Error VariantWriter::write(const Variant &p_variant, StoreStringFunc p_store_str
 		case Variant::AABB: {
 			AABB aabb = p_variant;
 			p_store_string_func(p_store_string_ud, "AABB(" + rtos_fix(aabb.position.x) + ", " + rtos_fix(aabb.position.y) + ", " + rtos_fix(aabb.position.z) + ", " + rtos_fix(aabb.size.x) + ", " + rtos_fix(aabb.size.y) + ", " + rtos_fix(aabb.size.z) + ")");
-		} break;
-		case Variant::QUATERNION: {
-			Quaternion quaternion = p_variant;
-			p_store_string_func(p_store_string_ud, "Quaternion(" + rtos_fix(quaternion.x) + ", " + rtos_fix(quaternion.y) + ", " + rtos_fix(quaternion.z) + ", " + rtos_fix(quaternion.w) + ")");
 		} break;
 		case Variant::TRANSFORM2D: {
 			String s = "Transform2D(";

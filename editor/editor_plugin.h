@@ -32,10 +32,8 @@
 #define EDITOR_PLUGIN_H
 
 #include "core/io/config_file.h"
-#include "scene/3d/camera_3d.h"
 #include "scene/gui/control.h"
 
-class Node3D;
 class Button;
 class PopupMenu;
 class EditorDebuggerPlugin;
@@ -44,10 +42,7 @@ class EditorExportPlugin;
 class EditorImportPlugin;
 class EditorInspectorPlugin;
 class EditorInterface;
-class EditorNode3DGizmoPlugin;
 class EditorResourceConversionPlugin;
-class EditorSceneFormatImporter;
-class EditorScenePostImportPlugin;
 class EditorToolAddons;
 class EditorTranslationParserPlugin;
 class EditorUndoRedoManager;
@@ -57,19 +52,12 @@ class EditorPlugin : public Node {
 	GDCLASS(EditorPlugin, Node);
 	friend class EditorData;
 
-	bool input_event_forwarding_always_enabled = false;
 	bool force_draw_over_forwarding_enabled = false;
 
 	String last_main_screen_name;
 	String plugin_version;
 
-#ifndef DISABLE_DEPRECATED
-	void _editor_project_settings_changed();
-#endif
-
 protected:
-	void _notification(int p_what);
-
 	static void _bind_methods();
 	EditorUndoRedoManager *get_undo_redo();
 
@@ -79,9 +67,6 @@ protected:
 	GDVIRTUAL1R(bool, _forward_canvas_gui_input, Ref<InputEvent>)
 	GDVIRTUAL1(_forward_canvas_draw_over_viewport, Control *)
 	GDVIRTUAL1(_forward_canvas_force_draw_over_viewport, Control *)
-	GDVIRTUAL2R(int, _forward_3d_gui_input, Camera3D *, Ref<InputEvent>)
-	GDVIRTUAL1(_forward_3d_draw_over_viewport, Control *)
-	GDVIRTUAL1(_forward_3d_force_draw_over_viewport, Control *)
 	GDVIRTUAL0RC(String, _get_plugin_name)
 	GDVIRTUAL0RC(Ref<Texture2D>, _get_plugin_icon)
 	GDVIRTUAL0RC(bool, _has_main_screen)
@@ -104,10 +89,6 @@ protected:
 public:
 	enum CustomControlContainer {
 		CONTAINER_TOOLBAR,
-		CONTAINER_SPATIAL_EDITOR_MENU,
-		CONTAINER_SPATIAL_EDITOR_SIDE_LEFT,
-		CONTAINER_SPATIAL_EDITOR_SIDE_RIGHT,
-		CONTAINER_SPATIAL_EDITOR_BOTTOM,
 		CONTAINER_CANVAS_EDITOR_MENU,
 		CONTAINER_CANVAS_EDITOR_SIDE_LEFT,
 		CONTAINER_CANVAS_EDITOR_SIDE_RIGHT,
@@ -148,11 +129,6 @@ public:
 	void add_tool_submenu_item(const String &p_name, PopupMenu *p_submenu);
 	void remove_tool_menu_item(const String &p_name);
 
-	PopupMenu *get_export_as_menu();
-
-	void set_input_event_forwarding_always_enabled();
-	bool is_input_event_forwarding_always_enabled() { return input_event_forwarding_always_enabled; }
-
 	void set_force_draw_over_forwarding_enabled();
 	bool is_force_draw_over_forwarding_enabled() { return force_draw_over_forwarding_enabled; }
 
@@ -164,10 +140,6 @@ public:
 	virtual bool forward_canvas_gui_input(const Ref<InputEvent> &p_event);
 	virtual void forward_canvas_draw_over_viewport(Control *p_overlay);
 	virtual void forward_canvas_force_draw_over_viewport(Control *p_overlay);
-
-	virtual EditorPlugin::AfterGUIInput forward_3d_gui_input(Camera3D *p_camera, const Ref<InputEvent> &p_event);
-	virtual void forward_3d_draw_over_viewport(Control *p_overlay);
-	virtual void forward_3d_force_draw_over_viewport(Control *p_overlay);
 
 	virtual String get_name() const;
 	virtual const Ref<Texture2D> get_icon() const;
@@ -214,17 +186,8 @@ public:
 	void add_export_plugin(const Ref<EditorExportPlugin> &p_exporter);
 	void remove_export_plugin(const Ref<EditorExportPlugin> &p_exporter);
 
-	void add_node_3d_gizmo_plugin(const Ref<EditorNode3DGizmoPlugin> &p_gizmo_plugin);
-	void remove_node_3d_gizmo_plugin(const Ref<EditorNode3DGizmoPlugin> &p_gizmo_plugin);
-
 	void add_inspector_plugin(const Ref<EditorInspectorPlugin> &p_plugin);
 	void remove_inspector_plugin(const Ref<EditorInspectorPlugin> &p_plugin);
-
-	void add_scene_format_importer_plugin(const Ref<EditorSceneFormatImporter> &p_importer, bool p_first_priority = false);
-	void remove_scene_format_importer_plugin(const Ref<EditorSceneFormatImporter> &p_importer);
-
-	void add_scene_post_import_plugin(const Ref<EditorScenePostImportPlugin> &p_importer, bool p_first_priority = false);
-	void remove_scene_post_import_plugin(const Ref<EditorScenePostImportPlugin> &p_importer);
 
 	void add_autoload_singleton(const String &p_name, const String &p_path);
 	void remove_autoload_singleton(const String &p_name);

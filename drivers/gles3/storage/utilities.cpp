@@ -34,10 +34,7 @@
 
 #include "../rasterizer_gles3.h"
 #include "config.h"
-#include "light_storage.h"
 #include "material_storage.h"
-#include "mesh_storage.h"
-#include "particles_storage.h"
 #include "texture_storage.h"
 
 #include "servers/rendering/rendering_server_globals.h"
@@ -133,19 +130,6 @@ Vector<uint8_t> Utilities::buffer_get_data(GLenum p_target, GLuint p_buffer, uin
 /* INSTANCES */
 
 RS::InstanceType Utilities::get_base_type(RID p_rid) const {
-	if (GLES3::MeshStorage::get_singleton()->owns_mesh(p_rid)) {
-		return RS::INSTANCE_MESH;
-	} else if (GLES3::MeshStorage::get_singleton()->owns_multimesh(p_rid)) {
-		return RS::INSTANCE_MULTIMESH;
-	} else if (GLES3::LightStorage::get_singleton()->owns_light(p_rid)) {
-		return RS::INSTANCE_LIGHT;
-	} else if (GLES3::LightStorage::get_singleton()->owns_lightmap(p_rid)) {
-		return RS::INSTANCE_LIGHTMAP;
-	} else if (GLES3::ParticlesStorage::get_singleton()->owns_particles(p_rid)) {
-		return RS::INSTANCE_PARTICLES;
-	} else if (GLES3::ParticlesStorage::get_singleton()->owns_particles_collision(p_rid)) {
-		return RS::INSTANCE_PARTICLES_COLLISION;
-	}
 	return RS::INSTANCE_NONE;
 }
 
@@ -165,33 +149,6 @@ bool Utilities::free(RID p_rid) {
 	} else if (GLES3::MaterialStorage::get_singleton()->owns_material(p_rid)) {
 		GLES3::MaterialStorage::get_singleton()->material_free(p_rid);
 		return true;
-	} else if (GLES3::MeshStorage::get_singleton()->owns_mesh(p_rid)) {
-		GLES3::MeshStorage::get_singleton()->mesh_free(p_rid);
-		return true;
-	} else if (GLES3::MeshStorage::get_singleton()->owns_multimesh(p_rid)) {
-		GLES3::MeshStorage::get_singleton()->multimesh_free(p_rid);
-		return true;
-	} else if (GLES3::MeshStorage::get_singleton()->owns_mesh_instance(p_rid)) {
-		GLES3::MeshStorage::get_singleton()->mesh_instance_free(p_rid);
-		return true;
-	} else if (GLES3::LightStorage::get_singleton()->owns_light(p_rid)) {
-		GLES3::LightStorage::get_singleton()->light_free(p_rid);
-		return true;
-	} else if (GLES3::LightStorage::get_singleton()->owns_lightmap(p_rid)) {
-		GLES3::LightStorage::get_singleton()->lightmap_free(p_rid);
-		return true;
-	} else if (GLES3::ParticlesStorage::get_singleton()->owns_particles(p_rid)) {
-		GLES3::ParticlesStorage::get_singleton()->particles_free(p_rid);
-		return true;
-	} else if (GLES3::ParticlesStorage::get_singleton()->owns_particles_collision(p_rid)) {
-		GLES3::ParticlesStorage::get_singleton()->particles_collision_free(p_rid);
-		return true;
-	} else if (GLES3::ParticlesStorage::get_singleton()->owns_particles_collision_instance(p_rid)) {
-		GLES3::ParticlesStorage::get_singleton()->particles_collision_instance_free(p_rid);
-		return true;
-	} else if (GLES3::MeshStorage::get_singleton()->owns_skeleton(p_rid)) {
-		GLES3::MeshStorage::get_singleton()->skeleton_free(p_rid);
-		return true;
 	} else {
 		return false;
 	}
@@ -200,50 +157,6 @@ bool Utilities::free(RID p_rid) {
 /* DEPENDENCIES */
 
 void Utilities::base_update_dependency(RID p_base, DependencyTracker *p_instance) {
-	if (MeshStorage::get_singleton()->owns_mesh(p_base)) {
-		Mesh *mesh = MeshStorage::get_singleton()->get_mesh(p_base);
-		p_instance->update_dependency(&mesh->dependency);
-	} else if (MeshStorage::get_singleton()->owns_multimesh(p_base)) {
-		MultiMesh *multimesh = MeshStorage::get_singleton()->get_multimesh(p_base);
-		p_instance->update_dependency(&multimesh->dependency);
-		if (multimesh->mesh.is_valid()) {
-			base_update_dependency(multimesh->mesh, p_instance);
-		}
-	} else if (LightStorage::get_singleton()->owns_light(p_base)) {
-		Light *l = LightStorage::get_singleton()->get_light(p_base);
-		p_instance->update_dependency(&l->dependency);
-	} else if (ParticlesStorage::get_singleton()->owns_particles(p_base)) {
-		Dependency *dependency = ParticlesStorage::get_singleton()->particles_get_dependency(p_base);
-		p_instance->update_dependency(dependency);
-	} else if (ParticlesStorage::get_singleton()->owns_particles_collision(p_base)) {
-		Dependency *dependency = ParticlesStorage::get_singleton()->particles_collision_get_dependency(p_base);
-		p_instance->update_dependency(dependency);
-	}
-}
-
-/* VISIBILITY NOTIFIER */
-
-RID Utilities::visibility_notifier_allocate() {
-	return RID();
-}
-
-void Utilities::visibility_notifier_initialize(RID p_notifier) {
-}
-
-void Utilities::visibility_notifier_free(RID p_notifier) {
-}
-
-void Utilities::visibility_notifier_set_aabb(RID p_notifier, const AABB &p_aabb) {
-}
-
-void Utilities::visibility_notifier_set_callbacks(RID p_notifier, const Callable &p_enter_callbable, const Callable &p_exit_callable) {
-}
-
-AABB Utilities::visibility_notifier_get_aabb(RID p_notifier) const {
-	return AABB();
-}
-
-void Utilities::visibility_notifier_call(RID p_notifier, bool p_enter, bool p_deferred) {
 }
 
 /* TIMING */
@@ -321,14 +234,10 @@ String Utilities::get_captured_timestamp_name(uint32_t p_index) const {
 void Utilities::update_dirty_resources() {
 	MaterialStorage::get_singleton()->_update_global_shader_uniforms();
 	MaterialStorage::get_singleton()->_update_queued_materials();
-	MeshStorage::get_singleton()->_update_dirty_skeletons();
-	MeshStorage::get_singleton()->_update_dirty_multimeshes();
 	TextureStorage::get_singleton()->update_texture_atlas();
 }
 
 void Utilities::set_debug_generate_wireframes(bool p_generate) {
-	Config *config = Config::get_singleton();
-	config->generate_wireframes = p_generate;
 }
 
 bool Utilities::has_os_feature(const String &p_feature) const {
@@ -383,10 +292,6 @@ String Utilities::get_video_adapter_vendor() const {
 	const String rendering_device_vendor = String::utf8((const char *)glGetString(GL_VENDOR));
 	// NVIDIA suffixes its vendor name with " Corporation". This is neither necessary to process nor display.
 	return rendering_device_vendor.trim_suffix(" Corporation");
-}
-
-RenderingDevice::DeviceType Utilities::get_video_adapter_type() const {
-	return RenderingDevice::DeviceType::DEVICE_TYPE_OTHER;
 }
 
 String Utilities::get_video_adapter_api_version() const {

@@ -102,6 +102,14 @@ float StyleBoxTexture::get_expand_margin(Side p_side) const {
 	return expand_margin[p_side];
 }
 
+Point2 StyleBoxTexture::get_expand_margin_begin() const {
+	return Point2(expand_margin[SIDE_LEFT], expand_margin[SIDE_TOP]);
+}
+
+Point2 StyleBoxTexture::get_expand_margin_end() const {
+	return Point2(expand_margin[SIDE_RIGHT], expand_margin[SIDE_BOTTOM]);
+}
+
 void StyleBoxTexture::set_region_rect(const Rect2 &p_region_rect) {
 	if (region_rect == p_region_rect) {
 		return;

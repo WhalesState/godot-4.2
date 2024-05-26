@@ -14,13 +14,6 @@
 		$Label.add_theme_font_override("font", fv)
 		$Label.add_theme_font_size_override("font_size", 64)
 		[/gdscript]
-		[csharp]
-		var fv = new FontVariation();
-		fv.SetBaseFont(ResourceLoader.Load&lt;FontFile&gt;("res://BarlowCondensed-Regular.ttf"));
-		fv.SetVariationEmbolden(1.2);
-		GetNode("Label").AddThemeFontOverride("font", fv);
-		GetNode("Label").AddThemeFontSizeOverride("font_size", 64);
-		[/csharp]
 		[/codeblocks]
 		To set the coordinate of multiple variation axes:
 		[codeblock]
@@ -63,7 +56,7 @@
 		</member>
 		<member name="variation_embolden" type="float" setter="set_variation_embolden" getter="get_variation_embolden" default="0.0">
 			If is not equal to zero, emboldens the font outlines. Negative values reduce the outline thickness.
-			[b]Note:[/b] Emboldened fonts might have self-intersecting outlines, which will prevent MSDF fonts and [TextMesh] from working correctly.
+			[b]Note:[/b] Emboldened fonts might have self-intersecting outlines, which will prevent MSDF fonts and TextMesh from working correctly.
 		</member>
 		<member name="variation_face_index" type="int" setter="set_variation_face_index" getter="get_variation_face_index" default="0">
 			Active face index in the TrueType / OpenType collection file.

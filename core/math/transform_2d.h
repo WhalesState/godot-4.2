@@ -112,6 +112,7 @@ struct _NO_DISCARD_ Transform2D {
 
 	Transform2D interpolate_with(const Transform2D &p_transform, const real_t p_c) const;
 
+	_FORCE_INLINE_ Vector2 _xform(const Vector2 &p_vec) const;
 	_FORCE_INLINE_ Vector2 basis_xform(const Vector2 &p_vec) const;
 	_FORCE_INLINE_ Vector2 basis_xform_inv(const Vector2 &p_vec) const;
 	_FORCE_INLINE_ Vector2 xform(const Vector2 &p_vec) const;
@@ -147,6 +148,10 @@ struct _NO_DISCARD_ Transform2D {
 		columns[1][1] = 1.0;
 	}
 };
+
+Vector2 Transform2D::_xform(const Vector2 &p_vec) const {
+	return xform(p_vec);
+}
 
 Vector2 Transform2D::basis_xform(const Vector2 &p_vec) const {
 	return Vector2(

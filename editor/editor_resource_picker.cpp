@@ -631,9 +631,7 @@ void EditorResourcePicker::_get_allowed_types(bool p_with_convert, HashSet<Strin
 		_add_allowed_type(base, p_vector);
 
 		if (p_with_convert) {
-			if (base == "BaseMaterial3D") {
-				p_vector->insert("Texture2D");
-			} else if (base == "ShaderMaterial") {
+			if (base == "ShaderMaterial") {
 				p_vector->insert("Shader");
 			} else if (base == "Texture2D") {
 				p_vector->insert("Image");
@@ -743,18 +741,6 @@ void EditorResourcePicker::drop_data_fw(const Point2 &p_point, const Variant &p_
 		if (!_is_type_valid(res_type, allowed_types)) {
 			for (const StringName &E : allowed_types) {
 				String at = E;
-
-				if (at == "BaseMaterial3D" && Ref<Texture2D>(dropped_resource).is_valid()) {
-					// Use existing resource if possible and only replace its data.
-					Ref<StandardMaterial3D> mat = edited_resource;
-					if (!mat.is_valid()) {
-						mat.instantiate();
-					}
-					mat->set_texture(StandardMaterial3D::TextureParam::TEXTURE_ALBEDO, dropped_resource);
-					dropped_resource = mat;
-					break;
-				}
-
 				if (at == "ShaderMaterial" && Ref<Shader>(dropped_resource).is_valid()) {
 					Ref<ShaderMaterial> mat = edited_resource;
 					if (!mat.is_valid()) {
@@ -982,7 +968,7 @@ void EditorResourcePicker::_gather_resources_to_duplicate(const Ref<Resource> p_
 		p_item->set_text(1, p_property_name);
 	}
 
-	static Vector<String> unique_exceptions = { "Image", "Shader", "Mesh", "FontFile" };
+	static Vector<String> unique_exceptions = { "Image", "Shader", "FontFile" };
 	if (!unique_exceptions.has(p_resource->get_class())) {
 		// Automatically select resource, unless it's something that shouldn't be duplicated.
 		p_item->set_checked(0, true);

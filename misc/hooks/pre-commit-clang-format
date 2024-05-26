@@ -134,9 +134,6 @@ do
     if grep -q "thirdparty" <<< $file; then
         continue;
     fi
-    if grep -q "platform/android/java/lib/src/com" <<< $file; then
-        continue;
-    fi
     if grep -q "\-so_wrap." <<< $file; then
         continue;
     fi

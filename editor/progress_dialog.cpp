@@ -213,9 +213,7 @@ bool ProgressDialog::task_step(const String &p_task, const String &p_state, int 
 	last_progress_tick = OS::get_singleton()->get_ticks_usec();
 	DisplayServer::get_singleton()->process_events();
 
-#ifndef ANDROID_ENABLED
 	Main::iteration(); // this will not work on a lot of platforms, so it's only meant for the editor
-#endif
 	return canceled;
 }
 
@@ -257,9 +255,8 @@ ProgressDialog::ProgressDialog() {
 	main->add_child(cancel_hb);
 	cancel_hb->hide();
 	cancel = memnew(Button);
-	cancel_hb->add_spacer();
+	cancel->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_CENTER);
 	cancel_hb->add_child(cancel);
 	cancel->set_text(TTR("Cancel"));
-	cancel_hb->add_spacer();
 	cancel->connect("pressed", callable_mp(this, &ProgressDialog::_cancel_pressed));
 }

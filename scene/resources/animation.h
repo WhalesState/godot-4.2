@@ -43,9 +43,6 @@ class Animation : public Resource {
 public:
 	enum TrackType {
 		TYPE_VALUE, ///< Set a value in a property, can be interpolated.
-		TYPE_POSITION_3D, ///< Position 3D track
-		TYPE_ROTATION_3D, ///< Rotation 3D track
-		TYPE_SCALE_3D, ///< Scale 3D track
 		TYPE_BLEND_SHAPE, ///< Blend Shape track
 		TYPE_METHOD, ///< Call any method on a specific node.
 		TYPE_BEZIER, ///< Bezier curve
@@ -116,40 +113,13 @@ private:
 		double time = 0.0; // time in secs
 	};
 
-	// transform key holds either Vector3 or Quaternion
+	// transform key holds Vector3
 	template <class T>
 	struct TKey : public Key {
 		T value;
 	};
 
-	const int32_t POSITION_TRACK_SIZE = 5;
-	const int32_t ROTATION_TRACK_SIZE = 6;
-	const int32_t SCALE_TRACK_SIZE = 5;
 	const int32_t BLEND_SHAPE_TRACK_SIZE = 3;
-
-	/* POSITION TRACK */
-
-	struct PositionTrack : public Track {
-		Vector<TKey<Vector3>> positions;
-		int32_t compressed_track = -1;
-		PositionTrack() { type = TYPE_POSITION_3D; }
-	};
-
-	/* ROTATION TRACK */
-
-	struct RotationTrack : public Track {
-		Vector<TKey<Quaternion>> rotations;
-		int32_t compressed_track = -1;
-		RotationTrack() { type = TYPE_ROTATION_3D; }
-	};
-
-	/* SCALE TRACK */
-
-	struct ScaleTrack : public Track {
-		Vector<TKey<Vector3>> scales;
-		int32_t compressed_track = -1;
-		ScaleTrack() { type = TYPE_SCALE_3D; }
-	};
 
 	/* BLEND SHAPE TRACK */
 
@@ -247,13 +217,11 @@ private:
 	inline int _find(const Vector<K> &p_keys, double p_time, bool p_backward = false) const;
 
 	_FORCE_INLINE_ Vector3 _interpolate(const Vector3 &p_a, const Vector3 &p_b, real_t p_c) const;
-	_FORCE_INLINE_ Quaternion _interpolate(const Quaternion &p_a, const Quaternion &p_b, real_t p_c) const;
 	_FORCE_INLINE_ Variant _interpolate(const Variant &p_a, const Variant &p_b, real_t p_c) const;
 	_FORCE_INLINE_ real_t _interpolate(const real_t &p_a, const real_t &p_b, real_t p_c) const;
 	_FORCE_INLINE_ Variant _interpolate_angle(const Variant &p_a, const Variant &p_b, real_t p_c) const;
 
 	_FORCE_INLINE_ Vector3 _cubic_interpolate_in_time(const Vector3 &p_pre_a, const Vector3 &p_a, const Vector3 &p_b, const Vector3 &p_post_b, real_t p_c, real_t p_pre_a_t, real_t p_b_t, real_t p_post_b_t) const;
-	_FORCE_INLINE_ Quaternion _cubic_interpolate_in_time(const Quaternion &p_pre_a, const Quaternion &p_a, const Quaternion &p_b, const Quaternion &p_post_b, real_t p_c, real_t p_pre_a_t, real_t p_b_t, real_t p_post_b_t) const;
 	_FORCE_INLINE_ Variant _cubic_interpolate_in_time(const Variant &p_pre_a, const Variant &p_a, const Variant &p_b, const Variant &p_post_b, real_t p_c, real_t p_pre_a_t, real_t p_b_t, real_t p_post_b_t) const;
 	_FORCE_INLINE_ real_t _cubic_interpolate_in_time(const real_t &p_pre_a, const real_t &p_a, const real_t &p_b, const real_t &p_post_b, real_t p_c, real_t p_pre_a_t, real_t p_b_t, real_t p_post_b_t) const;
 	_FORCE_INLINE_ Variant _cubic_interpolate_angle_in_time(const Variant &p_pre_a, const Variant &p_a, const Variant &p_b, const Variant &p_post_b, real_t p_c, real_t p_pre_a_t, real_t p_b_t, real_t p_post_b_t) const;
@@ -337,8 +305,6 @@ private:
 	} compression;
 
 	Vector3i _compress_key(uint32_t p_track, const AABB &p_bounds, int32_t p_key = -1, float p_time = 0.0);
-	bool _rotation_interpolate_compressed(uint32_t p_compressed_track, double p_time, Quaternion &r_ret) const;
-	bool _pos_scale_interpolate_compressed(uint32_t p_compressed_track, double p_time, Vector3 &r_ret) const;
 	bool _blend_shape_interpolate_compressed(uint32_t p_compressed_track, double p_time, float &r_ret) const;
 	template <uint32_t COMPONENTS>
 	bool _fetch_compressed(uint32_t p_compressed_track, double p_time, Vector3i &r_current_value, double &r_current_time, Vector3i &r_next_value, double &r_next_time, uint32_t *key_index = nullptr) const;
@@ -347,8 +313,6 @@ private:
 	int _get_compressed_key_count(uint32_t p_compressed_track) const;
 	template <uint32_t COMPONENTS>
 	void _get_compressed_key_indices_in_range(uint32_t p_compressed_track, double p_time, double p_delta, List<int> *r_indices) const;
-	_FORCE_INLINE_ Quaternion _uncompress_quaternion(const Vector3i &p_value) const;
-	_FORCE_INLINE_ Vector3 _uncompress_pos_scale(uint32_t p_compressed_track, const Vector3i &p_value) const;
 	_FORCE_INLINE_ float _uncompress_blend_shape(const Vector3i &p_value) const;
 
 	// bind helpers
@@ -356,11 +320,7 @@ private:
 	bool _float_track_optimize_key(const TKey<float> t0, const TKey<float> t1, const TKey<float> t2, real_t p_allowed_velocity_err, real_t p_allowed_precision_error);
 	bool _vector2_track_optimize_key(const TKey<Vector2> t0, const TKey<Vector2> t1, const TKey<Vector2> t2, real_t p_alowed_velocity_err, real_t p_allowed_angular_error, real_t p_allowed_precision_error);
 	bool _vector3_track_optimize_key(const TKey<Vector3> t0, const TKey<Vector3> t1, const TKey<Vector3> t2, real_t p_alowed_velocity_err, real_t p_allowed_angular_error, real_t p_allowed_precision_error);
-	bool _quaternion_track_optimize_key(const TKey<Quaternion> t0, const TKey<Quaternion> t1, const TKey<Quaternion> t2, real_t p_allowed_velocity_err, real_t p_allowed_angular_error, real_t p_allowed_precision_error);
 
-	void _position_track_optimize(int p_idx, real_t p_allowed_velocity_err, real_t p_allowed_angular_err, real_t p_allowed_precision_error);
-	void _rotation_track_optimize(int p_idx, real_t p_allowed_velocity_err, real_t p_allowed_angular_error, real_t p_allowed_precision_error);
-	void _scale_track_optimize(int p_idx, real_t p_allowed_velocity_err, real_t p_allowed_angular_err, real_t p_allowed_precision_error);
 	void _blend_shape_track_optimize(int p_idx, real_t p_allowed_velocity_err, real_t p_allowed_precision_error);
 	void _value_track_optimize(int p_idx, real_t p_allowed_velocity_err, real_t p_allowed_angular_err, real_t p_allowed_precision_error);
 
@@ -409,21 +369,6 @@ public:
 	double track_get_key_time(int p_track, int p_key_idx) const;
 	real_t track_get_key_transition(int p_track, int p_key_idx) const;
 	bool track_is_compressed(int p_track) const;
-
-	int position_track_insert_key(int p_track, double p_time, const Vector3 &p_position);
-	Error position_track_get_key(int p_track, int p_key, Vector3 *r_position) const;
-	Error try_position_track_interpolate(int p_track, double p_time, Vector3 *r_interpolation) const;
-	Vector3 position_track_interpolate(int p_track, double p_time) const;
-
-	int rotation_track_insert_key(int p_track, double p_time, const Quaternion &p_rotation);
-	Error rotation_track_get_key(int p_track, int p_key, Quaternion *r_rotation) const;
-	Error try_rotation_track_interpolate(int p_track, double p_time, Quaternion *r_interpolation) const;
-	Quaternion rotation_track_interpolate(int p_track, double p_time) const;
-
-	int scale_track_insert_key(int p_track, double p_time, const Vector3 &p_scale);
-	Error scale_track_get_key(int p_track, int p_key, Vector3 *r_scale) const;
-	Error try_scale_track_interpolate(int p_track, double p_time, Vector3 *r_interpolation) const;
-	Vector3 scale_track_interpolate(int p_track, double p_time) const;
 
 	int blend_shape_track_insert_key(int p_track, double p_time, float p_blend);
 	Error blend_shape_track_get_key(int p_track, int p_key, float *r_blend) const;

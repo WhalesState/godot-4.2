@@ -384,10 +384,6 @@ bool OS::has_feature(const String &p_feature) {
 		return true;
 	}
 
-	if (p_feature == "movie") {
-		return _writing_movie;
-	}
-
 #ifdef DEBUG_ENABLED
 	if (p_feature == "debug") {
 		return true;
@@ -494,12 +490,6 @@ bool OS::has_feature(const String &p_feature) {
 	}
 #endif
 	if (p_feature == "wasm") {
-		return true;
-	}
-#endif
-
-#if defined(IOS_SIMULATOR)
-	if (p_feature == "simulator") {
 		return true;
 	}
 #endif

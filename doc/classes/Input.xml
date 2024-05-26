@@ -45,14 +45,6 @@
 				The engine will already do this itself at key execution points (at least once per frame). However, this can be useful in advanced cases where you want precise control over the timing of event handling.
 			</description>
 		</method>
-		<method name="get_accelerometer" qualifiers="const">
-			<return type="Vector3" />
-			<description>
-				Returns the acceleration in m/s² of the device's accelerometer sensor, if the device has one. Otherwise, the method returns [constant Vector3.ZERO].
-				Note this method returns an empty [Vector3] when running from the editor even when your device has an accelerometer. You must export your project to a supported device to read values from the accelerometer.
-				[b]Note:[/b] This method only works on Android and iOS. On other platforms, it always returns [constant Vector3.ZERO].
-			</description>
-		</method>
 		<method name="get_action_raw_strength" qualifiers="const">
 			<return type="float" />
 			<param index="0" name="action" type="StringName" />
@@ -90,20 +82,6 @@
 			<return type="int" enum="Input.CursorShape" />
 			<description>
 				Returns the currently assigned cursor shape (see [enum CursorShape]).
-			</description>
-		</method>
-		<method name="get_gravity" qualifiers="const">
-			<return type="Vector3" />
-			<description>
-				Returns the gravity in m/s² of the device's accelerometer sensor, if the device has one. Otherwise, the method returns [constant Vector3.ZERO].
-				[b]Note:[/b] This method only works on Android and iOS. On other platforms, it always returns [constant Vector3.ZERO].
-			</description>
-		</method>
-		<method name="get_gyroscope" qualifiers="const">
-			<return type="Vector3" />
-			<description>
-				Returns the rotation rate in rad/s around a device's X, Y, and Z axes of the gyroscope sensor, if the device has one. Otherwise, the method returns [constant Vector3.ZERO].
-				[b]Note:[/b] This method only works on Android and iOS. On other platforms, it always returns [constant Vector3.ZERO].
 			</description>
 		</method>
 		<method name="get_joy_axis" qualifiers="const">
@@ -160,13 +138,6 @@
 			<return type="Vector2" />
 			<description>
 				Returns the last mouse velocity. To provide a precise and jitter-free velocity, mouse velocity is only calculated every 0.1s. Therefore, mouse velocity will lag mouse movements.
-			</description>
-		</method>
-		<method name="get_magnetometer" qualifiers="const">
-			<return type="Vector3" />
-			<description>
-				Returns the magnetic field strength in micro-Tesla for all axes of the device's magnetometer sensor, if the device has one. Otherwise, the method returns [constant Vector3.ZERO].
-				[b]Note:[/b] This method only works on Android and iOS. On other platforms, it always returns [constant Vector3.ZERO].
 			</description>
 		</method>
 		<method name="get_mouse_button_mask" qualifiers="const">
@@ -288,14 +259,7 @@
 				cancel_event.pressed = true
 				Input.parse_input_event(cancel_event)
 				[/gdscript]
-				[csharp]
-				var cancelEvent = new InputEventAction();
-				cancelEvent.Action = "ui_cancel";
-				cancelEvent.Pressed = true;
-				Input.ParseInputEvent(cancelEvent);
-				[/csharp]
 				[/codeblocks]
-				[b]Note:[/b] Calling this function has no influence on the operating system. So for example sending an [InputEventMouseMotion] will not move the OS mouse cursor to the specified position (use [method warp_mouse] instead) and sending [kbd]Alt/Cmd + Tab[/kbd] as [InputEventKey] won't toggle between active windows.
 			</description>
 		</method>
 		<method name="remove_joy_mapping">
@@ -303,14 +267,6 @@
 			<param index="0" name="guid" type="String" />
 			<description>
 				Removes all mappings from the internal database that match the given GUID.
-			</description>
-		</method>
-		<method name="set_accelerometer">
-			<return type="void" />
-			<param index="0" name="value" type="Vector3" />
-			<description>
-				Sets the acceleration value of the accelerometer sensor. Can be used for debugging on devices without a hardware sensor, for example in an editor on a PC.
-				[b]Note:[/b] This value can be immediately overwritten by the hardware sensor value on Android and iOS.
 			</description>
 		</method>
 		<method name="set_custom_mouse_cursor">
@@ -334,30 +290,6 @@
 				Sets the default cursor shape to be used in the viewport instead of [constant CURSOR_ARROW].
 				[b]Note:[/b] If you want to change the default cursor shape for [Control]'s nodes, use [member Control.mouse_default_cursor_shape] instead.
 				[b]Note:[/b] This method generates an [InputEventMouseMotion] to update cursor immediately.
-			</description>
-		</method>
-		<method name="set_gravity">
-			<return type="void" />
-			<param index="0" name="value" type="Vector3" />
-			<description>
-				Sets the gravity value of the accelerometer sensor. Can be used for debugging on devices without a hardware sensor, for example in an editor on a PC.
-				[b]Note:[/b] This value can be immediately overwritten by the hardware sensor value on Android and iOS.
-			</description>
-		</method>
-		<method name="set_gyroscope">
-			<return type="void" />
-			<param index="0" name="value" type="Vector3" />
-			<description>
-				Sets the value of the rotation rate of the gyroscope sensor. Can be used for debugging on devices without a hardware sensor, for example in an editor on a PC.
-				[b]Note:[/b] This value can be immediately overwritten by the hardware sensor value on Android and iOS.
-			</description>
-		</method>
-		<method name="set_magnetometer">
-			<return type="void" />
-			<param index="0" name="value" type="Vector3" />
-			<description>
-				Sets the value of the magnetic field of the magnetometer sensor. Can be used for debugging on devices without a hardware sensor, for example in an editor on a PC.
-				[b]Note:[/b] This value can be immediately overwritten by the hardware sensor value on Android and iOS.
 			</description>
 		</method>
 		<method name="should_ignore_device" qualifiers="const">

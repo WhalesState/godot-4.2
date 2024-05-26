@@ -77,13 +77,10 @@ public:
 	virtual void material_initialize(RID p_rid) = 0;
 	virtual void material_free(RID p_rid) = 0;
 
-	virtual void material_set_render_priority(RID p_material, int priority) = 0;
 	virtual void material_set_shader(RID p_shader_material, RID p_shader) = 0;
 
 	virtual void material_set_param(RID p_material, const StringName &p_param, const Variant &p_value) = 0;
 	virtual Variant material_get_param(RID p_material, const StringName &p_param) const = 0;
-
-	virtual void material_set_next_pass(RID p_material, RID p_next_material) = 0;
 
 	virtual bool material_is_animated(RID p_material) = 0;
 	virtual bool material_casts_shadows(RID p_material) = 0;

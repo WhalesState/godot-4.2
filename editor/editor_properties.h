@@ -303,13 +303,7 @@ class EditorPropertyLayers : public EditorProperty {
 
 public:
 	enum LayerType {
-		LAYER_PHYSICS_2D,
 		LAYER_RENDER_2D,
-		LAYER_NAVIGATION_2D,
-		LAYER_PHYSICS_3D,
-		LAYER_RENDER_3D,
-		LAYER_NAVIGATION_3D,
-		LAYER_AVOIDANCE,
 	};
 
 private:
@@ -505,40 +499,6 @@ public:
 	virtual void update_property() override;
 	void setup(double p_min, double p_max, double p_step, bool p_hide_slider, const String &p_suffix = String());
 	EditorPropertyPlane(bool p_force_wide = false);
-};
-
-class EditorPropertyQuaternion : public EditorProperty {
-	GDCLASS(EditorPropertyQuaternion, EditorProperty);
-	BoxContainer *default_layout = nullptr;
-	EditorSpinSlider *spin[4];
-	bool setting = false;
-
-	Button *warning = nullptr;
-	AcceptDialog *warning_dialog = nullptr;
-
-	Label *euler_label = nullptr;
-	VBoxContainer *edit_custom_bc = nullptr;
-	EditorSpinSlider *euler[3];
-	Button *edit_button = nullptr;
-
-	Vector3 edit_euler;
-
-	void _value_changed(double p_val, const String &p_name);
-	void _edit_custom_value();
-	void _custom_value_changed(double p_val);
-	void _warning_pressed();
-
-	bool is_grabbing_euler();
-
-protected:
-	virtual void _set_read_only(bool p_read_only) override;
-	void _notification(int p_what);
-	static void _bind_methods();
-
-public:
-	virtual void update_property() override;
-	void setup(double p_min, double p_max, double p_step, bool p_hide_slider, const String &p_suffix = String(), bool p_hide_editor = false);
-	EditorPropertyQuaternion();
 };
 
 class EditorPropertyAABB : public EditorProperty {

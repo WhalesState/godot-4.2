@@ -337,7 +337,7 @@ void ScriptEditorQuickOpen::popup_dialog(const Vector<String> &p_functions, bool
 	} else {
 		search_box->clear();
 	}
-	search_box->grab_focus();
+	search_box->edit();
 	functions = p_functions;
 	_update_search();
 }
@@ -3842,6 +3842,7 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	add_child(main_container);
 
 	menu_hb = memnew(HBoxContainer);
+	menu_hb->add_theme_constant_override("separation", 0);
 	main_container->add_child(menu_hb);
 
 	script_split = memnew(HSplitContainer);
@@ -4024,9 +4025,9 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	debugger->connect("breakpoint_set_in_tree", callable_mp(this, &ScriptEditor::_set_breakpoint));
 	debugger->connect("breakpoints_cleared_in_tree", callable_mp(this, &ScriptEditor::_clear_breakpoints));
 
-	menu_hb->add_spacer();
-
 	script_icon = memnew(TextureRect);
+	script_icon->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
+	script_icon->set_stretch_mode(TextureRect::STRETCH_KEEP_ASPECT_CENTERED);
 	menu_hb->add_child(script_icon);
 	script_name_label = memnew(Label);
 	menu_hb->add_child(script_name_label);
@@ -4034,21 +4035,21 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	script_icon->hide();
 	script_name_label->hide();
 
-	menu_hb->add_spacer();
-
-	site_search = memnew(Button);
-	site_search->set_flat(true);
-	site_search->set_text(TTR("Online Docs"));
-	site_search->connect("pressed", callable_mp(this, &ScriptEditor::_menu_option).bind(SEARCH_WEBSITE));
-	menu_hb->add_child(site_search);
-	site_search->set_tooltip_text(TTR("Open Godot online documentation."));
-
 	help_search = memnew(Button);
+	help_search->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
 	help_search->set_flat(true);
 	help_search->set_text(TTR("Search Help"));
 	help_search->connect("pressed", callable_mp(this, &ScriptEditor::_menu_option).bind(SEARCH_HELP));
 	menu_hb->add_child(help_search);
 	help_search->set_tooltip_text(TTR("Search the reference documentation."));
+
+	site_search = memnew(Button);
+	site_search->set_flat(true);
+	site_search->set_text(TTR("Online Godot Docs"));
+	site_search->connect("pressed", callable_mp(this, &ScriptEditor::_menu_option).bind(SEARCH_WEBSITE));
+	menu_hb->add_child(site_search);
+	site_search->set_tooltip_text(TTR("Open Godot online documentation."));
+	site_search->hide();
 
 	menu_hb->add_child(memnew(VSeparator));
 

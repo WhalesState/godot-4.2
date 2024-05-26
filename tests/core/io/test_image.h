@@ -218,13 +218,13 @@ TEST_CASE("[Image] Modifying pixels of an image") {
 			!image->is_invisible(),
 			"Image should not be invisible after drawing on it.");
 	CHECK_MESSAGE(
-			image->get_pixelv(Vector2(0, 0)).is_equal_approx(Color(1, 1, 1, 1)),
+			image->get_pixel_v(Vector2(0, 0)).is_equal_approx(Color(1, 1, 1, 1)),
 			"Image's get_pixel() should return the same color value as the one being set with set_pixel() in the same position.");
 	CHECK_MESSAGE(
 			image->get_used_rect() == Rect2i(0, 0, 1, 1),
 			"Image's get_used_rect should return the expected value, larger than Rect2i(0, 0, 0, 0) if it's visible.");
 
-	image->set_pixelv(Vector2(0, 0), Color(0.5, 0.5, 0.5, 0.5));
+	image->set_pixel_v(Vector2(0, 0), Color(0.5, 0.5, 0.5, 0.5));
 	Ref<Image> image2 = memnew(Image(3, 3, false, Image::FORMAT_RGBA8));
 
 	// Fill image with color
@@ -404,33 +404,6 @@ TEST_CASE("[Image] Custom mipmaps") {
 			}
 		}
 	}
-}
-
-TEST_CASE("[Image] Convert image") {
-	for (int format = Image::FORMAT_RF; format < Image::FORMAT_RGBE9995; format++) {
-		for (int new_format = Image::FORMAT_RF; new_format < Image::FORMAT_RGBE9995; new_format++) {
-			Ref<Image> image = memnew(Image(4, 4, false, (Image::Format)format));
-			image->convert((Image::Format)new_format);
-			String format_string = Image::format_names[(Image::Format)format];
-			String new_format_string = Image::format_names[(Image::Format)new_format];
-			format_string = "Error converting from " + format_string + " to " + new_format_string + ".";
-			CHECK_MESSAGE(image->get_format() == new_format, format_string);
-		}
-	}
-
-	Ref<Image> image = memnew(Image(4, 4, false, Image::FORMAT_RGBA8));
-	PackedByteArray image_data = image->get_data();
-	ERR_PRINT_OFF;
-	image->convert((Image::Format)-1);
-	ERR_PRINT_ON;
-	CHECK_MESSAGE(image->get_data() == image_data, "Image conversion to invalid type (-1) should not alter image.");
-
-	Ref<Image> image2 = memnew(Image(4, 4, false, Image::FORMAT_RGBA8));
-	image_data = image2->get_data();
-	ERR_PRINT_OFF;
-	image2->convert((Image::Format)(Image::FORMAT_MAX + 1));
-	ERR_PRINT_ON;
-	CHECK_MESSAGE(image2->get_data() == image_data, "Image conversion to invalid type (Image::FORMAT_MAX + 1) should not alter image.");
 }
 
 } // namespace TestImage

@@ -31,15 +31,8 @@
 #ifndef RENDERER_COMPOSITOR_H
 #define RENDERER_COMPOSITOR_H
 
-#include "servers/rendering/environment/renderer_fog.h"
-#include "servers/rendering/environment/renderer_gi.h"
 #include "servers/rendering/renderer_canvas_render.h"
-#include "servers/rendering/rendering_method.h"
-#include "servers/rendering/storage/camera_attributes_storage.h"
-#include "servers/rendering/storage/light_storage.h"
 #include "servers/rendering/storage/material_storage.h"
-#include "servers/rendering/storage/mesh_storage.h"
-#include "servers/rendering/storage/particles_storage.h"
 #include "servers/rendering/storage/texture_storage.h"
 #include "servers/rendering/storage/utilities.h"
 #include "servers/rendering_server.h"
@@ -69,7 +62,6 @@ struct BlitToScreen {
 
 class RendererCompositor {
 private:
-	bool xr_enabled = false;
 	static RendererCompositor *singleton;
 
 protected:
@@ -81,15 +73,9 @@ public:
 	static RendererCompositor *create();
 
 	virtual RendererUtilities *get_utilities() = 0;
-	virtual RendererLightStorage *get_light_storage() = 0;
 	virtual RendererMaterialStorage *get_material_storage() = 0;
-	virtual RendererMeshStorage *get_mesh_storage() = 0;
-	virtual RendererParticlesStorage *get_particles_storage() = 0;
 	virtual RendererTextureStorage *get_texture_storage() = 0;
-	virtual RendererGI *get_gi() = 0;
-	virtual RendererFog *get_fog() = 0;
 	virtual RendererCanvasRender *get_canvas() = 0;
-	virtual RendererSceneRender *get_scene() = 0;
 
 	virtual void set_boot_image(const Ref<Image> &p_image, const Color &p_color, bool p_scale, bool p_use_filter = true) = 0;
 
@@ -106,7 +92,6 @@ public:
 	virtual double get_total_time() const = 0;
 
 	static bool is_low_end() { return low_end; };
-	virtual bool is_xr_enabled() const;
 
 	static RendererCompositor *get_singleton() { return singleton; }
 	RendererCompositor();

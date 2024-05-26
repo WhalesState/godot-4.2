@@ -57,11 +57,26 @@ public:
 	};
 
 private:
-	bool hflip = false;
-	bool vflip = false;
 	Ref<Texture2D> texture;
 	ExpandMode expand_mode = EXPAND_KEEP_SIZE;
 	StretchMode stretch_mode = STRETCH_SCALE;
+	RID tiled_texture;
+
+	bool hflip = false;
+	bool vflip = false;
+
+	struct Grow {
+		Size2 size;
+		bool fixed = false;
+	} grow;
+
+	bool region_enabled = false;
+	Rect2 region_rect;
+	bool region_filter_clip_enabled = false;
+
+	int frame = 0;
+	int vframes = 1;
+	int hframes = 1;
 
 	void _texture_changed();
 
@@ -69,13 +84,13 @@ protected:
 	void _notification(int p_what);
 	virtual Size2 get_minimum_size() const override;
 	static void _bind_methods();
-#ifndef DISABLE_DEPRECATED
-	bool _set(const StringName &p_name, const Variant &p_value);
-#endif
+	void _validate_property(PropertyInfo &p_property) const;
 
 public:
 	void set_texture(const Ref<Texture2D> &p_tex);
 	Ref<Texture2D> get_texture() const;
+
+	Size2 get_texture_size() const;
 
 	void set_expand_mode(ExpandMode p_mode);
 	ExpandMode get_expand_mode() const;
@@ -88,6 +103,25 @@ public:
 
 	void set_flip_v(bool p_flip);
 	bool is_flipped_v() const;
+
+	void set_grow_size(const Size2 &p_grow_size);
+	Size2 get_grow_size() const;
+
+	void set_use_fixed_grow(bool p_fixed_grow);
+	bool is_using_fixed_grow() const;
+
+	void set_frame(int p_frame);
+	int get_frame() const;
+
+	void set_frame_coords(const Vector2i &p_coord);
+	Vector2i get_frame_coords() const;
+
+	void set_vframes(int p_amount);
+	int get_vframes() const;
+
+	void set_hframes(int p_amount);
+	int get_hframes() const;
+	int get_max_frames() const;
 
 	TextureRect();
 	~TextureRect();

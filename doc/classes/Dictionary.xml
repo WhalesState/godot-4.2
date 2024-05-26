@@ -28,15 +28,6 @@
 		    some_key = 42,
 		}
 		[/gdscript]
-		[csharp]
-		var myDict = new Godot.Collections.Dictionary(); // Creates an empty dictionary.
-		var pointsDict = new Godot.Collections.Dictionary
-		{
-		    {"White", 50},
-		    {"Yellow", 75},
-		    {"Orange", 100}
-		};
-		[/csharp]
 		[/codeblocks]
 		You can access a dictionary's value by referencing its corresponding key. In the above example, [code]points_dict["White"][/code] will return [code]50[/code]. You can also write [code]points_dict.White[/code], which is equivalent. However, you'll have to use the bracket syntax if the key you're accessing the dictionary with isn't a fixed string (such as a number or variable).
 		[codeblocks]
@@ -47,21 +38,6 @@
 		    # We can't use dot syntax here as `my_color` is a variable.
 		    var points = points_dict[my_color]
 		[/gdscript]
-		[csharp]
-		[Export(PropertyHint.Enum, "White,Yellow,Orange")]
-		public string MyColor { get; set; }
-		private Godot.Collections.Dictionary _pointsDict = new Godot.Collections.Dictionary
-		{
-		    {"White", 50},
-		    {"Yellow", 75},
-		    {"Orange", 100}
-		};
-
-		public override void _Ready()
-		{
-		    int points = (int)_pointsDict[MyColor];
-		}
-		[/csharp]
 		[/codeblocks]
 		In the above code, [code]points[/code] will be assigned the value that is paired with the appropriate color selected in [code]my_color[/code].
 		Dictionaries can contain more complex data:
@@ -71,12 +47,6 @@
 		    "First Array": [1, 2, 3, 4] # Assigns an Array to a String key.
 		}
 		[/gdscript]
-		[csharp]
-		var myDict = new Godot.Collections.Dictionary
-		{
-		    {"First Array", new Godot.Collections.Array{1, 2, 3, 4}}
-		};
-		[/csharp]
 		[/codeblocks]
 		To add a key to an existing dictionary, access it like an existing key and assign to it:
 		[codeblocks]
@@ -84,15 +54,6 @@
 		var points_dict = {"White": 50, "Yellow": 75, "Orange": 100}
 		points_dict["Blue"] = 150 # Add "Blue" as a key and assign 150 as its value.
 		[/gdscript]
-		[csharp]
-		var pointsDict = new Godot.Collections.Dictionary
-		{
-		    {"White", 50},
-		    {"Yellow", 75},
-		    {"Orange", 100}
-		};
-		pointsDict["Blue"] = 150; // Add "Blue" as a key and assign 150 as its value.
-		[/csharp]
 		[/codeblocks]
 		Finally, dictionaries can contain different types of keys and values in the same dictionary:
 		[codeblocks]
@@ -107,16 +68,6 @@
 		    "sub_dict": {"sub_key": "Nested value"},
 		}
 		[/gdscript]
-		[csharp]
-		// This is a valid dictionary.
-		// To access the string "Nested value" below, use `((Godot.Collections.Dictionary)myDict["sub_dict"])["sub_key"]`.
-		var myDict = new Godot.Collections.Dictionary {
-		    {"String Key", 5},
-		    {4, new Godot.Collections.Array{1,2,3}},
-		    {7, "Hello"},
-		    {"sub_dict", new Godot.Collections.Dictionary{{"sub_key", "Nested value"}}}
-		};
-		[/csharp]
 		[/codeblocks]
 		The keys of a dictionary can be iterated with the [code]for[/code] keyword:
 		[codeblocks]
@@ -125,13 +76,6 @@
 		for fruit in groceries:
 		    var amount = groceries[fruit]
 		[/gdscript]
-		[csharp]
-		var groceries = new Godot.Collections.Dictionary{{"Orange", 20}, {"Apple", 2}, {"Banana", 4}};
-		foreach (var (fruit, amount) in groceries)
-		{
-		    // `fruit` is the key, `amount` is the value.
-		}
-		[/csharp]
 		[/codeblocks]
 		[b]Note:[/b] Dictionaries are always passed by reference. To get a copy of a dictionary which can be modified independently of the original dictionary, use [method duplicate].
 		[b]Note:[/b] Erasing elements while iterating over dictionaries is [b]not[/b] supported and will result in unpredictable behavior.
@@ -210,17 +154,6 @@
 				print(my_dict.has(210))     # Prints true
 				print(my_dict.has(4))       # Prints false
 				[/gdscript]
-				[csharp]
-				var myDict = new Godot.Collections.Dictionary
-				{
-				    { "Godot", 4 },
-				    { 210, default },
-				};
-
-				GD.Print(myDict.ContainsKey("Godot")); // Prints true
-				GD.Print(myDict.ContainsKey(210));     // Prints true
-				GD.Print(myDict.ContainsKey(4));       // Prints false
-				[/csharp]
 				[/codeblocks]
 				In GDScript, this is equivalent to the [code]in[/code] operator:
 				[codeblock]
@@ -252,13 +185,6 @@
 
 				print(dict1.hash() == dict2.hash()) # Prints true
 				[/gdscript]
-				[csharp]
-				var dict1 = new Godot.Collections.Dictionary{{"A", 10}, {"B", 2}};
-				var dict2 = new Godot.Collections.Dictionary{{"A", 10}, {"B", 2}};
-
-				// Godot.Collections.Dictionary has no Hash() method. Use GD.Hash() instead.
-				GD.Print(GD.Hash(dict1) == GD.Hash(dict2)); // Prints true
-				[/csharp]
 				[/codeblocks]
 				[b]Note:[/b] Dictionaries with the same entries but in a different order will not have the same hash.
 				[b]Note:[/b] Dictionaries with equal hash values are [i]not[/i] guaranteed to be the same, because of hash collisions. On the contrary, dictionaries with different hash values are guaranteed to be different.
@@ -307,27 +233,6 @@
 				dict.merge(other_dict, true)
 				print(dict)  # { "item": "sword", "quantity": 15, "color": "silver" }
 				[/gdscript]
-				[csharp]
-				var dict = new Godot.Collections.Dictionary
-				{
-				    ["item"] = "sword",
-				    ["quantity"] = 2,
-				};
-
-				var otherDict = new Godot.Collections.Dictionary
-				{
-				    ["quantity"] = 15,
-				    ["color"] = "silver",
-				};
-
-				// Overwriting of existing keys is disabled by default.
-				dict.Merge(otherDict);
-				GD.Print(dict); // { "item": "sword", "quantity": 2, "color": "silver" }
-
-				// With overwriting of existing keys enabled.
-				dict.Merge(otherDict, true);
-				GD.Print(dict); // { "item": "sword", "quantity": 15, "color": "silver" }
-				[/csharp]
 				[/codeblocks]
 				[b]Note:[/b] [method merge] is [i]not[/i] recursive. Nested dictionaries are considered as keys that can be overwritten or not depending on the value of [param overwrite], but they will never be merged together.
 			</description>
@@ -358,7 +263,6 @@
 			<param index="0" name="right" type="Dictionary" />
 			<description>
 				Returns [code]true[/code] if the two dictionaries contain the same keys and values. The order of the entries does not matter.
-				[b]Note:[/b] In C#, by convention, this operator compares by [b]reference[/b]. If you need to compare by value, iterate over both dictionaries.
 			</description>
 		</operator>
 		<operator name="operator []">

@@ -1188,7 +1188,7 @@ PackedByteArray CodeSign::file_hash_sha256(const String &p_path) {
 	return file_hash;
 }
 
-Error CodeSign::_codesign_file(bool p_use_hardened_runtime, bool p_force, const String &p_info, const String &p_exe_path, const String &p_bundle_path, const String &p_ent_path, bool p_ios_bundle, String &r_error_msg) {
+Error CodeSign::_codesign_file(bool p_use_hardened_runtime, bool p_force, const String &p_info, const String &p_exe_path, const String &p_bundle_path, const String &p_ent_path, String &r_error_msg) {
 #define CLEANUP()                                        \
 	if (files_to_sign.size() > 1) {                      \
 		for (int j = 0; j < files_to_sign.size(); j++) { \
@@ -1287,51 +1287,28 @@ Error CodeSign::_codesign_file(bool p_use_hardened_runtime, bool p_force, const 
 		print_verbose("CodeSign: Generating bundle CodeResources...");
 		CodeSignCodeResources cr;
 
-		if (p_ios_bundle) {
-			cr.add_rule1("^.*");
-			cr.add_rule1("^.*\\.lproj/", "optional", 100);
-			cr.add_rule1("^.*\\.lproj/locversion.plist$", "omit", 1100);
-			cr.add_rule1("^Base\\.lproj/", "", 1010);
-			cr.add_rule1("^version.plist$");
+		cr.add_rule1("^Resources/");
+		cr.add_rule1("^Resources/.*\\.lproj/", "optional", 1000);
+		cr.add_rule1("^Resources/.*\\.lproj/locversion.plist$", "omit", 1100);
+		cr.add_rule1("^Resources/Base\\.lproj/", "", 1010);
+		cr.add_rule1("^version.plist$");
 
-			cr.add_rule2(".*\\.dSYM($|/)", "", 11);
-			cr.add_rule2("^(.*/)?\\.DS_Store$", "omit", 2000);
-			cr.add_rule2("^.*");
-			cr.add_rule2("^.*\\.lproj/", "optional", 1000);
-			cr.add_rule2("^.*\\.lproj/locversion.plist$", "omit", 1100);
-			cr.add_rule2("^Base\\.lproj/", "", 1010);
-			cr.add_rule2("^Info\\.plist$", "omit", 20);
-			cr.add_rule2("^PkgInfo$", "omit", 20);
-			cr.add_rule2("^embedded\\.provisionprofile$", "", 10);
-			cr.add_rule2("^version\\.plist$", "", 20);
-
-			cr.add_rule2("^_MASReceipt", "omit", 2000, false);
-			cr.add_rule2("^_CodeSignature", "omit", 2000, false);
-			cr.add_rule2("^CodeResources", "omit", 2000, false);
-		} else {
-			cr.add_rule1("^Resources/");
-			cr.add_rule1("^Resources/.*\\.lproj/", "optional", 1000);
-			cr.add_rule1("^Resources/.*\\.lproj/locversion.plist$", "omit", 1100);
-			cr.add_rule1("^Resources/Base\\.lproj/", "", 1010);
-			cr.add_rule1("^version.plist$");
-
-			cr.add_rule2(".*\\.dSYM($|/)", "", 11);
-			cr.add_rule2("^(.*/)?\\.DS_Store$", "omit", 2000);
-			cr.add_rule2("^(Frameworks|SharedFrameworks|PlugIns|Plug-ins|XPCServices|Helpers|MacOS|Library/(Automator|Spotlight|LoginItems))/", "nested", 10);
-			cr.add_rule2("^.*");
-			cr.add_rule2("^Info\\.plist$", "omit", 20);
-			cr.add_rule2("^PkgInfo$", "omit", 20);
-			cr.add_rule2("^Resources/", "", 20);
-			cr.add_rule2("^Resources/.*\\.lproj/", "optional", 1000);
-			cr.add_rule2("^Resources/.*\\.lproj/locversion.plist$", "omit", 1100);
-			cr.add_rule2("^Resources/Base\\.lproj/", "", 1010);
-			cr.add_rule2("^[^/]+$", "nested", 10);
-			cr.add_rule2("^embedded\\.provisionprofile$", "", 10);
-			cr.add_rule2("^version\\.plist$", "", 20);
-			cr.add_rule2("^_MASReceipt", "omit", 2000, false);
-			cr.add_rule2("^_CodeSignature", "omit", 2000, false);
-			cr.add_rule2("^CodeResources", "omit", 2000, false);
-		}
+		cr.add_rule2(".*\\.dSYM($|/)", "", 11);
+		cr.add_rule2("^(.*/)?\\.DS_Store$", "omit", 2000);
+		cr.add_rule2("^(Frameworks|SharedFrameworks|PlugIns|Plug-ins|XPCServices|Helpers|MacOS|Library/(Automator|Spotlight|LoginItems))/", "nested", 10);
+		cr.add_rule2("^.*");
+		cr.add_rule2("^Info\\.plist$", "omit", 20);
+		cr.add_rule2("^PkgInfo$", "omit", 20);
+		cr.add_rule2("^Resources/", "", 20);
+		cr.add_rule2("^Resources/.*\\.lproj/", "optional", 1000);
+		cr.add_rule2("^Resources/.*\\.lproj/locversion.plist$", "omit", 1100);
+		cr.add_rule2("^Resources/Base\\.lproj/", "", 1010);
+		cr.add_rule2("^[^/]+$", "nested", 10);
+		cr.add_rule2("^embedded\\.provisionprofile$", "", 10);
+		cr.add_rule2("^version\\.plist$", "", 20);
+		cr.add_rule2("^_MASReceipt", "omit", 2000, false);
+		cr.add_rule2("^_CodeSignature", "omit", 2000, false);
+		cr.add_rule2("^CodeResources", "omit", 2000, false);
 
 		if (!cr.add_folder_recursive(p_bundle_path, "", main_exe)) {
 			CLEANUP();
@@ -1529,7 +1506,6 @@ Error CodeSign::codesign(bool p_use_hardened_runtime, bool p_force, const String
 		String main_exe;
 		String bundle_path;
 		bool bundle = false;
-		bool ios_bundle = false;
 		if (da->file_exists(p_path.path_join("Contents/Info.plist"))) {
 			info_path = p_path.path_join("Contents/Info.plist");
 			main_exe = p_path.path_join("Contents/MacOS");
@@ -1540,21 +1516,15 @@ Error CodeSign::codesign(bool p_use_hardened_runtime, bool p_force, const String
 			main_exe = p_path.path_join(vformat("Versions/%s", fmw_ver));
 			bundle_path = p_path.path_join(vformat("Versions/%s", fmw_ver));
 			bundle = true;
-		} else if (da->file_exists(p_path.path_join("Info.plist"))) {
-			info_path = p_path.path_join("Info.plist");
-			main_exe = p_path;
-			bundle_path = p_path;
-			bundle = true;
-			ios_bundle = true;
 		}
 		if (bundle) {
-			return _codesign_file(p_use_hardened_runtime, p_force, info_path, main_exe, bundle_path, p_ent_path, ios_bundle, r_error_msg);
+			return _codesign_file(p_use_hardened_runtime, p_force, info_path, main_exe, bundle_path, p_ent_path, r_error_msg);
 		} else {
 			r_error_msg = TTR("Unknown bundle type.");
 			ERR_FAIL_V_MSG(FAILED, "CodeSign: Unknown bundle type.");
 		}
 	} else if (da->file_exists(p_path)) {
-		return _codesign_file(p_use_hardened_runtime, p_force, "", p_path, "", p_ent_path, false, r_error_msg);
+		return _codesign_file(p_use_hardened_runtime, p_force, "", p_path, "", p_ent_path, r_error_msg);
 	} else {
 		r_error_msg = TTR("Unknown object type.");
 		ERR_FAIL_V_MSG(FAILED, "CodeSign: Unknown object type.");

@@ -91,6 +91,14 @@ float StyleBoxLine::get_grow_begin() const {
 	return grow_begin;
 }
 
+Point2 StyleBoxLine::get_expand_margin_begin() const {
+	return vertical ? Point2(0, grow_begin) : Point2(grow_begin, 0);
+}
+
+Point2 StyleBoxLine::get_expand_margin_end() const {
+	return vertical ? Point2(0, grow_end) : Point2(grow_end, 0);
+}
+
 void StyleBoxLine::draw(RID p_canvas_item, const Rect2 &p_rect) const {
 	RenderingServer *vs = RenderingServer::get_singleton();
 	Rect2i r = p_rect;

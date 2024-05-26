@@ -39,7 +39,6 @@ class ResourceImporterTextureAtlas : public ResourceImporter {
 	struct PackData {
 		Rect2 region;
 		bool is_cropped = false;
-		bool is_mesh = false;
 		Vector<int> chart_pieces; //one for region, many for mesh
 		Vector<Vector<Vector2>> chart_vertices; //for mesh
 		Ref<Image> image;
@@ -47,8 +46,7 @@ class ResourceImporterTextureAtlas : public ResourceImporter {
 
 public:
 	enum ImportMode {
-		IMPORT_MODE_REGION,
-		IMPORT_MODE_2D_MESH
+		IMPORT_MODE_REGION
 	};
 
 	virtual String get_importer_name() const override;

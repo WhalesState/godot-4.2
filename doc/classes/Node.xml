@@ -14,7 +14,6 @@
 		To keep track of the scene hierarchy (especially when instantiating scenes into other scenes), an "owner" can be set for the node with the [member owner] property. This keeps track of who instantiated what. This is mostly useful when writing editors and tools, though.
 		Finally, when a node is freed with [method Object.free] or [method queue_free], it will also free all its children.
 		[b]Groups:[/b] Nodes can be added to as many groups as you want to be easy to manage, you could create groups like "enemies" or "collectables" for example, depending on your game. See [method add_to_group], [method is_in_group] and [method remove_from_group]. You can then retrieve all nodes in these groups, iterate them and even call methods on groups via the methods on [SceneTree].
-		[b]Networking with nodes:[/b] After connecting to a server (or making one, see [ENetMultiplayerPeer]), it is possible to use the built-in RPC (remote procedure call) system to communicate over the network. By calling [method rpc] with a method name, it will be called locally and in all connected peers (peers = clients and the server that accepts connections). To identify which node receives the RPC call, Godot will use its [NodePath] (make sure node names are the same on all peers). Also, take a look at the high-level networking tutorial and corresponding demos.
 		[b]Note:[/b] The [code]script[/code] property is part of the [Object] class, not [Node]. It isn't exposed like most properties but does have a setter and getter (see [method Object.set_script] and [method Object.get_script]).
 	</description>
 	<tutorials>
@@ -100,7 +99,7 @@
 			<return type="void" />
 			<param index="0" name="event" type="InputEvent" />
 			<description>
-				Called when an [InputEventKey], [InputEventShortcut], or [InputEventJoypadButton] hasn't been consumed by [method _input] or any GUI [Control] item. It is called before [method _unhandled_key_input] and [method _unhandled_input]. The input event propagates up through the node tree until a node consumes it.
+				Called when an [InputEventKey] or [InputEventShortcut] hasn't been consumed by [method _input] or any GUI [Control] item. It is called before [method _unhandled_key_input] and [method _unhandled_input]. The input event propagates up through the node tree until a node consumes it.
 				It is only called if shortcut processing is enabled, which is done automatically if this method is overridden, and can be toggled with [method set_process_shortcut_input].
 				To consume the input event and stop it propagating further to other nodes, [method Viewport.set_input_as_handled] can be called.
 				This method can be used to handle shortcuts. For generic GUI events, use [method _input] instead. Gameplay events should usually be handled with either [method _unhandled_input] or [method _unhandled_key_input].
@@ -147,14 +146,6 @@
 				    child_node.get_parent().remove_child(child_node)
 				add_child(child_node)
 				[/gdscript]
-				[csharp]
-				Node childNode = GetChild(0);
-				if (childNode.GetParent() != null)
-				{
-				    childNode.GetParent().RemoveChild(childNode);
-				}
-				AddChild(childNode);
-				[/csharp]
 				[/codeblocks]
 				If you need the child node to be added below a specific node in the list of children, use [method add_sibling] instead of this method.
 				[b]Note:[/b] If you want a child to be persisted to a [PackedScene], you must set [member owner] in addition to calling [method add_child]. This is typically relevant for [url=$DOCS_URL/tutorials/plugins/running_code_in_the_editor.html]tool scripts[/url] and [url=$DOCS_URL/tutorials/plugins/editor/index.html]editor plugins[/url]. If [method add_child] is called without setting [member owner], the newly added [Node] will not be visible in the scene tree, though it will be visible in the 2D/3D view.
@@ -211,9 +202,6 @@
 				[gdscript]
 				get_tree().create_tween().bind_node(self)
 				[/gdscript]
-				[csharp]
-				GetTree().CreateTween().BindNode(this);
-				[/csharp]
 				[/codeblocks]
 				The Tween will start automatically on the next process frame or physics frame (depending on [enum Tween.TweenProcessMode]).
 			</description>
@@ -311,15 +299,6 @@
 				    if not str(group).begins_with("_"):
 				        non_internal_groups.push_back(group)
 				[/gdscript]
-				[csharp]
-				// Stores the node's non-internal groups only (as a List of StringNames).
-				List&lt;string&gt; nonInternalGroups = new List&lt;string&gt;();
-				foreach (string group in GetGroups())
-				{
-				    if (!group.BeginsWith("_"))
-				        nonInternalGroups.Add(group);
-				}
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -335,12 +314,6 @@
 			<return type="Window" />
 			<description>
 				Returns the [Window] that contains this node, or the last exclusive child in a chain of windows starting with the one that contains this node.
-			</description>
-		</method>
-		<method name="get_multiplayer_authority" qualifiers="const">
-			<return type="int" />
-			<description>
-				Returns the peer ID of the multiplayer authority for this node. See [method set_multiplayer_authority].
 			</description>
 		</method>
 		<method name="get_node" qualifiers="const">
@@ -370,12 +343,6 @@
 				get_node("../Swamp/Alligator")
 				get_node("/root/MyGame")
 				[/gdscript]
-				[csharp]
-				GetNode("Sword");
-				GetNode("Backpack/Dagger");
-				GetNode("../Swamp/Alligator");
-				GetNode("/root/MyGame");
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -405,22 +372,6 @@
 				print(c[1].get_class()) # Prints AtlasTexture
 				print(c[2])             # Prints ^":region"
 				[/gdscript]
-				[csharp]
-				var a = GetNodeAndResource(NodePath("Area2D/Sprite2D"));
-				GD.Print(a[0].Name); // Prints Sprite2D
-				GD.Print(a[1]);      // Prints &lt;null&gt;
-				GD.Print(a[2]);      // Prints ^"
-
-				var b = GetNodeAndResource(NodePath("Area2D/Sprite2D:texture:atlas"));
-				GD.Print(b[0].name);        // Prints Sprite2D
-				GD.Print(b[1].get_class()); // Prints AtlasTexture
-				GD.Print(b[2]);             // Prints ^""
-
-				var c = GetNodeAndResource(NodePath("Area2D/Sprite2D:texture:atlas:region"));
-				GD.Print(c[0].name);        // Prints Sprite2D
-				GD.Print(c[1].get_class()); // Prints AtlasTexture
-				GD.Print(c[2]);             // Prints ^":region"
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -571,12 +522,6 @@
 			<return type="bool" />
 			<description>
 				Returns [code]true[/code] if this node is currently inside a [SceneTree]. See also [method get_tree].
-			</description>
-		</method>
-		<method name="is_multiplayer_authority" qualifiers="const">
-			<return type="bool" />
-			<description>
-				Returns [code]true[/code] if the local system is the multiplayer authority of this node.
 			</description>
 		</method>
 		<method name="is_node_ready" qualifiers="const">
@@ -740,7 +685,7 @@
 			<param index="1" name="keep_global_transform" type="bool" default="true" />
 			<description>
 				Changes the parent of this [Node] to the [param new_parent]. The node needs to already have a parent.
-				If [param keep_global_transform] is [code]true[/code], the node's global transform will be preserved if supported. [Node2D], [Node3D] and [Control] support this argument (but [Control] keeps only position).
+				If [param keep_global_transform] is [code]true[/code], the node's global transform will be preserved if supported. [Node2D] and [Control] support this argument (but [Control] keeps only position).
 			</description>
 		</method>
 		<method name="replace_by">
@@ -758,37 +703,6 @@
 			<description>
 				Requests [method _ready] to be called again the next time the node enters the tree. Does [b]not[/b] immediately call [method _ready].
 				[b]Note:[/b] This method only affects the current node. If the node's children also need to request ready, this method needs to be called for each one of them. When the node and its children enter the tree again, the order of [method _ready] callbacks will be the same as normal.
-			</description>
-		</method>
-		<method name="rpc" qualifiers="vararg">
-			<return type="int" enum="Error" />
-			<param index="0" name="method" type="StringName" />
-			<description>
-				Sends a remote procedure call request for the given [param method] to peers on the network (and locally), sending additional arguments to the method called by the RPC. The call request will only be received by nodes with the same [NodePath], including the exact same [member name]. Behavior depends on the RPC configuration for the given [param method] (see [method rpc_config] and [annotation @GDScript.@rpc]). By default, methods are not exposed to RPCs.
-				May return [constant OK] if the call is successful, [constant ERR_INVALID_PARAMETER] if the arguments passed in the [param method] do not match, [constant ERR_UNCONFIGURED] if the node's [member multiplayer] cannot be fetched (such as when the node is not inside the tree), [constant ERR_CONNECTION_ERROR] if [member multiplayer]'s connection is not available.
-				[b]Note:[/b] You can only safely use RPCs on clients after you received the [signal MultiplayerAPI.connected_to_server] signal from the [MultiplayerAPI]. You also need to keep track of the connection state, either by the [MultiplayerAPI] signals like [signal MultiplayerAPI.server_disconnected] or by checking ([code]get_multiplayer().peer.get_connection_status() == CONNECTION_CONNECTED[/code]).
-			</description>
-		</method>
-		<method name="rpc_config">
-			<return type="void" />
-			<param index="0" name="method" type="StringName" />
-			<param index="1" name="config" type="Variant" />
-			<description>
-				Changes the RPC configuration for the given [param method]. [param config] should either be [code]null[/code] to disable the feature (as by default), or a [Dictionary] containing the following entries:
-				- [code]rpc_mode[/code]: see [enum MultiplayerAPI.RPCMode];
-				- [code]transfer_mode[/code]: see [enum MultiplayerPeer.TransferMode];
-				- [code]call_local[/code]: if [code]true[/code], the method will also be called locally;
-				- [code]channel[/code]: an [int] representing the channel to send the RPC on.
-				[b]Note:[/b] In GDScript, this method corresponds to the [annotation @GDScript.@rpc] annotation, with various parameters passed ([code]@rpc(any)[/code], [code]@rpc(authority)[/code]...). See also the [url=$DOCS_URL/tutorials/networking/high_level_multiplayer.html]high-level multiplayer[/url] tutorial.
-			</description>
-		</method>
-		<method name="rpc_id" qualifiers="vararg">
-			<return type="int" enum="Error" />
-			<param index="0" name="peer_id" type="int" />
-			<param index="1" name="method" type="StringName" />
-			<description>
-				Sends a [method rpc] to a specific peer identified by [param peer_id] (see [method MultiplayerPeer.set_target_peer]).
-				May return [constant OK] if the call is successful, [constant ERR_INVALID_PARAMETER] if the arguments passed in the [param method] do not match, [constant ERR_UNCONFIGURED] if the node's [member multiplayer] cannot be fetched (such as when the node is not inside the tree), [constant ERR_CONNECTION_ERROR] if [member multiplayer]'s connection is not available.
 			</description>
 		</method>
 		<method name="set_deferred_thread_group">
@@ -812,16 +726,6 @@
 			<param index="1" name="is_editable" type="bool" />
 			<description>
 				Set to [code]true[/code] to allow all nodes owned by [param node] to be available, and editable, in the Scene dock, even if their [member owner] is not the scene root. This method is intended to be used in editor plugins and tools, but it also works in release builds. See also [method is_editable_instance].
-			</description>
-		</method>
-		<method name="set_multiplayer_authority">
-			<return type="void" />
-			<param index="0" name="id" type="int" />
-			<param index="1" name="recursive" type="bool" default="true" />
-			<description>
-				Sets the node's multiplayer authority to the peer with the given peer [param id]. The multiplayer authority is the peer that has authority over the node on the network. Defaults to peer ID 1 (the server). Useful in conjunction with [method rpc_config] and the [MultiplayerAPI].
-				If [param recursive] is [code]true[/code], the given peer is recursively set as the authority for all children of this node.
-				[b]Warning:[/b] This does [b]not[/b] automatically replicate the new authority to other peers. It is the developer's responsibility to do so. You may replicate the new authority's information using [member MultiplayerSpawner.spawn_function], an RPC, or a [MultiplayerSynchronizer]. Furthermore, the parent's authority does [b]not[/b] propagate to newly added children.
 			</description>
 		</method>
 		<method name="set_physics_process">
@@ -908,10 +812,6 @@
 		<member name="editor_description" type="String" setter="set_editor_description" getter="get_editor_description" default="&quot;&quot;">
 			An optional description to the node. It will be displayed as a tooltip when hovering over the node in the editor's Scene dock.
 		</member>
-		<member name="multiplayer" type="MultiplayerAPI" setter="" getter="get_multiplayer">
-			The [MultiplayerAPI] instance associated with this node. See [method SceneTree.get_multiplayer].
-			[b]Note:[/b] Renaming the node, or moving it in the tree, will not move the [MultiplayerAPI] to the new path, you will have to update this manually.
-		</member>
 		<member name="name" type="StringName" setter="set_name" getter="get_name">
 			The name of the node. This name must be unique among the siblings (other child nodes from the same parent). When set to an existing sibling's name, the node is automatically renamed.
 			[b]Note:[/b] When changing the name, the following characters will be removed: ([code].[/code] [code]:[/code] [code]@[/code] [code]/[/code] [code]"[/code] [code]%[/code]). In particular, the [code]@[/code] character is reserved for auto-generated names. See also [method String.validate_node_name].
@@ -933,7 +833,7 @@
 			Set the process thread group for this node (basically, whether it receives [constant NOTIFICATION_PROCESS], [constant NOTIFICATION_PHYSICS_PROCESS], [method _process] or [method _physics_process] (and the internal versions) on the main thread or in a sub-thread.
 			By default, the thread group is [constant PROCESS_THREAD_GROUP_INHERIT], which means that this node belongs to the same thread group as the parent node. The thread groups means that nodes in a specific thread group will process together, separate to other thread groups (depending on [member process_thread_group_order]). If the value is set is [constant PROCESS_THREAD_GROUP_SUB_THREAD], this thread group will occur on a sub thread (not the main thread), otherwise if set to [constant PROCESS_THREAD_GROUP_MAIN_THREAD] it will process on the main thread. If there is not a parent or grandparent node set to something other than inherit, the node will belong to the [i]default thread group[/i]. This default group will process on the main thread and its group order is 0.
 			During processing in a sub-thread, accessing most functions in nodes outside the thread group is forbidden (and it will result in an error in debug mode). Use [method Object.call_deferred], [method call_thread_safe], [method call_deferred_thread_group] and the likes in order to communicate from the thread groups to the main thread (or to other thread groups).
-			To better understand process thread groups, the idea is that any node set to any other value than [constant PROCESS_THREAD_GROUP_INHERIT] will include any child (and grandchild) nodes set to inherit into its process thread group. This means that the processing of all the nodes in the group will happen together, at the same time as the node including them.
+			To better understand process thread groups, the idea is that any node set to any other value than [constant PROCESS_THREAD_GROUP_INHERIT] will include any children (and grandchildren) nodes set to inherit into its process thread group. this means that the processing of all the nodes in the group will happen together, at the same time as the node including them.
 		</member>
 		<member name="process_thread_group_order" type="int" setter="set_process_thread_group_order" getter="get_process_thread_group_order">
 			Change the process thread group order. Groups with a lesser order will process before groups with a greater order. This is useful when a large amount of nodes process in sub thread and, afterwards, another group wants to collect their result in the main thread, as an example.
@@ -1099,10 +999,6 @@
 			Notification received from the OS when a close request is sent (e.g. closing the window with a "Close" button or [kbd]Alt + F4[/kbd]).
 			Implemented on desktop platforms.
 		</constant>
-		<constant name="NOTIFICATION_WM_GO_BACK_REQUEST" value="1007">
-			Notification received from the OS when a go back request is sent (e.g. pressing the "Back" button on Android).
-			Implemented only on iOS.
-		</constant>
 		<constant name="NOTIFICATION_WM_SIZE_CHANGED" value="1008">
 			Notification received when the window is resized.
 			[b]Note:[/b] Only the resized [Window] node receives this notification, and it's not propagated to the child nodes.
@@ -1170,13 +1066,13 @@
 			Never process. Completely disables processing, ignoring [member SceneTree.paused]. This is the inverse of [constant PROCESS_MODE_ALWAYS].
 		</constant>
 		<constant name="PROCESS_THREAD_GROUP_INHERIT" value="0" enum="ProcessThreadGroup">
-			Process this node based on the thread group mode of the first parent (or grandparent) node that has a thread group mode that is not inherit. See [member process_thread_group] for more information.
+			If the [member process_thread_group] property is sent to this, the node will belong to any parent (or grandparent) node that has a thread group mode that is not inherit. See [member process_thread_group] for more information.
 		</constant>
 		<constant name="PROCESS_THREAD_GROUP_MAIN_THREAD" value="1" enum="ProcessThreadGroup">
-			Process this node (and child nodes set to inherit) on the main thread. See [member process_thread_group] for more information.
+			Process this node (and children nodes set to inherit) on the main thread. See [member process_thread_group] for more information.
 		</constant>
 		<constant name="PROCESS_THREAD_GROUP_SUB_THREAD" value="2" enum="ProcessThreadGroup">
-			Process this node (and child nodes set to inherit) on a sub-thread. See [member process_thread_group] for more information.
+			Process this node (and children nodes set to inherit) on a sub-thread. See [member process_thread_group] for more information.
 		</constant>
 		<constant name="FLAG_PROCESS_THREAD_MESSAGES" value="1" enum="ProcessThreadMessages" is_bitfield="true">
 		</constant>
@@ -1200,10 +1096,10 @@
 			The node will not be internal.
 		</constant>
 		<constant name="INTERNAL_MODE_FRONT" value="1" enum="InternalMode">
-			The node will be placed at the beginning of the parent's children, before any non-internal sibling.
+			The node will be placed at the beginning of the parent's children list, before any non-internal sibling.
 		</constant>
 		<constant name="INTERNAL_MODE_BACK" value="2" enum="InternalMode">
-			The node will be placed at the end of the parent's children, after any non-internal sibling.
+			The node will be placed at the end of the parent's children list, after any non-internal sibling.
 		</constant>
 	</constants>
 </class>

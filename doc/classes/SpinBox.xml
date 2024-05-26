@@ -14,13 +14,6 @@
 		line_edit.context_menu_enabled = false
 		spin_box.horizontal_alignment = LineEdit.HORIZONTAL_ALIGNMENT_RIGHT
 		[/gdscript]
-		[csharp]
-		var spinBox = new SpinBox();
-		AddChild(spinBox);
-		var lineEdit = spinBox.GetLineEdit();
-		lineEdit.ContextMenuEnabled = false;
-		spinBox.AlignHorizontal = LineEdit.HorizontalAlignEnum.Right;
-		[/csharp]
 		[/codeblocks]
 		The above code will create a [SpinBox], disable context menu on it and set the text alignment to right.
 		See [Range] class for more options over the [SpinBox].

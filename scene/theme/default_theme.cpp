@@ -435,7 +435,7 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_color("clear_button_color", "LineEdit", control_font_color);
 	theme->set_color("clear_button_color_pressed", "LineEdit", control_font_pressed_color);
 
-	theme->set_constant("minimum_character_width", "LineEdit", 4);
+	theme->set_constant("minimum_character_width", "LineEdit", 3);
 	theme->set_constant("outline_size", "LineEdit", 0);
 	theme->set_constant("caret_width", "LineEdit", 1);
 
@@ -939,16 +939,19 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 
 	// ColorPicker
 
-	theme->set_constant("margin", "ColorPicker", Math::round(4 * scale));
-	theme->set_constant("sv_width", "ColorPicker", Math::round(256 * scale));
-	theme->set_constant("sv_height", "ColorPicker", Math::round(256 * scale));
-	theme->set_constant("h_width", "ColorPicker", Math::round(30 * scale));
-	theme->set_constant("label_width", "ColorPicker", Math::round(10 * scale));
+	theme->set_constant("margin_left", "ColorPicker", Math::round(2 * scale));
+	theme->set_constant("margin_top", "ColorPicker", Math::round(2 * scale));
+	theme->set_constant("margin_right", "ColorPicker", Math::round(2 * scale));
+	theme->set_constant("margin_bottom", "ColorPicker", Math::round(2 * scale));
+	theme->set_constant("sv_width", "ColorPicker", Math::round(234 * scale));
+	theme->set_constant("sv_height", "ColorPicker", Math::round(234 * scale));
+	theme->set_constant("h_width", "ColorPicker", Math::round(24 * scale));
 	theme->set_constant("center_slider_grabbers", "ColorPicker", 1);
 
 	theme->set_icon("folded_arrow", "ColorPicker", icons["arrow_right"]);
 	theme->set_icon("expanded_arrow", "ColorPicker", icons["arrow_down"]);
 	theme->set_icon("screen_picker", "ColorPicker", icons["color_picker_pipette"]);
+	theme->set_icon("modes_icon", "ColorPicker", icons["tabs_menu_hl"]);
 	theme->set_icon("shape_circle", "ColorPicker", icons["picker_shape_circle"]);
 	theme->set_icon("shape_rect", "ColorPicker", icons["picker_shape_rectangle"]);
 	theme->set_icon("shape_rect_wheel", "ColorPicker", icons["picker_shape_rectangle_wheel"]);
@@ -1138,42 +1141,58 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 
 	theme->set_stylebox("panel", "PanelContainer", make_flat_stylebox(style_normal_color, 0, 0, 0, 0));
 
-	theme->set_icon("zoom_out", "GraphEdit", icons["zoom_less"]);
-	theme->set_icon("zoom_in", "GraphEdit", icons["zoom_more"]);
-	theme->set_icon("zoom_reset", "GraphEdit", icons["zoom_reset"]);
-	theme->set_icon("grid_toggle", "GraphEdit", icons["grid_toggle"]);
-	theme->set_icon("minimap_toggle", "GraphEdit", icons["grid_minimap"]);
-	theme->set_icon("snapping_toggle", "GraphEdit", icons["grid_snap"]);
-	theme->set_icon("layout", "GraphEdit", icons["grid_layout"]);
+	Ref<StyleBoxFlat> foldable_container_title = make_flat_stylebox(style_pressed_color);
+	foldable_container_title->set_corner_radius(CORNER_BOTTOM_LEFT, 0);
+	foldable_container_title->set_corner_radius(CORNER_BOTTOM_RIGHT, 0);
+	theme->set_stylebox("title_panel", "FoldableContainer", foldable_container_title);
+	Ref<StyleBoxFlat> foldable_container_hover = make_flat_stylebox(style_hover_color);
+	foldable_container_hover->set_corner_radius(CORNER_BOTTOM_LEFT, 0);
+	foldable_container_hover->set_corner_radius(CORNER_BOTTOM_RIGHT, 0);
+	theme->set_stylebox("title_hover_panel", "FoldableContainer", foldable_container_hover);
+	theme->set_stylebox("title_collapsed_panel", "FoldableContainer", make_flat_stylebox(style_pressed_color));
+	theme->set_stylebox("title_collapsed_hover_panel", "FoldableContainer", make_flat_stylebox(style_hover_color));
+	Ref<StyleBoxFlat> foldable_container_panel = make_flat_stylebox(style_normal_color, 18);
+	foldable_container_panel->set_corner_radius(CORNER_TOP_LEFT, 0);
+	foldable_container_panel->set_corner_radius(CORNER_TOP_RIGHT, 0);
+	theme->set_stylebox("panel", "FoldableContainer", foldable_container_panel);
+	theme->set_stylebox("focus", "FoldableContainer", focus);
 
-	theme->set_stylebox("panel", "GraphEdit", make_flat_stylebox(style_normal_color, 4, 4, 4, 5));
+	theme->set_font("font", "FoldableContainer", Ref<Font>());
+	theme->set_font_size("font_size", "FoldableContainer", default_font_size);
 
-	Ref<StyleBoxFlat> graph_toolbar_style = make_flat_stylebox(Color(0.24, 0.24, 0.24, 0.6), 4, 2, 4, 2);
-	theme->set_stylebox("menu_panel", "GraphEdit", graph_toolbar_style);
+	theme->set_color("font_color", "FoldableContainer", control_font_color);
+	theme->set_color("hover_font_color", "FoldableContainer", control_font_hover_color);
+	theme->set_color("collapsed_font_color", "FoldableContainer", control_font_pressed_color);
+	theme->set_color("font_outline_color", "FoldableContainer", Color(1, 1, 1));
 
-	theme->set_color("grid_minor", "GraphEdit", Color(1, 1, 1, 0.05));
-	theme->set_color("grid_major", "GraphEdit", Color(1, 1, 1, 0.2));
-	theme->set_color("selection_fill", "GraphEdit", Color(1, 1, 1, 0.3));
-	theme->set_color("selection_stroke", "GraphEdit", Color(1, 1, 1, 0.8));
-	theme->set_color("activity", "GraphEdit", Color(1, 1, 1));
+	theme->set_icon("arrow", "FoldableContainer", icons["arrow_down"]);
+	theme->set_icon("arrow_collapsed", "FoldableContainer", icons["arrow_right"]);
+	theme->set_icon("arrow_collapsed_mirrored", "FoldableContainer", icons["arrow_left"]);
 
-	// Visual Node Ports
+	theme->set_constant("outline_size", "FoldableContainer", 0);
+	theme->set_constant("h_separation", "FoldableContainer", Math::round(2 * scale));
 
-	theme->set_constant("port_hotzone_inner_extent", "GraphEdit", 22 * scale);
-	theme->set_constant("port_hotzone_outer_extent", "GraphEdit", 26 * scale);
+	// ZoomWidget
+	theme->set_icon("zoom_less", "ZoomWidget", icons["zoom_less"]);
+	theme->set_icon("zoom_more", "ZoomWidget", icons["zoom_more"]);
 
-	theme->set_stylebox("panel", "GraphEditMinimap", make_flat_stylebox(Color(0.24, 0.24, 0.24), 0, 0, 0, 0));
-	Ref<StyleBoxFlat> style_minimap_camera = make_flat_stylebox(Color(0.65, 0.65, 0.65, 0.2), 0, 0, 0, 0, 0);
-	style_minimap_camera->set_border_color(Color(0.65, 0.65, 0.65, 0.45));
-	style_minimap_camera->set_border_width_all(1);
-	theme->set_stylebox("camera", "GraphEditMinimap", style_minimap_camera);
-	theme->set_stylebox("node", "GraphEditMinimap", make_flat_stylebox(Color(1, 1, 1), 0, 0, 0, 0, 2));
-
-	theme->set_icon("resizer", "GraphEditMinimap", icons["resizer_nw"]);
-	theme->set_color("resizer_color", "GraphEditMinimap", Color(1, 1, 1, 0.85));
+	// ControlViewport
+	Ref<StyleBoxFlat> control_viewport_focus_style = make_flat_stylebox(Color(1, 1, 1), 0, 0, 0, 0, 0, false, 2);
+	Color control_viewport_focus_color = style_focus_color;
+	control_viewport_focus_color.a = 0.4;
+	control_viewport_focus_style->set_border_color(control_viewport_focus_color);
+	theme->set_stylebox("focus_style", "ControlViewport", control_viewport_focus_style);
+	theme->set_font("ruler_font", "ControlViewport", default_font);
+	theme->set_font_size("ruler_font_size", "ControlViewport", 10);
+	theme->set_constant("ruler_width", "ControlViewport", 20);
+	theme->set_color("ruler_font_color", "ControlViewport", control_font_color);
+	theme->set_color("ruler_bg_color", "ControlViewport", Color(0.177, 0.162, 0.209).darkened(0.4));
+	theme->set_color("primary_grid_color", "ControlViewport", Color(1, 1, 1, 0.6));
+	theme->set_color("secondary_grid_color", "ControlViewport", Color(1, 1, 1, 0.2));
+	theme->set_color("guides_color", "ControlViewport", Color(0.725, 0.467, 0.988));
+	theme->set_color("viewport_color", "ControlViewport", Color(0.4, 0.4, 1, 0.8));
 
 	// Theme
-
 	default_icon = icons["error_icon"];
 	// Same color as the error icon.
 	default_style = make_flat_stylebox(Color(1, 0.365, 0.365), 4, 4, 4, 4, 0, false, 2);

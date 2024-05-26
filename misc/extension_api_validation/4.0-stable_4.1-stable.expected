@@ -65,19 +65,13 @@ The previous type was simply wrong and didn't match the actual C++ definition. C
 GH-74600
 --------
 Validate extension JSON: Error: Hash changed for 'classes/AnimatedSprite2D/methods/play', from 57037631 to 8D62DD1B. This means that the function has changed and no compatibility function was provided.
-Validate extension JSON: Error: Hash changed for 'classes/AnimatedSprite3D/methods/play', from 57037631 to 8D62DD1B. This means that the function has changed and no compatibility function was provided.
 Validate extension JSON: Error: Hash changed for 'classes/Animation/methods/compress', from 6B87C27F to D713F035. This means that the function has changed and no compatibility function was provided.
 Validate extension JSON: Error: Hash changed for 'classes/AnimationPlayer/methods/play', from 846788DD to B9DCE17F. This means that the function has changed and no compatibility function was provided.
 Validate extension JSON: Error: Hash changed for 'classes/AudioStreamPlayer/methods/play', from B54BA998 to 74B7272C. This means that the function has changed and no compatibility function was provided.
-Validate extension JSON: Error: Hash changed for 'classes/AudioStreamPlayer2D/methods/play', from B54BA998 to 74B7272C. This means that the function has changed and no compatibility function was provided.
-Validate extension JSON: Error: Hash changed for 'classes/AudioStreamPlayer3D/methods/play', from B54BA998 to 74B7272C. This means that the function has changed and no compatibility function was provided.
 Validate extension JSON: Error: Hash changed for 'classes/CanvasItem/methods/draw_set_transform', from F93CB735 to C3BC1B8B. This means that the function has changed and no compatibility function was provided.
 Validate extension JSON: Error: Hash changed for 'classes/Curve2D/methods/sample_baked', from DF8CB3E7 to CE7C60AA. This means that the function has changed and no compatibility function was provided.
 Validate extension JSON: Error: Hash changed for 'classes/Curve2D/methods/sample_baked_with_rotation', from 0F34F230 to C475D415. This means that the function has changed and no compatibility function was provided.
 Validate extension JSON: Error: Hash changed for 'classes/Curve2D/methods/tessellate_even_length', from FC150C61 to 8A44C0E5. This means that the function has changed and no compatibility function was provided.
-Validate extension JSON: Error: Hash changed for 'classes/Curve3D/methods/sample_baked', from FCBE3242 to 5078AD06. This means that the function has changed and no compatibility function was provided.
-Validate extension JSON: Error: Hash changed for 'classes/Curve3D/methods/sample_baked_with_rotation', from 9431C26F to 7398459B. This means that the function has changed and no compatibility function was provided.
-Validate extension JSON: Error: Hash changed for 'classes/Curve3D/methods/tessellate_even_length', from E96241BB to 07F10939. This means that the function has changed and no compatibility function was provided.
 Validate extension JSON: Error: Hash changed for 'classes/DisplayServer/methods/tts_speak', from DDE9B9D7 to DEFE6FA5. This means that the function has changed and no compatibility function was provided.
 Validate extension JSON: Error: Hash changed for 'classes/Font/methods/find_variation', from DCDAC3C2 to 44828B18. This means that the function has changed and no compatibility function was provided.
 Validate extension JSON: Error: Hash changed for 'classes/GridMap/methods/make_baked_meshes', from 43AF36C6 to D72155A9. This means that the function has changed and no compatibility function was provided.
@@ -206,15 +200,6 @@ Validate extension JSON: Error: Field 'classes/Area3D/methods/set_priority/argum
 Validate extension JSON: Error: Field 'classes/Area3D/methods/set_priority/arguments/0': type changed value in new API, from "float" to "int".
 
 Type changed from `float` to `int`. Previously the `float` values were internally converted to `int`s anyways and the type ways inconsistent with the type of the priority property, which already was `int`.
-
-
-GH-72152
---------
-Validate extension JSON: Error: Hash changed for 'classes/MeshInstance3D/methods/create_multiple_convex_collisions', from BFDD6D64 to 257A91A5. This means that the function has changed and no compatibility function was provided.
-Validate extension JSON: JSON file: Field was added in a way that breaks compatibility 'classes/MeshInstance3D/methods/create_multiple_convex_collisions': arguments
-
-Added an optional parameter with a default value. No adjustments should be necessary.
-
 
 GH-75759
 --------

@@ -186,9 +186,6 @@ private:
 		BitField<ProcessThreadMessages> process_thread_messages;
 		void *process_group = nullptr; // to avoid cyclic dependency
 
-		int multiplayer_authority = 1; // Server by default.
-		Variant rpc_config;
-
 		// Variables used to properly sort the node when processing, ignored otherwise.
 		// TODO: Should move all the stuff below to bits.
 		bool physics_process = false;
@@ -215,8 +212,6 @@ private:
 
 	} data;
 
-	Ref<MultiplayerAPI> multiplayer;
-
 	String _get_tree_string_pretty(const String &p_prefix, bool p_last);
 	String _get_tree_string(const Node *p_node);
 
@@ -241,9 +236,6 @@ private:
 	Node *_duplicate(int p_flags, HashMap<const Node *, Node *> *r_duplimap = nullptr) const;
 
 	TypedArray<StringName> _get_groups() const;
-
-	Error _rpc_bind(const Variant **p_args, int p_argcount, Callable::CallError &r_error);
-	Error _rpc_id_bind(const Variant **p_args, int p_argcount, Callable::CallError &r_error);
 
 	friend class SceneTree;
 
@@ -357,7 +349,6 @@ public:
 		NOTIFICATION_WM_WINDOW_FOCUS_IN = 1004,
 		NOTIFICATION_WM_WINDOW_FOCUS_OUT = 1005,
 		NOTIFICATION_WM_CLOSE_REQUEST = 1006,
-		NOTIFICATION_WM_GO_BACK_REQUEST = 1007,
 		NOTIFICATION_WM_SIZE_CHANGED = 1008,
 		NOTIFICATION_WM_DPI_CHANGE = 1009,
 		NOTIFICATION_VP_MOUSE_ENTER = 1010,
@@ -640,24 +631,6 @@ public:
 
 	void set_display_folded(bool p_folded);
 	bool is_displayed_folded() const;
-	/* NETWORK */
-
-	virtual void set_multiplayer_authority(int p_peer_id, bool p_recursive = true);
-	int get_multiplayer_authority() const;
-	bool is_multiplayer_authority() const;
-
-	void rpc_config(const StringName &p_method, const Variant &p_config); // config a local method for RPC
-	const Variant get_node_rpc_config() const;
-
-	template <typename... VarArgs>
-	Error rpc(const StringName &p_method, VarArgs... p_args);
-
-	template <typename... VarArgs>
-	Error rpc_id(int p_peer_id, const StringName &p_method, VarArgs... p_args);
-
-	Error rpcp(int p_peer_id, const StringName &p_method, const Variant **p_arg, int p_argcount);
-
-	Ref<MultiplayerAPI> get_multiplayer() const;
 
 	void call_deferred_thread_groupp(const StringName &p_method, const Variant **p_args, int p_argcount, bool p_show_error = false);
 	template <typename... VarArgs>
@@ -723,21 +696,6 @@ typedef HashSet<Node *, Node::Comparator> NodeSet;
 
 // Template definitions must be in the header so they are always fully initialized before their usage.
 // See this StackOverflow question for more information: https://stackoverflow.com/questions/495021/why-can-templates-only-be-implemented-in-the-header-file
-
-template <typename... VarArgs>
-Error Node::rpc(const StringName &p_method, VarArgs... p_args) {
-	return rpc_id(0, p_method, p_args...);
-}
-
-template <typename... VarArgs>
-Error Node::rpc_id(int p_peer_id, const StringName &p_method, VarArgs... p_args) {
-	Variant args[sizeof...(p_args) + 1] = { p_args..., Variant() }; // +1 makes sure zero sized arrays are also supported.
-	const Variant *argptrs[sizeof...(p_args) + 1];
-	for (uint32_t i = 0; i < sizeof...(p_args); i++) {
-		argptrs[i] = &args[i];
-	}
-	return rpcp(p_peer_id, p_method, sizeof...(p_args) == 0 ? nullptr : (const Variant **)argptrs, sizeof...(p_args));
-}
 
 #ifdef DEBUG_ENABLED
 #define ERR_THREAD_GUARD ERR_FAIL_COND_MSG(!is_accessible_from_caller_thread(), vformat("Caller thread can't call this function in this node (%s). Use call_deferred() or call_thread_group() instead.", get_description()));

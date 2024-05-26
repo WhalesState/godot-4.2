@@ -389,7 +389,7 @@ if env["freetype_enabled"]:
         ]
     )
 
-if env["platform"] == "android" or env["platform"] == "linuxbsd":
+if env["platform"] == "linuxbsd":
     env_harfbuzz.Append(CCFLAGS=["-DHAVE_PTHREAD"])
 
 env_harfbuzz.Append(

@@ -76,7 +76,7 @@ Dictionary Control::_edit_get_state() const {
 	offsets.push_back(get_offset(SIDE_BOTTOM));
 	s["offsets"] = offsets;
 
-	s["layout_mode"] = _get_layout_mode();
+	s["layout_mode"] = get_layout_mode();
 	s["anchors_layout_preset"] = _get_anchors_layout_preset();
 
 	return s;
@@ -104,7 +104,7 @@ void Control::_edit_set_state(const Dictionary &p_state) {
 		}
 	}
 
-	_set_layout_mode(_layout);
+	set_layout_mode(_layout);
 	if (_layout == LayoutMode::LAYOUT_MODE_ANCHORS || _layout == LayoutMode::LAYOUT_MODE_UNCONTROLLED) {
 		_set_anchors_layout_preset((int)state["anchors_layout_preset"]);
 	}
@@ -231,10 +231,6 @@ PackedStringArray Control::get_configuration_warnings() const {
 
 	if (data.mouse_filter == MOUSE_FILTER_IGNORE && !data.tooltip.is_empty()) {
 		warnings.push_back(RTR("The Hint Tooltip won't be displayed as the control's Mouse Filter is set to \"Ignore\". To solve this, set the Mouse Filter to \"Stop\" or \"Pass\"."));
-	}
-
-	if (get_z_index() != 0) {
-		warnings.push_back(RTR("Changing the Z index of a control only affects the drawing order, not the input event handling order."));
 	}
 
 	return warnings;
@@ -562,7 +558,7 @@ void Control::_validate_property(PropertyInfo &p_property) const {
 		}
 
 		// Use the layout mode to display or hide advanced anchoring properties.
-		LayoutMode _layout = _get_layout_mode();
+		LayoutMode _layout = get_layout_mode();
 		bool use_anchors = (_layout == LayoutMode::LAYOUT_MODE_ANCHORS || _layout == LayoutMode::LAYOUT_MODE_UNCONTROLLED);
 		if (!use_anchors && p_property.name == "anchors_preset") {
 			p_property.usage ^= PROPERTY_USAGE_EDITOR;
@@ -883,7 +879,7 @@ void Control::_compute_offsets(Rect2 p_rect, const real_t p_anchors[4], real_t (
 
 /// Presets and layout modes.
 
-void Control::_set_layout_mode(LayoutMode p_mode) {
+void Control::set_layout_mode(LayoutMode p_mode) {
 	bool list_changed = false;
 
 	if (data.stored_layout_mode != p_mode) {
@@ -903,14 +899,14 @@ void Control::_set_layout_mode(LayoutMode p_mode) {
 }
 
 void Control::_update_layout_mode() {
-	LayoutMode computed_layout = _get_layout_mode();
+	LayoutMode computed_layout = get_layout_mode();
 	if (data.stored_layout_mode != computed_layout) {
 		data.stored_layout_mode = computed_layout;
 		notify_property_list_changed();
 	}
 }
 
-Control::LayoutMode Control::_get_layout_mode() const {
+Control::LayoutMode Control::get_layout_mode() const {
 	Node *parent_node = get_parent_control();
 	// In these modes the property is read-only.
 	if (!parent_node) {
@@ -3332,8 +3328,6 @@ void Control::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_minimum_size"), &Control::get_minimum_size);
 	ClassDB::bind_method(D_METHOD("get_combined_minimum_size"), &Control::get_combined_minimum_size);
 
-	ClassDB::bind_method(D_METHOD("_set_layout_mode", "mode"), &Control::_set_layout_mode);
-	ClassDB::bind_method(D_METHOD("_get_layout_mode"), &Control::_get_layout_mode);
 	ClassDB::bind_method(D_METHOD("_set_anchors_layout_preset", "preset"), &Control::_set_anchors_layout_preset);
 	ClassDB::bind_method(D_METHOD("_get_anchors_layout_preset"), &Control::_get_anchors_layout_preset);
 	ClassDB::bind_method(D_METHOD("set_anchors_preset", "preset", "keep_offsets"), &Control::set_anchors_preset, DEFVAL(false));
@@ -3346,6 +3340,8 @@ void Control::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_offset", "side", "offset"), &Control::set_offset);
 	ClassDB::bind_method(D_METHOD("get_offset", "offset"), &Control::get_offset);
 	ClassDB::bind_method(D_METHOD("set_anchor_and_offset", "side", "anchor", "offset", "push_opposite_anchor"), &Control::set_anchor_and_offset, DEFVAL(false));
+	ClassDB::bind_method(D_METHOD("set_layout_mode", "mode"), &Control::set_layout_mode);
+	ClassDB::bind_method(D_METHOD("get_layout_mode"), &Control::get_layout_mode);
 
 	ClassDB::bind_method(D_METHOD("set_begin", "position"), &Control::set_begin);
 	ClassDB::bind_method(D_METHOD("set_end", "position"), &Control::set_end);
@@ -3504,7 +3500,7 @@ void Control::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "clip_contents"), "set_clip_contents", "is_clipping_contents");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "custom_minimum_size", PROPERTY_HINT_NONE, "suffix:px"), "set_custom_minimum_size", "get_custom_minimum_size");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "layout_direction", PROPERTY_HINT_ENUM, "Inherited,Based on Locale,Left-to-Right,Right-to-Left"), "set_layout_direction", "get_layout_direction");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "layout_mode", PROPERTY_HINT_ENUM, "Position,Anchors,Container,Uncontrolled", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_INTERNAL), "_set_layout_mode", "_get_layout_mode");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "layout_mode", PROPERTY_HINT_ENUM, "Position,Anchors,Container,Uncontrolled", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_INTERNAL), "set_layout_mode", "get_layout_mode");
 	ADD_PROPERTY_DEFAULT("layout_mode", LayoutMode::LAYOUT_MODE_POSITION);
 
 	const String anchors_presets_options = "Custom:-1,PresetFullRect:15,"
@@ -3531,7 +3527,12 @@ void Control::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "grow_horizontal", PROPERTY_HINT_ENUM, "Left,Right,Both"), "set_h_grow_direction", "get_h_grow_direction");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "grow_vertical", PROPERTY_HINT_ENUM, "Top,Bottom,Both"), "set_v_grow_direction", "get_v_grow_direction");
 
-	ADD_SUBGROUP("Transform", "");
+	ADD_SUBGROUP("Container Sizing", "size_flags_");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "size_flags_horizontal", PROPERTY_HINT_FLAGS, "Fill:1,Expand:2,Shrink Center:4,Shrink End:8"), "set_h_size_flags", "get_h_size_flags");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "size_flags_vertical", PROPERTY_HINT_FLAGS, "Fill:1,Expand:2,Shrink Center:4,Shrink End:8"), "set_v_size_flags", "get_v_size_flags");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "size_flags_stretch_ratio", PROPERTY_HINT_RANGE, "0,20,0.01,or_greater"), "set_stretch_ratio", "get_stretch_ratio");
+
+	ADD_GROUP("Transform", "");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "size", PROPERTY_HINT_NONE, "suffix:px", PROPERTY_USAGE_EDITOR), "_set_size", "get_size");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "position", PROPERTY_HINT_NONE, "suffix:px", PROPERTY_USAGE_EDITOR), "_set_position", "get_position");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "global_position", PROPERTY_HINT_NONE, "suffix:px", PROPERTY_USAGE_NONE), "_set_global_position", "get_global_position");
@@ -3539,11 +3540,6 @@ void Control::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "rotation_degrees", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NONE), "set_rotation_degrees", "get_rotation_degrees");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "pivot_offset", PROPERTY_HINT_NONE, "suffix:px"), "set_pivot_offset", "get_pivot_offset");
-
-	ADD_SUBGROUP("Container Sizing", "size_flags_");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "size_flags_horizontal", PROPERTY_HINT_FLAGS, "Fill:1,Expand:2,Shrink Center:4,Shrink End:8"), "set_h_size_flags", "get_h_size_flags");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "size_flags_vertical", PROPERTY_HINT_FLAGS, "Fill:1,Expand:2,Shrink Center:4,Shrink End:8"), "set_v_size_flags", "get_v_size_flags");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "size_flags_stretch_ratio", PROPERTY_HINT_RANGE, "0,20,0.01,or_greater"), "set_stretch_ratio", "get_stretch_ratio");
 
 	ADD_GROUP("Localization", "");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "auto_translate"), "set_auto_translate", "is_auto_translating");
@@ -3646,6 +3642,11 @@ void Control::_bind_methods() {
 
 	BIND_ENUM_CONSTANT(ANCHOR_BEGIN);
 	BIND_ENUM_CONSTANT(ANCHOR_END);
+
+	BIND_ENUM_CONSTANT(LAYOUT_MODE_POSITION);
+	BIND_ENUM_CONSTANT(LAYOUT_MODE_ANCHORS);
+	BIND_ENUM_CONSTANT(LAYOUT_MODE_CONTAINER);
+	BIND_ENUM_CONSTANT(LAYOUT_MODE_UNCONTROLLED);
 
 	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_INHERITED);
 	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_LOCALE);

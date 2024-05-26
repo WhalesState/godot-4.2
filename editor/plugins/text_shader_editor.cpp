@@ -335,19 +335,7 @@ void ShaderTextEditor::_load_theme_settings() {
 void ShaderTextEditor::_check_shader_mode() {
 	String type = ShaderLanguage::get_shader_type(get_text_editor()->get_text());
 
-	Shader::Mode mode;
-
-	if (type == "canvas_item") {
-		mode = Shader::MODE_CANVAS_ITEM;
-	} else if (type == "particles") {
-		mode = Shader::MODE_PARTICLES;
-	} else if (type == "sky") {
-		mode = Shader::MODE_SKY;
-	} else if (type == "fog") {
-		mode = Shader::MODE_FOG;
-	} else {
-		mode = Shader::MODE_SPATIAL;
-	}
+	Shader::Mode mode = Shader::MODE_CANVAS_ITEM;
 
 	if (shader->get_mode() != mode) {
 		set_block_shader_changed(true);

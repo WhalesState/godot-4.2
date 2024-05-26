@@ -41,9 +41,7 @@
 #include "editor/gui/editor_file_dialog.h"
 
 const char *EditorFeatureProfile::feature_names[FEATURE_MAX] = {
-	TTRC("3D Editor"),
 	TTRC("Script Editor"),
-	TTRC("Asset Library"),
 	TTRC("Scene Tree Editing"),
 	TTRC("Node Dock"),
 	TTRC("FileSystem Dock"),
@@ -52,9 +50,7 @@ const char *EditorFeatureProfile::feature_names[FEATURE_MAX] = {
 };
 
 const char *EditorFeatureProfile::feature_descriptions[FEATURE_MAX] = {
-	TTRC("Allows to view and edit 3D scenes."),
 	TTRC("Allows to edit scripts using the integrated script editor."),
-	TTRC("Provides built-in access to the Asset Library."),
 	TTRC("Allows editing the node hierarchy in the Scene dock."),
 	TTRC("Allows to work with signals and groups of the node selected in the Scene dock."),
 	TTRC("Allows to browse the local file system via a dedicated dock."),
@@ -63,9 +59,7 @@ const char *EditorFeatureProfile::feature_descriptions[FEATURE_MAX] = {
 };
 
 const char *EditorFeatureProfile::feature_identifiers[FEATURE_MAX] = {
-	"3d",
 	"script",
-	"asset_lib",
 	"scene_tree",
 	"node_dock",
 	"filesystem_dock",
@@ -299,9 +293,7 @@ void EditorFeatureProfile::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("save_to_file", "path"), &EditorFeatureProfile::save_to_file);
 	ClassDB::bind_method(D_METHOD("load_from_file", "path"), &EditorFeatureProfile::load_from_file);
 
-	BIND_ENUM_CONSTANT(FEATURE_3D);
 	BIND_ENUM_CONSTANT(FEATURE_SCRIPT);
-	BIND_ENUM_CONSTANT(FEATURE_ASSET_LIB);
 	BIND_ENUM_CONSTANT(FEATURE_SCENE_TREE);
 	BIND_ENUM_CONSTANT(FEATURE_NODE_DOCK);
 	BIND_ENUM_CONSTANT(FEATURE_FILESYSTEM_DOCK);
@@ -440,7 +432,7 @@ void EditorFeatureProfileManager::_profile_action(int p_action) {
 		case PROFILE_NEW: {
 			new_profile_dialog->popup_centered(Size2(240, 60) * EDSCALE);
 			new_profile_name->clear();
-			new_profile_name->grab_focus();
+			new_profile_name->edit();
 		} break;
 		case PROFILE_ERASE: {
 			String selected = _get_selected_profile();

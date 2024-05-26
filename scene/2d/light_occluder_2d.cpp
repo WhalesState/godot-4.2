@@ -152,12 +152,6 @@ OccluderPolygon2D::~OccluderPolygon2D() {
 	RS::get_singleton()->free(occ_polygon);
 }
 
-void LightOccluder2D::_poly_changed() {
-#ifdef DEBUG_ENABLED
-	queue_redraw();
-#endif
-}
-
 void LightOccluder2D::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_CANVAS: {
@@ -173,29 +167,21 @@ void LightOccluder2D::_notification(int p_what) {
 		case NOTIFICATION_VISIBILITY_CHANGED: {
 			RS::get_singleton()->canvas_light_occluder_set_enabled(occluder, is_visible_in_tree());
 		} break;
-
+#ifdef TOOLS_ENABLED
 		case NOTIFICATION_DRAW: {
-			if (Engine::get_singleton()->is_editor_hint()) {
-				if (occluder_polygon.is_valid()) {
-					Vector<Vector2> poly = occluder_polygon->get_polygon();
-
-					if (poly.size()) {
-						if (occluder_polygon->is_closed()) {
-							Vector<Color> color;
-							color.push_back(Color(0, 0, 0, 0.6));
-							draw_polygon(Variant(poly), color);
-						} else {
-							int ps = poly.size();
-							const Vector2 *r = poly.ptr();
-							for (int i = 0; i < ps - 1; i++) {
-								draw_line(r[i], r[i + 1], Color(0, 0, 0, 0.6), 3);
-							}
-						}
-					}
-				}
+			if (!Engine::get_singleton()->is_editor_hint() && !get_tree()->is_debugging_paths_hint()) {
+				return;
 			}
-		} break;
 
+			if (!occluder_polygon.is_valid() || occluder_polygon->get_polygon().size() < 3 || !occluder_polygon->is_closed()) {
+				return;
+			}
+
+			Vector<Color> color;
+			color.push_back(Color(0, 0, 0, 0.6));
+			draw_polygon(Variant(occluder_polygon->get_polygon()), color);
+		} break;
+#endif
 		case NOTIFICATION_EXIT_CANVAS: {
 			RS::get_singleton()->canvas_light_occluder_attach_to_canvas(occluder, RID());
 		} break;
@@ -210,10 +196,14 @@ Rect2 LightOccluder2D::_edit_get_rect() const {
 bool LightOccluder2D::_edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const {
 	return occluder_polygon.is_valid() ? occluder_polygon->_edit_is_selected_on_click(p_point, p_tolerance) : false;
 }
+
+void LightOccluder2D::_poly_changed() {
+	queue_redraw();
+}
 #endif
 
 void LightOccluder2D::set_occluder_polygon(const Ref<OccluderPolygon2D> &p_polygon) {
-#ifdef DEBUG_ENABLED
+#ifdef TOOLS_ENABLED
 	if (occluder_polygon.is_valid()) {
 		occluder_polygon->disconnect_changed(callable_mp(this, &LightOccluder2D::_poly_changed));
 	}
@@ -226,7 +216,7 @@ void LightOccluder2D::set_occluder_polygon(const Ref<OccluderPolygon2D> &p_polyg
 		RS::get_singleton()->canvas_light_occluder_set_polygon(occluder, RID());
 	}
 
-#ifdef DEBUG_ENABLED
+#ifdef TOOLS_ENABLED
 	if (occluder_polygon.is_valid()) {
 		occluder_polygon->connect_changed(callable_mp(this, &LightOccluder2D::_poly_changed));
 	}

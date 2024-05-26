@@ -46,7 +46,7 @@ _arguments \
   '--audio-output-latency[override audio output latency in milliseconds (default is 15 ms)]:number of milliseconds' \
   '--display-driver[set the display driver]:display driver name' \
   "--rendering-method[set the renderer]:renderer name:((forward_plus\:'Desktop renderer' mobile\:'Desktop and mobile renderer' gl_compatibility\:'Desktop, mobile and web renderer'))" \
-  "--rendering-driver[set the rendering driver]:rendering driver name:((vulkan\:'Vulkan renderer' opengl3\:'OpenGL ES 3.0 renderer' dummy\:'Dummy renderer'))" \
+  "--rendering-driver[set the rendering driver]:rendering driver name:((opengl3\:'OpenGL ES 3.0 renderer' dummy\:'Dummy renderer'))" \
   "--gpu-index[use a specific GPU (run with --verbose to get available device list)]:device index" \
   '--text-driver[set the text driver]:text driver name' \
   '--tablet-driver[set the pen tablet input driver]:tablet driver name' \
@@ -83,11 +83,8 @@ _arguments \
   '--export-release[export the project in release mode using the given preset and output path]:export preset name then path' \
   '--export-debug[export the project in debug mode using the given preset and output path]:export preset name then path' \
   '--export-pack[export the project data only as a PCK or ZIP file using the given preset and output path]:export preset name then path' \
-  '--convert-3to4[converts project from Godot 3.x to Godot 4.x]' \
-  '--validate-conversion-3to4[shows what elements will be renamed when converting project from Godot 3.x to Godot 4.x]' \
   '--doctool[dump the engine API reference to the given path in XML format, merging if existing files are found]:path to base Godot build directory (optional):_dirs' \
   '--no-docbase[disallow dumping the base types (used with --doctool)]' \
-  '--build-solutions[build the scripting solutions (e.g. for C# projects)]' \
   '--dump-gdextension-interface[generate GDExtension header file 'gdextension_interface.h' in the current folder. This file is the base file required to implement a GDExtension.]' \
   '--dump-extension-api[generate JSON dump of the Godot API for GDExtension bindings named "extension_api.json" in the current folder]' \
   '--benchmark[benchmark the run time and print it to console]' \

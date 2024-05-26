@@ -2,7 +2,6 @@ BASEDIR = .
 CLASSES = "$(BASEDIR)/classes/" "$(BASEDIR)/../modules/" "$(BASEDIR)/../platform/"
 OUTPUTDIR = $(BASEDIR)/_build
 TOOLSDIR = $(BASEDIR)/tools
-JSDIR = "$(BASEDIR)/../platform/web"
 LANGARG ?= en
 TOOLSOPT ?=
 
@@ -27,5 +26,3 @@ xml-check:
 rstjs:
 	rm -rf "$(OUTPUTDIR)/rstjs"
 	mkdir -p "$(OUTPUTDIR)/rstjs"
-	npm --prefix "$(JSDIR)" ci
-	npm --prefix "$(JSDIR)" run docs -- --destination "$(OUTPUTDIR)/rstjs/html5_shell_classref.rst"

@@ -36,7 +36,6 @@ for file in $files; do
     platform=$(echo $file | sed "s@.*platform/\([^/]*\).*@\1@")
     prefix="${platform^^}_"
   fi
-  if [[ "$file" == "modules/mono/utils/"* && "$bname" != *"mono"* ]]; then prefix="MONO_"; fi
   if [[ "$file" == "servers/rendering/storage/utilities.h" ]]; then prefix="RENDERER_"; fi
 
   suffix=

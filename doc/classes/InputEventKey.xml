@@ -87,16 +87,6 @@
 			        var keycode = DisplayServer.keyboard_get_keycode_from_physical(event.physical_keycode)
 			        print(OS.get_keycode_string(keycode))
 			[/gdscript]
-			[csharp]
-			public override void _Input(InputEvent @event)
-			{
-			    if (@event is InputEventKey inputEventKey)
-			    {
-			        var keycode = DisplayServer.KeyboardGetKeycodeFromPhysical(inputEventKey.PhysicalKeycode);
-			        GD.Print(OS.GetKeycodeString(keycode));
-			    }
-			}
-			[/csharp]
 			[/codeblocks]
 		</member>
 		<member name="pressed" type="bool" setter="set_pressed" getter="is_pressed" default="false">

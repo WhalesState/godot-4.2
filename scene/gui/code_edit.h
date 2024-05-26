@@ -302,12 +302,6 @@ private:
 protected:
 	void _notification(int p_what);
 	static void _bind_methods();
-
-#ifndef DISABLE_DEPRECATED
-	String _get_text_for_symbol_lookup_bind_compat_73196();
-	static void _bind_compatibility_methods();
-#endif
-
 	/* Text manipulation */
 
 	// Overridable actions

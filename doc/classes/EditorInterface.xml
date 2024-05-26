@@ -10,10 +10,6 @@
 		[gdscript]
 		var editor_settings = EditorInterface.get_editor_settings()
 		[/gdscript]
-		[csharp]
-		// In C# you can access it via the static Singleton property.
-		EditorSettings settings = EditorInterface.Singleton.GetEditorSettings();
-		[/csharp]
 		[/codeblocks]
 	</description>
 	<tutorials>
@@ -122,13 +118,6 @@
 				Returns the 2D editor [SubViewport]. It does not have a camera. Instead, the view transforms are done directly and can be accessed with [member Viewport.global_canvas_transform].
 			</description>
 		</method>
-		<method name="get_editor_viewport_3d" qualifiers="const">
-			<return type="SubViewport" />
-			<param index="0" name="idx" type="int" default="0" />
-			<description>
-				Returns the specified 3D editor [SubViewport], from [code]0[/code] to [code]3[/code]. The viewport can be used to access the active editor cameras with [method Viewport.get_camera_3d].
-			</description>
-		</method>
 		<method name="get_file_system_dock" qualifiers="const">
 			<return type="FileSystemDock" />
 			<description>
@@ -206,14 +195,6 @@
 			<param index="0" name="plugin" type="String" />
 			<description>
 				Returns [code]true[/code] if the specified [param plugin] is enabled. The plugin name is the same as its directory name.
-			</description>
-		</method>
-		<method name="make_mesh_previews">
-			<return type="Texture2D[]" />
-			<param index="0" name="meshes" type="Mesh[]" />
-			<param index="1" name="preview_size" type="int" />
-			<description>
-				Returns mesh previews rendered at the given size as an [Array] of [Texture2D]s.
 			</description>
 		</method>
 		<method name="mark_scene_as_unsaved">
@@ -360,9 +341,6 @@
 	<members>
 		<member name="distraction_free_mode" type="bool" setter="set_distraction_free_mode" getter="is_distraction_free_mode_enabled">
 			If [code]true[/code], enables distraction-free mode which hides side docks to increase the space available for the main view.
-		</member>
-		<member name="movie_maker_enabled" type="bool" setter="set_movie_maker_enabled" getter="is_movie_maker_enabled">
-			If [code]true[/code], the Movie Maker mode is enabled in the editor. See [MovieWriter] for more information.
 		</member>
 	</members>
 </class>

@@ -560,6 +560,7 @@
 			Set when a validated word from [signal symbol_validate] is clicked, the [signal symbol_lookup] should be emitted.
 		</member>
 		<member name="text_direction" type="int" setter="set_text_direction" getter="get_text_direction" overrides="TextEdit" enum="Control.TextDirection" default="1" />
+		<member name="texture_filter" type="int" setter="set_texture_filter" getter="get_texture_filter" overrides="CanvasItem" enum="CanvasItem.TextureFilter" default="2" />
 	</members>
 	<signals>
 		<signal name="breakpoint_toggled">

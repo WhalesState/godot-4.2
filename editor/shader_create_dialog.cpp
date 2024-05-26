@@ -31,16 +31,15 @@
 #include "shader_create_dialog.h"
 
 #include "core/config/project_settings.h"
+#include "core/string/string_builder.h"
 #include "editor/editor_scale.h"
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/gui/editor_validation_panel.h"
 #include "scene/resources/shader_include.h"
-#include "scene/resources/visual_shader.h"
 #include "servers/rendering/shader_types.h"
 
 enum ShaderType {
 	SHADER_TYPE_TEXT,
-	SHADER_TYPE_VISUAL,
 	SHADER_TYPE_INC,
 	SHADER_TYPE_MAX,
 };
@@ -66,8 +65,8 @@ void ShaderCreateDialog::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
-			static const char *shader_types[3] = { "Shader", "VisualShader", "TextFile" };
-			for (int i = 0; i < 3; i++) {
+			static const char *shader_types[2] = { "Shader", "TextFile" };
+			for (int i = 0; i < 2; i++) {
 				Ref<Texture2D> icon = get_editor_theme_icon(shader_types[i]);
 				if (icon.is_valid()) {
 					type_menu->set_item_icon(i, icon);
@@ -112,7 +111,7 @@ void ShaderCreateDialog::_path_hbox_sorted() {
 		file_path->set_caret_column(file_path->get_text().length());
 		file_path->set_caret_column(filename_start_pos);
 
-		file_path->grab_focus();
+		file_path->edit();
 	}
 }
 
@@ -152,22 +151,6 @@ void ShaderCreateDialog::_create_new() {
 
 			if (current_template == 0) { // Default template.
 				switch (current_mode) {
-					case Shader::MODE_SPATIAL:
-						code += R"(
-void vertex() {
-	// Called for every vertex the material is visible on.
-}
-
-void fragment() {
-	// Called for every pixel the material is visible on.
-}
-
-//void light() {
-	// Called for every pixel for every light affecting the material.
-	// Uncomment to replace the default light processing function with this one.
-//}
-)";
-						break;
 					case Shader::MODE_CANVAS_ITEM:
 						code += R"(
 void vertex() {
@@ -184,42 +167,9 @@ void fragment() {
 //}
 )";
 						break;
-					case Shader::MODE_PARTICLES:
-						code += R"(
-void start() {
-	// Called when a particle is spawned.
-}
-
-void process() {
-	// Called every frame on existing particles (according to the Fixed FPS property).
-}
-)";
-						break;
-					case Shader::MODE_SKY:
-						code += R"(
-void sky() {
-	// Called for every visible pixel in the sky background, as well as all pixels
-	// in the radiance cubemap.
-}
-)";
-						break;
-					case Shader::MODE_FOG:
-						code += R"(
-void fog() {
-	// Called once for every froxel that is touched by an axis-aligned bounding box
-	// of the associated FogVolume. This means that froxels that just barely touch
-	// a given FogVolume will still be used.
-}
-)";
 				}
 			}
 			text_shader->set_code(code.as_string());
-		} break;
-		case SHADER_TYPE_VISUAL: {
-			Ref<VisualShader> visual_shader;
-			visual_shader.instantiate();
-			shader = visual_shader;
-			visual_shader->set_mode(Shader::Mode(current_mode));
 		} break;
 		case SHADER_TYPE_INC: {
 			Ref<ShaderInclude> include;
@@ -356,7 +306,7 @@ void ShaderCreateDialog::_file_selected(const String &p_file) {
 	int select_start = p.rfind(filename);
 	file_path->select(select_start, select_start + filename.length());
 	file_path->set_caret_column(select_start + filename.length());
-	file_path->grab_focus();
+	file_path->edit();
 }
 
 void ShaderCreateDialog::_path_changed(const String &p_path) {
@@ -577,9 +527,6 @@ ShaderCreateDialog::ShaderCreateDialog() {
 			case SHADER_TYPE_TEXT:
 				type = "Shader";
 				default_type = i;
-				break;
-			case SHADER_TYPE_VISUAL:
-				type = "VisualShader";
 				break;
 			case SHADER_TYPE_INC:
 				type = "ShaderInclude";

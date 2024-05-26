@@ -302,32 +302,6 @@ int DebugAdapterProtocol::parse_variant(const Variant &p_var) {
 			variable_list.insert(id, arr);
 			return id;
 		}
-		case Variant::QUATERNION: {
-			int id = variable_id++;
-			Quaternion quat = p_var;
-			const String type_float = Variant::get_type_name(Variant::FLOAT);
-			DAP::Variable x, y, z, w;
-			x.name = "x";
-			y.name = "y";
-			z.name = "z";
-			w.name = "w";
-			x.type = type_float;
-			y.type = type_float;
-			z.type = type_float;
-			w.type = type_float;
-			x.value = rtos(quat.x);
-			y.value = rtos(quat.y);
-			z.value = rtos(quat.z);
-			w.value = rtos(quat.w);
-
-			Array arr;
-			arr.push_back(x.to_json());
-			arr.push_back(y.to_json());
-			arr.push_back(z.to_json());
-			arr.push_back(w.to_json());
-			variable_list.insert(id, arr);
-			return id;
-		}
 		case Variant::AABB: {
 			int id = variable_id++;
 			AABB aabb = p_var;

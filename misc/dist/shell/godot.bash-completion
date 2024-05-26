@@ -86,11 +86,8 @@ _complete_godot_options() {
 --export-release
 --export-debug
 --export-pack
---convert-3to4
---validate-conversion-3to4
 --doctool
 --no-docbase
---build-solutions
 --dump-gdextension-interface
 --dump-extension-api
 --benchmark
@@ -127,7 +124,7 @@ _complete_godot_bash() {
   elif [[ $prev == "--rendering-driver" ]]; then
     local IFS=$' \n\t'
     # shellcheck disable=SC2207
-    COMPREPLY=($(compgen -W "vulkan opengl3 dummy" -- "$cur"))
+    COMPREPLY=($(compgen -W "opengl3 dummy" -- "$cur"))
 	elif [[ $prev == "--xr-mode" ]]; then
     local IFS=$' \n\t'
     # shellcheck disable=SC2207

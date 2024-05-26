@@ -1096,7 +1096,7 @@ Ref<Texture2D> CurvePreviewGenerator::generate(const Ref<Resource> &p_from, cons
 
 		Vector<Point2i> points = Geometry2D::bresenham_line(Point2i(x - 1, prev_y), Point2i(x, y));
 		for (Point2i point : points) {
-			im.set_pixelv(point, line_color);
+			im.set_pixel_v(point, line_color);
 		}
 		prev_y = y;
 	}

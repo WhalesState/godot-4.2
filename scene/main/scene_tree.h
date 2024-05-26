@@ -35,7 +35,6 @@
 #include "core/os/thread_safe.h"
 #include "core/templates/paged_allocator.h"
 #include "core/templates/self_list.h"
-#include "scene/resources/mesh.h"
 
 #undef Window
 
@@ -43,8 +42,6 @@ class PackedScene;
 class Node;
 class Window;
 class Material;
-class Mesh;
-class MultiplayerAPI;
 class SceneDebugger;
 class Tween;
 class Viewport;
@@ -126,12 +123,9 @@ private:
 	double physics_process_time = 0.0;
 	double process_time = 0.0;
 	bool accept_quit = true;
-	bool quit_on_go_back = true;
 
 #ifdef DEBUG_ENABLED
-	bool debug_collisions_hint = false;
 	bool debug_paths_hint = false;
-	bool debug_navigation_hint = false;
 #endif
 	bool paused = false;
 	int root_lock = 0;
@@ -181,25 +175,13 @@ private:
 	Node *prev_scene = nullptr;
 	Node *pending_new_scene = nullptr;
 
-	Color debug_collisions_color;
-	Color debug_collision_contact_color;
 	Color debug_paths_color;
 	float debug_paths_width = 1.0f;
-	Ref<ArrayMesh> debug_contact_mesh;
-	Ref<Material> debug_paths_material;
-	Ref<Material> collision_material;
-	int collision_debug_contacts;
 
 	void _flush_scene_change();
 
 	List<Ref<SceneTreeTimer>> timers;
 	List<Ref<Tween>> tweens;
-
-	///network///
-
-	Ref<MultiplayerAPI> multiplayer;
-	HashMap<NodePath, Ref<MultiplayerAPI>> custom_multiplayers;
-	bool multiplayer_poll = true;
 
 	static SceneTree *singleton;
 	friend class Node;
@@ -230,7 +212,6 @@ private:
 	void _flush_delete_queue();
 	// Optimization.
 	friend class CanvasItem;
-	friend class Node3D;
 	friend class Viewport;
 
 	SelfList<Node>::List xform_change_list;
@@ -249,7 +230,6 @@ private:
 
 	void _main_window_focus_in();
 	void _main_window_close();
-	void _main_window_go_back();
 
 	enum CallInputType {
 		CALL_INPUT_TYPE_INPUT,
@@ -321,9 +301,6 @@ public:
 	bool is_auto_accept_quit() const;
 	void set_auto_accept_quit(bool p_enable);
 
-	bool is_quit_on_go_back() const;
-	void set_quit_on_go_back(bool p_enable);
-
 	void quit(int p_exit_code = EXIT_SUCCESS);
 
 	_FORCE_INLINE_ double get_physics_process_time() const { return physics_process_time; }
@@ -339,42 +316,19 @@ public:
 	bool is_paused() const;
 
 #ifdef DEBUG_ENABLED
-	void set_debug_collisions_hint(bool p_enabled);
-	bool is_debugging_collisions_hint() const;
-
 	void set_debug_paths_hint(bool p_enabled);
 	bool is_debugging_paths_hint() const;
 
-	void set_debug_navigation_hint(bool p_enabled);
-	bool is_debugging_navigation_hint() const;
 #else
-	void set_debug_collisions_hint(bool p_enabled) {}
-	bool is_debugging_collisions_hint() const { return false; }
-
 	void set_debug_paths_hint(bool p_enabled) {}
 	bool is_debugging_paths_hint() const { return false; }
 
-	void set_debug_navigation_hint(bool p_enabled) {}
-	bool is_debugging_navigation_hint() const { return false; }
 #endif
-
-	void set_debug_collisions_color(const Color &p_color);
-	Color get_debug_collisions_color() const;
-
-	void set_debug_collision_contact_color(const Color &p_color);
-	Color get_debug_collision_contact_color() const;
-
 	void set_debug_paths_color(const Color &p_color);
 	Color get_debug_paths_color() const;
 
 	void set_debug_paths_width(float p_width);
 	float get_debug_paths_width() const;
-
-	Ref<Material> get_debug_paths_material();
-	Ref<Material> get_debug_collision_material();
-	Ref<ArrayMesh> get_debug_contact_mesh();
-
-	int get_collision_debug_contact_count() { return collision_debug_contacts; }
 
 	int64_t get_frame() const;
 
@@ -409,13 +363,6 @@ public:
 	static SceneTree *get_singleton() { return singleton; }
 
 	void get_argument_options(const StringName &p_function, int p_idx, List<String> *r_options) const override;
-
-	//network API
-
-	Ref<MultiplayerAPI> get_multiplayer(const NodePath &p_for_path = NodePath()) const;
-	void set_multiplayer(Ref<MultiplayerAPI> p_multiplayer, const NodePath &p_root_path = NodePath());
-	void set_multiplayer_poll_enabled(bool p_enabled);
-	bool is_multiplayer_poll_enabled() const;
 
 	static void add_idle_callback(IdleCallback p_callback);
 

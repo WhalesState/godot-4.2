@@ -33,7 +33,6 @@
 
 #ifdef GLES3_ENABLED
 
-#include "rasterizer_scene_gles3.h"
 #include "servers/rendering/renderer_canvas_render.h"
 #include "servers/rendering/renderer_compositor.h"
 #include "storage/material_storage.h"
@@ -63,9 +62,7 @@ class RasterizerCanvasGLES3 : public RendererCanvasRender {
 		FLAGS_TRANSPOSE_RECT = (1 << 10),
 
 		FLAGS_NINEPACH_DRAW_CENTER = (1 << 12),
-		FLAGS_USING_PARTICLES = (1 << 13),
 
-		FLAGS_USE_SKELETON = (1 << 15),
 		FLAGS_NINEPATCH_H_MODE_SHIFT = 16,
 		FLAGS_NINEPATCH_V_MODE_SHIFT = 18,
 		FLAGS_LIGHT_COUNT_SHIFT = 20,
@@ -200,7 +197,7 @@ public:
 		PolygonID last_id = 0;
 	} polygon_buffers;
 
-	RendererCanvasRender::PolygonID request_polygon(const Vector<int> &p_indices, const Vector<Point2> &p_points, const Vector<Color> &p_colors, const Vector<Point2> &p_uvs = Vector<Point2>(), const Vector<int> &p_bones = Vector<int>(), const Vector<float> &p_weights = Vector<float>()) override;
+	RendererCanvasRender::PolygonID request_polygon(const Vector<int> &p_indices, const Vector<Point2> &p_points, const Vector<Color> &p_colors, const Vector<Point2> &p_uvs = Vector<Point2>()) override;
 	void free_polygon(PolygonID p_polygon) override;
 
 	struct InstanceData {
@@ -236,9 +233,6 @@ public:
 
 		GLuint indexed_quad_buffer;
 		GLuint indexed_quad_array;
-
-		GLuint particle_quad_vertices;
-		GLuint particle_quad_array;
 
 		GLuint ninepatch_vertices;
 		GLuint ninepatch_elements;

@@ -56,11 +56,6 @@ enum PropertyHint {
 	PROPERTY_HINT_LINK,
 	PROPERTY_HINT_FLAGS, ///< hint_text= "flag1,flag2,etc" (as bit flags)
 	PROPERTY_HINT_LAYERS_2D_RENDER,
-	PROPERTY_HINT_LAYERS_2D_PHYSICS,
-	PROPERTY_HINT_LAYERS_2D_NAVIGATION,
-	PROPERTY_HINT_LAYERS_3D_RENDER,
-	PROPERTY_HINT_LAYERS_3D_PHYSICS,
-	PROPERTY_HINT_LAYERS_3D_NAVIGATION,
 	PROPERTY_HINT_FILE, ///< a file path must be passed, hint_text (optionally) is a filter "*.png,*.wav,*.doc,"
 	PROPERTY_HINT_DIR, ///< a directory path must be passed
 	PROPERTY_HINT_GLOBAL_FILE, ///< a file path must be passed, hint_text (optionally) is a filter "*.png,*.wav,*.doc,"
@@ -83,7 +78,6 @@ enum PropertyHint {
 	PROPERTY_HINT_LOCALE_ID,
 	PROPERTY_HINT_LOCALIZABLE_STRING,
 	PROPERTY_HINT_NODE_TYPE, ///< a node object type
-	PROPERTY_HINT_HIDE_QUATERNION_EDIT, /// Only Node3D::transform should hide the quaternion editor.
 	PROPERTY_HINT_PASSWORD,
 	PROPERTY_HINT_LAYERS_AVOIDANCE,
 	PROPERTY_HINT_MAX,
@@ -324,9 +318,6 @@ struct ObjectGDExtension {
 	GDExtensionClassPropertyCanRevert property_can_revert;
 	GDExtensionClassPropertyGetRevert property_get_revert;
 	GDExtensionClassValidateProperty validate_property;
-#ifndef DISABLE_DEPRECATED
-	GDExtensionClassNotification notification;
-#endif // DISABLE_DEPRECATED
 	GDExtensionClassNotification2 notification2;
 	GDExtensionClassToString to_string;
 	GDExtensionClassReference reference;

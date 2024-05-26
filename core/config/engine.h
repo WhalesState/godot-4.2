@@ -86,7 +86,6 @@ private:
 
 	static Engine *singleton;
 
-	String write_movie_path;
 	String shader_cache_path;
 
 public:
@@ -161,9 +160,6 @@ public:
 	Dictionary get_donor_info() const;
 	Dictionary get_license_info() const;
 	String get_license_text() const;
-
-	void set_write_movie_path(const String &p_path);
-	String get_write_movie_path() const;
 
 	String get_architecture_name() const;
 

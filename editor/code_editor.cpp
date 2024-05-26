@@ -45,9 +45,8 @@ void GotoLineDialog::popup_find_line(CodeEdit *p_edit) {
 
 	// Add 1 because text_editor->get_caret_line() starts from 0, but the editor user interface starts from 1.
 	line->set_text(itos(text_editor->get_caret_line() + 1));
-	line->select_all();
 	popup_centered(Size2(180, 80) * EDSCALE);
-	line->grab_focus();
+	line->edit(true);
 }
 
 int GotoLineDialog::get_line() const {
@@ -517,10 +516,10 @@ void FindReplaceBar::_show_search(bool p_focus_replace, bool p_show_only) {
 
 	if (p_focus_replace) {
 		search_text->deselect();
-		replace_text->call_deferred(SNAME("grab_focus"));
+		replace_text->call_deferred(SNAME("edit"));
 	} else {
 		replace_text->deselect();
-		search_text->call_deferred(SNAME("grab_focus"));
+		search_text->call_deferred(SNAME("edit"));
 	}
 
 	if (text_editor->has_selection(0) && !is_selection_only()) {
@@ -952,6 +951,10 @@ void CodeTextEditor::_complete_request() {
 			font_color = completion_string_color;
 		} else if (e.insert_text.begins_with("##") || e.insert_text.begins_with("///")) {
 			font_color = completion_doc_comment_color;
+		} else if (e.insert_text.begins_with("#!") || e.insert_text.begins_with("//!")) {
+			font_color = completion_comment_warning;
+		} else if (e.insert_text.begins_with("#?") || e.insert_text.begins_with("//?")) {
+			font_color = completion_comment_question;
 		} else if (e.insert_text.begins_with("#") || e.insert_text.begins_with("//")) {
 			font_color = completion_comment_color;
 		}
@@ -1027,6 +1030,8 @@ void CodeTextEditor::update_editor_settings() {
 	completion_font_color = EDITOR_GET("text_editor/theme/highlighting/completion_font_color");
 	completion_string_color = EDITOR_GET("text_editor/theme/highlighting/string_color");
 	completion_comment_color = EDITOR_GET("text_editor/theme/highlighting/comment_color");
+	completion_comment_warning = EDITOR_GET("text_editor/theme/highlighting/comment_warning");
+	completion_comment_question = EDITOR_GET("text_editor/theme/highlighting/comment_question");
 	completion_doc_comment_color = EDITOR_GET("text_editor/theme/highlighting/doc_comment_color");
 
 	// Appearance: Caret

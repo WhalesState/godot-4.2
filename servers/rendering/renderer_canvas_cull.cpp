@@ -1385,7 +1385,7 @@ void RendererCanvasCull::canvas_item_add_polygon(RID p_item, const Vector<Point2
 	polygon->polygon.create(indices, p_points, p_colors, p_uvs);
 }
 
-void RendererCanvasCull::canvas_item_add_triangle_array(RID p_item, const Vector<int> &p_indices, const Vector<Point2> &p_points, const Vector<Color> &p_colors, const Vector<Point2> &p_uvs, const Vector<int> &p_bones, const Vector<float> &p_weights, RID p_texture, int p_count) {
+void RendererCanvasCull::canvas_item_add_triangle_array(RID p_item, const Vector<int> &p_indices, const Vector<Point2> &p_points, const Vector<Color> &p_colors, const Vector<Point2> &p_uvs, RID p_texture, int p_count) {
 	Item *canvas_item = canvas_item_owner.get_or_null(p_item);
 	ERR_FAIL_NULL(canvas_item);
 
@@ -1393,8 +1393,6 @@ void RendererCanvasCull::canvas_item_add_triangle_array(RID p_item, const Vector
 	ERR_FAIL_COND(vertex_count == 0);
 	ERR_FAIL_COND(!p_colors.is_empty() && p_colors.size() != vertex_count && p_colors.size() != 1);
 	ERR_FAIL_COND(!p_uvs.is_empty() && p_uvs.size() != vertex_count);
-	ERR_FAIL_COND(!p_bones.is_empty() && p_bones.size() != vertex_count * 4);
-	ERR_FAIL_COND(!p_weights.is_empty() && p_weights.size() != vertex_count * 4);
 
 	Vector<int> indices = p_indices;
 
@@ -1403,7 +1401,7 @@ void RendererCanvasCull::canvas_item_add_triangle_array(RID p_item, const Vector
 
 	polygon->texture = p_texture;
 
-	polygon->polygon.create(indices, p_points, p_colors, p_uvs, p_bones, p_weights);
+	polygon->polygon.create(indices, p_points, p_colors, p_uvs);
 
 	polygon->primitive = RS::PRIMITIVE_TRIANGLES;
 }
@@ -1415,50 +1413,6 @@ void RendererCanvasCull::canvas_item_add_set_transform(RID p_item, const Transfo
 	Item::CommandTransform *tr = canvas_item->alloc_command<Item::CommandTransform>();
 	ERR_FAIL_NULL(tr);
 	tr->xform = p_transform;
-}
-
-void RendererCanvasCull::canvas_item_add_mesh(RID p_item, const RID &p_mesh, const Transform2D &p_transform, const Color &p_modulate, RID p_texture) {
-	Item *canvas_item = canvas_item_owner.get_or_null(p_item);
-	ERR_FAIL_NULL(canvas_item);
-	ERR_FAIL_COND(!p_mesh.is_valid());
-
-	Item::CommandMesh *m = canvas_item->alloc_command<Item::CommandMesh>();
-	ERR_FAIL_NULL(m);
-	m->mesh = p_mesh;
-	if (canvas_item->skeleton.is_valid()) {
-		m->mesh_instance = RSG::mesh_storage->mesh_instance_create(p_mesh);
-		RSG::mesh_storage->mesh_instance_set_skeleton(m->mesh_instance, canvas_item->skeleton);
-	}
-
-	m->texture = p_texture;
-
-	m->transform = p_transform;
-	m->modulate = p_modulate;
-}
-
-void RendererCanvasCull::canvas_item_add_particles(RID p_item, RID p_particles, RID p_texture) {
-	Item *canvas_item = canvas_item_owner.get_or_null(p_item);
-	ERR_FAIL_NULL(canvas_item);
-
-	Item::CommandParticles *part = canvas_item->alloc_command<Item::CommandParticles>();
-	ERR_FAIL_NULL(part);
-	part->particles = p_particles;
-
-	part->texture = p_texture;
-
-	//take the chance and request processing for them, at least once until they become visible again
-	RSG::particles_storage->particles_request_process(p_particles);
-}
-
-void RendererCanvasCull::canvas_item_add_multimesh(RID p_item, RID p_mesh, RID p_texture) {
-	Item *canvas_item = canvas_item_owner.get_or_null(p_item);
-	ERR_FAIL_NULL(canvas_item);
-
-	Item::CommandMultiMesh *mm = canvas_item->alloc_command<Item::CommandMultiMesh>();
-	ERR_FAIL_NULL(mm);
-	mm->multimesh = p_mesh;
-
-	mm->texture = p_texture;
 }
 
 void RendererCanvasCull::canvas_item_add_clip_ignore(RID p_item, bool p_ignore) {
@@ -1505,35 +1459,6 @@ void RendererCanvasCull::canvas_item_set_z_as_relative_to_parent(RID p_item, boo
 	ERR_FAIL_NULL(canvas_item);
 
 	canvas_item->z_relative = p_enable;
-}
-
-void RendererCanvasCull::canvas_item_attach_skeleton(RID p_item, RID p_skeleton) {
-	Item *canvas_item = canvas_item_owner.get_or_null(p_item);
-	ERR_FAIL_NULL(canvas_item);
-	if (canvas_item->skeleton == p_skeleton) {
-		return;
-	}
-	canvas_item->skeleton = p_skeleton;
-
-	Item::Command *c = canvas_item->commands;
-
-	while (c) {
-		if (c->type == Item::Command::TYPE_MESH) {
-			Item::CommandMesh *cm = static_cast<Item::CommandMesh *>(c);
-			if (canvas_item->skeleton.is_valid()) {
-				if (cm->mesh_instance.is_null()) {
-					cm->mesh_instance = RSG::mesh_storage->mesh_instance_create(cm->mesh);
-				}
-				RSG::mesh_storage->mesh_instance_set_skeleton(cm->mesh_instance, canvas_item->skeleton);
-			} else {
-				if (cm->mesh_instance.is_valid()) {
-					RSG::mesh_storage->mesh_instance_free(cm->mesh_instance);
-					cm->mesh_instance = RID();
-				}
-			}
-		}
-		c = c->next;
-	}
 }
 
 void RendererCanvasCull::canvas_item_set_copy_to_backbuffer(RID p_item, bool p_enable, const Rect2 &p_rect) {

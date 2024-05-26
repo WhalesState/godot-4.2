@@ -65,9 +65,6 @@ class EditorRunBar : public MarginContainer {
 	EditorRun editor_run;
 	EditorRunNative *run_native = nullptr;
 
-	PanelContainer *write_movie_panel = nullptr;
-	Button *write_movie_button = nullptr;
-
 	EditorQuickOpen *quick_run = nullptr;
 
 	RunMode current_mode = RunMode::STOPPED;
@@ -77,7 +74,6 @@ class EditorRunBar : public MarginContainer {
 	void _reset_play_buttons();
 	void _update_play_buttons();
 
-	void _write_movie_toggled(bool p_enabled);
 	void _quick_run_selected();
 
 	void _play_current_pressed();
@@ -105,9 +101,6 @@ public:
 
 	OS::ProcessID has_child_process(OS::ProcessID p_pid) const;
 	void stop_child_process(OS::ProcessID p_pid);
-
-	void set_movie_maker_enabled(bool p_enabled);
-	bool is_movie_maker_enabled() const;
 
 	Button *get_pause_button() { return pause_button; }
 

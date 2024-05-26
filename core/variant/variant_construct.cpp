@@ -137,20 +137,12 @@ void Variant::_register_variant_constructors() {
 	add_constructor<VariantConstructor<Plane, Vector3, Vector3, Vector3>>(sarray("point1", "point2", "point3"));
 	add_constructor<VariantConstructor<Plane, double, double, double, double>>(sarray("a", "b", "c", "d"));
 
-	add_constructor<VariantConstructNoArgs<Quaternion>>(sarray());
-	add_constructor<VariantConstructor<Quaternion, Quaternion>>(sarray("from"));
-	add_constructor<VariantConstructor<Quaternion, Basis>>(sarray("from"));
-	add_constructor<VariantConstructor<Quaternion, Vector3, double>>(sarray("axis", "angle"));
-	add_constructor<VariantConstructor<Quaternion, Vector3, Vector3>>(sarray("arc_from", "arc_to"));
-	add_constructor<VariantConstructor<Quaternion, double, double, double, double>>(sarray("x", "y", "z", "w"));
-
 	add_constructor<VariantConstructNoArgs<::AABB>>(sarray());
 	add_constructor<VariantConstructor<::AABB, ::AABB>>(sarray("from"));
 	add_constructor<VariantConstructor<::AABB, Vector3, Vector3>>(sarray("position", "size"));
 
 	add_constructor<VariantConstructNoArgs<Basis>>(sarray());
 	add_constructor<VariantConstructor<Basis, Basis>>(sarray("from"));
-	add_constructor<VariantConstructor<Basis, Quaternion>>(sarray("from"));
 	add_constructor<VariantConstructor<Basis, Vector3, double>>(sarray("axis", "angle"));
 	add_constructor<VariantConstructor<Basis, Vector3, Vector3, Vector3>>(sarray("x_axis", "y_axis", "z_axis"));
 

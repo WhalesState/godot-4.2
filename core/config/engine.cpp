@@ -144,10 +144,13 @@ static Array array_from_info_count(const char *const *info_list, int info_count)
 Dictionary Engine::get_author_info() const {
 	Dictionary dict;
 
-	dict["lead_developers"] = array_from_info(AUTHORS_LEAD_DEVELOPERS);
-	dict["project_managers"] = array_from_info(AUTHORS_PROJECT_MANAGERS);
-	dict["founders"] = array_from_info(AUTHORS_FOUNDERS);
-	dict["developers"] = array_from_info(AUTHORS_DEVELOPERS);
+	dict["godot_lead_developers"] = array_from_info(GODOT_AUTHORS_LEAD_DEVELOPERS);
+	dict["pixel_engine_lead_developers"] = array_from_info(PIXEL_ENGINE_AUTHORS_LEAD_DEVELOPERS);
+	dict["godot_project_managers"] = array_from_info(GODOT_AUTHORS_PROJECT_MANAGERS);
+	dict["pixel_engine_project_managers"] = array_from_info(PIXEL_ENGINE_AUTHORS_PROJECT_MANAGERS);
+	dict["founders"] = array_from_info(GODOT_AUTHORS_FOUNDERS);
+	dict["godot_developers"] = array_from_info(GODOT_AUTHORS_DEVELOPERS);
+	dict["pixel_engine_developers"] = array_from_info(PIXEL_ENGINE_AUTHORS_DEVELOPERS);
 
 	return dict;
 }
@@ -176,14 +179,14 @@ TypedArray<Dictionary> Engine::get_copyright_info() const {
 
 Dictionary Engine::get_donor_info() const {
 	Dictionary donors;
-	donors["patrons"] = array_from_info(DONORS_PATRONS);
-	donors["platinum_sponsors"] = array_from_info(DONORS_SPONSORS_PLATINUM);
-	donors["gold_sponsors"] = array_from_info(DONORS_SPONSORS_GOLD);
-	donors["silver_sponsors"] = array_from_info(DONORS_SPONSORS_SILVER);
-	donors["diamond_members"] = array_from_info(DONORS_MEMBERS_DIAMOND);
-	donors["titanium_members"] = array_from_info(DONORS_MEMBERS_TITANIUM);
-	donors["platinum_members"] = array_from_info(DONORS_MEMBERS_PLATINUM);
-	donors["gold_members"] = array_from_info(DONORS_MEMBERS_GOLD);
+	donors["godot_engine_patrons"] = array_from_info(GODOT_ENGINE_DONORS_PATRONS);
+	donors["godot_engine_platinum_sponsors"] = array_from_info(GODOT_ENGINE_DONORS_SPONSORS_PLATINUM);
+	donors["godot_engine_gold_sponsors"] = array_from_info(GODOT_ENGINE_DONORS_SPONSORS_GOLD);
+	donors["godot_engine_silver_sponsors"] = array_from_info(GODOT_ENGINE_DONORS_SPONSORS_SILVER);
+	donors["godot_engine_diamond_members"] = array_from_info(GODOT_ENGINE_DONORS_MEMBERS_DIAMOND);
+	donors["godot_engine_titanium_members"] = array_from_info(GODOT_ENGINE_DONORS_MEMBERS_TITANIUM);
+	donors["godot_engine_platinum_members"] = array_from_info(GODOT_ENGINE_DONORS_MEMBERS_PLATINUM);
+	donors["godot_engine_gold_members"] = array_from_info(GODOT_ENGINE_DONORS_MEMBERS_GOLD);
 	return donors;
 }
 
@@ -196,7 +199,7 @@ Dictionary Engine::get_license_info() const {
 }
 
 String Engine::get_license_text() const {
-	return String(GODOT_LICENSE_TEXT);
+	return String(PIXEL_ENGINE_LICENSE_TEXT);
 }
 
 String Engine::get_architecture_name() const {
@@ -328,14 +331,6 @@ void Engine::get_singletons(List<Singleton> *p_singletons) {
 
 		p_singletons->push_back(E);
 	}
-}
-
-String Engine::get_write_movie_path() const {
-	return write_movie_path;
-}
-
-void Engine::set_write_movie_path(const String &p_path) {
-	write_movie_path = p_path;
 }
 
 void Engine::set_shader_cache_path(const String &p_path) {

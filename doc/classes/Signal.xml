@@ -14,15 +14,6 @@
 		# These arguments must be passed when the signal is emitted.
 		signal item_dropped(item_name, amount)
 		[/gdscript]
-		[csharp]
-		[Signal]
-		delegate void AttackedEventHandler();
-
-		// Additional arguments may be declared.
-		// These arguments must be passed when the signal is emitted.
-		[Signal]
-		delegate void ItemDroppedEventHandler(string itemName, int amount);
-		[/csharp]
 		[/codeblocks]
 	</description>
 	<tutorials>

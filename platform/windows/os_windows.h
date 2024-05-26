@@ -46,12 +46,6 @@
 #include "drivers/xaudio2/audio_driver_xaudio2.h"
 #endif
 
-#if defined(VULKAN_ENABLED)
-#include "vulkan_context_win.h"
-
-#include "drivers/vulkan/rendering_device_vulkan.h"
-#endif
-
 #include <io.h>
 #include <shellapi.h>
 #include <stdio.h>

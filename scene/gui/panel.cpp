@@ -36,6 +36,9 @@ void Panel::_notification(int p_what) {
 		case NOTIFICATION_DRAW: {
 			RID ci = get_canvas_item();
 			theme_cache.panel_style->draw(ci, Rect2(Point2(), get_size()));
+			Size2 expand_begin = theme_cache.panel_style->get_expand_margin_begin();
+			Size2 expand_end = theme_cache.panel_style->get_expand_margin_end();
+			RenderingServer::get_singleton()->canvas_item_set_custom_rect(ci, !is_visibility_clip_disabled(), Rect2(-expand_begin, get_size() + expand_begin + expand_end));
 		} break;
 	}
 }

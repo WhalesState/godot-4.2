@@ -70,11 +70,9 @@
 #endif
 #endif
 
-#if !defined(IOS_ENABLED) && !defined(WEB_ENABLED)
 // We include EGL below to get debug callback on GLES2 platforms,
 // but EGL is not available on iOS.
 #define CAN_DEBUG
-#endif
 
 #include "platform_gl.h"
 
@@ -94,12 +92,9 @@ void RasterizerGLES3::begin_frame(double frame_step) {
 	time_total = Math::fmod(time_total, time_roll_over);
 
 	canvas->set_time(time_total);
-	scene->set_time(time_total, frame_step);
 
 	GLES3::Utilities *utils = GLES3::Utilities::get_singleton();
 	utils->_capture_timestamps_begin();
-
-	//scene->iteration();
 }
 
 void RasterizerGLES3::end_frame(bool p_swap_buffers) {
@@ -192,14 +187,8 @@ void RasterizerGLES3::initialize() {
 }
 
 void RasterizerGLES3::finalize() {
-	memdelete(scene);
 	memdelete(canvas);
-	memdelete(gi);
-	memdelete(fog);
 	memdelete(copy_effects);
-	memdelete(light_storage);
-	memdelete(particles_storage);
-	memdelete(mesh_storage);
 	memdelete(material_storage);
 	memdelete(texture_storage);
 	memdelete(utilities);
@@ -338,14 +327,8 @@ RasterizerGLES3::RasterizerGLES3() {
 	utilities = memnew(GLES3::Utilities);
 	texture_storage = memnew(GLES3::TextureStorage);
 	material_storage = memnew(GLES3::MaterialStorage);
-	mesh_storage = memnew(GLES3::MeshStorage);
-	particles_storage = memnew(GLES3::ParticlesStorage);
-	light_storage = memnew(GLES3::LightStorage);
 	copy_effects = memnew(GLES3::CopyEffects);
-	gi = memnew(GLES3::GI);
-	fog = memnew(GLES3::Fog);
 	canvas = memnew(RasterizerCanvasGLES3());
-	scene = memnew(RasterizerSceneGLES3());
 }
 
 RasterizerGLES3::~RasterizerGLES3() {
@@ -379,11 +362,7 @@ void RasterizerGLES3::_blit_render_target_to_screen(RID p_render_target, Display
 	glGenFramebuffers(1, &read_fbo);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, read_fbo);
 
-	if (rt->view_count > 1) {
-		glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rt->color, 0, p_layer);
-	} else {
-		glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt->color, 0);
-	}
+	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt->color, 0);
 
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, GLES3::TextureStorage::system_fbo);

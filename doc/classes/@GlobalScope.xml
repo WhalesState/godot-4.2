@@ -482,9 +482,6 @@
 				[gdscript]
 				print(hash("a")) # Prints 177670
 				[/gdscript]
-				[csharp]
-				GD.Print(GD.Hash("a")); // Prints 177670
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -502,19 +499,6 @@
 				    var inst = instance_from_id(id)
 				    print(inst.foo) # Prints bar
 				[/gdscript]
-				[csharp]
-				public partial class MyNode : Node
-				{
-				    public string Foo { get; set; } = "bar";
-
-				    public override void _Ready()
-				    {
-				        ulong id = GetInstanceId();
-				        var inst = (MyNode)InstanceFromId(Id);
-				        GD.Print(inst.Foo); // Prints bar
-				    }
-				}
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -603,7 +587,7 @@
 				is_same(arr_a, arr_a)  # true
 				is_same(arr_a, arr_b)  # false
 				[/codeblock]
-				These are [Variant] value types: [code]null[/code], [bool], [int], [float], [String], [StringName], [Vector2], [Vector2i], [Vector3], [Vector3i], [Vector4], [Vector4i], [Rect2], [Rect2i], [Transform2D], [Transform3D], [Plane], [Quaternion], [AABB], [Basis], [Projection], [Color], [NodePath], [RID], [Callable] and [Signal].
+				These are [Variant] value types: [code]null[/code], [bool], [int], [float], [String], [StringName], [Vector2], [Vector2i], [Vector3], [Vector3i], [Vector4], [Vector4i], [Rect2], [Rect2i], [Transform2D], [Transform3D], [Plane], [AABB], [Basis], [Projection], [Color], [NodePath], [RID], [Callable] and [Signal].
 				These are [Variant] reference types: [Object], [Dictionary], [Array], [PackedByteArray], [PackedInt32Array], [PackedInt64Array], [PackedFloat32Array], [PackedFloat64Array], [PackedStringArray], [PackedVector2Array], [PackedVector3Array] and [PackedColorArray].
 			</description>
 		</method>
@@ -622,12 +606,12 @@
 			<param index="2" name="weight" type="Variant" />
 			<description>
 				Linearly interpolates between two values by the factor defined in [param weight]. To perform interpolation, [param weight] should be between [code]0.0[/code] and [code]1.0[/code] (inclusive). However, values outside this range are allowed and can be used to perform [i]extrapolation[/i]. If this is not desired, use [method clamp] on the result of this function.
-				Both [param from] and [param to] must be the same type. Supported types: [int], [float], [Vector2], [Vector3], [Vector4], [Color], [Quaternion], [Basis].
+				Both [param from] and [param to] must be the same type. Supported types: [int], [float], [Vector2], [Vector3], [Vector4], [Color], [Basis].
 				[codeblock]
 				lerp(0, 4, 0.75) # Returns 3.0
 				[/codeblock]
 				See also [method inverse_lerp] which performs the reverse of this operation. To perform eased interpolation with [method lerp], combine it with [method ease] or [method smoothstep]. See also [method remap] to map a continuous series of values to another.
-				[b]Note:[/b] For better type safety, use [method lerpf], [method Vector2.lerp], [method Vector3.lerp], [method Vector4.lerp], [method Color.lerp], [method Quaternion.slerp] or [method Basis.slerp].
+				[b]Note:[/b] For better type safety, use [method lerpf], [method Vector2.lerp], [method Vector3.lerp], [method Vector4.lerp], [method Color.lerp] or [method Basis.slerp].
 			</description>
 		</method>
 		<method name="lerp_angle">
@@ -852,10 +836,6 @@
 				var a = [1, 2, 3]
 				print("a", "b", a) # Prints ab[1, 2, 3]
 				[/gdscript]
-				[csharp]
-				var a = new Godot.Collections.Array { 1, 2, 3 };
-				GD.Print("a", "b", a); // Prints ab[1, 2, 3]
-				[/csharp]
 				[/codeblocks]
 				[b]Note:[/b] Consider using [method push_error] and [method push_warning] to print error and warning messages instead of [method print] or [method print_rich]. This distinguishes them from print messages used for debugging purposes, while also displaying a stack trace when an error or warning is printed.
 			</description>
@@ -871,9 +851,6 @@
 				[gdscript skip-lint]
 				print_rich("[color=green][b]Hello world![/b][/color]") # Prints out "Hello world!" in green with a bold font
 				[/gdscript]
-				[csharp skip-lint]
-				GD.PrintRich("[color=green][b]Hello world![/b][/color]"); // Prints out "Hello world!" in green with a bold font
-				[/csharp]
 				[/codeblocks]
 				[b]Note:[/b] Consider using [method push_error] and [method push_warning] to print error and warning messages instead of [method print] or [method print_rich]. This distinguishes them from print messages used for debugging purposes, while also displaying a stack trace when an error or warning is printed.
 				[b]Note:[/b] On Windows, only Windows 10 and later correctly displays ANSI escape codes in standard output.
@@ -891,9 +868,6 @@
 				[gdscript]
 				printerr("prints to stderr")
 				[/gdscript]
-				[csharp]
-				GD.PrintErr("prints to stderr");
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -907,12 +881,6 @@
 				printraw("C")
 				# Prints ABC to terminal
 				[/gdscript]
-				[csharp]
-				GD.PrintRaw("A");
-				GD.PrintRaw("B");
-				GD.PrintRaw("C");
-				// Prints ABC to terminal
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -923,9 +891,6 @@
 				[gdscript]
 				prints("A", "B", "C") # Prints A B C
 				[/gdscript]
-				[csharp]
-				GD.PrintS("A", "B", "C"); // Prints A B C
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -936,9 +901,6 @@
 				[gdscript]
 				printt("A", "B", "C") # Prints A       B       C
 				[/gdscript]
-				[csharp]
-				GD.PrintT("A", "B", "C"); // Prints A       B       C
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -949,9 +911,6 @@
 				[gdscript]
 				push_error("test error") # Prints "test error" to debugger and terminal as error call
 				[/gdscript]
-				[csharp]
-				GD.PushError("test error"); // Prints "test error" to debugger and terminal as error call
-				[/csharp]
 				[/codeblocks]
 				[b]Note:[/b] This function does not pause project execution. To print an error message and pause project execution in debug builds, use [code]assert(false, "test error")[/code] instead.
 			</description>
@@ -963,9 +922,6 @@
 				[gdscript]
 				push_warning("test warning") # Prints "test warning" to debugger and terminal as warning call
 				[/gdscript]
-				[csharp]
-				GD.PushWarning("test warning"); // Prints "test warning" to debugger and terminal as warning call
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -1003,9 +959,6 @@
 				[gdscript]
 				randf() # Returns e.g. 0.375671
 				[/gdscript]
-				[csharp]
-				GD.Randf(); // Returns e.g. 0.375671
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -1020,10 +973,6 @@
 				randf_range(0, 20.5) # Returns e.g. 7.45315
 				randf_range(-10, 10) # Returns e.g. -3.844535
 				[/gdscript]
-				[csharp]
-				GD.RandRange(0.0, 20.5);   // Returns e.g. 7.45315
-				GD.RandRange(-10.0, 10.0); // Returns e.g. -3.844535
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -1046,12 +995,6 @@
 				randi() % 100     # Returns random integer between 0 and 99
 				randi() % 100 + 1 # Returns random integer between 1 and 100
 				[/gdscript]
-				[csharp]
-				GD.Randi();           // Returns random integer between 0 and 2^32 - 1
-				GD.Randi() % 20;      // Returns random integer between 0 and 19
-				GD.Randi() % 100;     // Returns random integer between 0 and 99
-				GD.Randi() % 100 + 1; // Returns random integer between 1 and 100
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -1066,10 +1009,6 @@
 				randi_range(0, 1)      # Returns either 0 or 1
 				randi_range(-10, 1000) # Returns random integer between -10 and 1000
 				[/gdscript]
-				[csharp]
-				GD.RandRange(0, 1);      // Returns either 0 or 1
-				GD.RandRange(-10, 1000); // Returns random integer between -10 and 1000
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -1161,14 +1100,6 @@
 				var b = randf() + randi()
 				# a and b are now identical
 				[/gdscript]
-				[csharp]
-				ulong mySeed = (ulong)GD.Hash("Godot Rocks");
-				GD.Seed(mySeed);
-				var a = GD.Randf() + GD.Randi();
-				GD.Seed(mySeed);
-				var b = GD.Randf() + GD.Randi();
-				// a and b are now identical
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -1308,7 +1239,7 @@
 				sqrt(10.24) # Returns 3.2
 				sqrt(-1)    # Returns NaN
 				[/codeblock]
-				[b]Note:[/b] Negative values of [param x] return NaN ("Not a Number"). in C#, if you need negative inputs, use [code]System.Numerics.Complex[/code].
+				[b]Note:[/b] Negative values of [param x] return NaN ("Not a Number").
 			</description>
 		</method>
 		<method name="step_decimals">
@@ -1346,11 +1277,6 @@
 				var dict = str_to_var(data)     # dict is a Dictionary
 				print(dict["a"])                # Prints 1
 				[/gdscript]
-				[csharp]
-				string data = "{ \"a\": 1, \"b\": 2 }";           // data is a string
-				var dict = GD.StrToVar(data).AsGodotDictionary(); // dict is a Dictionary
-				GD.Print(dict["a"]);                              // Prints 1
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -1449,10 +1375,6 @@
 				var a = { "a": 1, "b": 2 }
 				print(var_to_str(a))
 				[/gdscript]
-				[csharp]
-				var a = new Godot.Collections.Dictionary { ["a"] = 1, ["b"] = 2 };
-				GD.Print(GD.VarToStr(a));
-				[/csharp]
 				[/codeblocks]
 				Prints:
 				[codeblock]
@@ -1537,9 +1459,6 @@
 		<member name="AudioServer" type="AudioServer" setter="" getter="">
 			The [AudioServer] singleton.
 		</member>
-		<member name="CameraServer" type="CameraServer" setter="" getter="">
-			The [CameraServer] singleton.
-		</member>
 		<member name="ClassDB" type="ClassDB" setter="" getter="">
 			The [ClassDB] singleton.
 		</member>
@@ -1562,12 +1481,6 @@
 		<member name="Geometry2D" type="Geometry2D" setter="" getter="">
 			The [Geometry2D] singleton.
 		</member>
-		<member name="Geometry3D" type="Geometry3D" setter="" getter="">
-			The [Geometry3D] singleton.
-		</member>
-		<member name="GodotSharp" type="GodotSharp" setter="" getter="">
-			The [GodotSharp] singleton.
-		</member>
 		<member name="IP" type="IP" setter="" getter="">
 			The [IP] singleton.
 		</member>
@@ -1577,43 +1490,14 @@
 		<member name="InputMap" type="InputMap" setter="" getter="">
 			The [InputMap] singleton.
 		</member>
-		<member name="JavaClassWrapper" type="JavaClassWrapper" setter="" getter="">
-			The [JavaClassWrapper] singleton.
-			[b]Note:[/b] Only implemented on Android.
-		</member>
-		<member name="JavaScriptBridge" type="JavaScriptBridge" setter="" getter="">
-			The [JavaScriptBridge] singleton.
-			[b]Note:[/b] Only implemented on the Web platform.
-		</member>
 		<member name="Marshalls" type="Marshalls" setter="" getter="">
 			The [Marshalls] singleton.
-		</member>
-		<member name="NavigationMeshGenerator" type="NavigationMeshGenerator" setter="" getter="">
-			The [NavigationMeshGenerator] singleton.
-		</member>
-		<member name="NavigationServer2D" type="NavigationServer2D" setter="" getter="">
-			The [NavigationServer2D] singleton.
-		</member>
-		<member name="NavigationServer3D" type="NavigationServer3D" setter="" getter="">
-			The [NavigationServer3D] singleton.
 		</member>
 		<member name="OS" type="OS" setter="" getter="">
 			The [OS] singleton.
 		</member>
 		<member name="Performance" type="Performance" setter="" getter="">
 			The [Performance] singleton.
-		</member>
-		<member name="PhysicsServer2D" type="PhysicsServer2D" setter="" getter="">
-			The [PhysicsServer2D] singleton.
-		</member>
-		<member name="PhysicsServer2DManager" type="PhysicsServer2DManager" setter="" getter="">
-			The [PhysicsServer2DManager] singleton.
-		</member>
-		<member name="PhysicsServer3D" type="PhysicsServer3D" setter="" getter="">
-			The [PhysicsServer3D] singleton.
-		</member>
-		<member name="PhysicsServer3DManager" type="PhysicsServer3DManager" setter="" getter="">
-			The [PhysicsServer3DManager] singleton.
 		</member>
 		<member name="ProjectSettings" type="ProjectSettings" setter="" getter="">
 			The [ProjectSettings] singleton.
@@ -1644,9 +1528,6 @@
 		</member>
 		<member name="WorkerThreadPool" type="WorkerThreadPool" setter="" getter="">
 			The [WorkerThreadPool] singleton.
-		</member>
-		<member name="XRServer" type="XRServer" setter="" getter="">
-			The [XRServer] singleton.
 		</member>
 	</members>
 	<constants>
@@ -2773,55 +2654,37 @@
 		<constant name="PROPERTY_HINT_LAYERS_2D_RENDER" value="7" enum="PropertyHint">
 			Hints that an [int] property is a bitmask using the optionally named 2D render layers.
 		</constant>
-		<constant name="PROPERTY_HINT_LAYERS_2D_PHYSICS" value="8" enum="PropertyHint">
-			Hints that an [int] property is a bitmask using the optionally named 2D physics layers.
-		</constant>
-		<constant name="PROPERTY_HINT_LAYERS_2D_NAVIGATION" value="9" enum="PropertyHint">
-			Hints that an [int] property is a bitmask using the optionally named 2D navigation layers.
-		</constant>
-		<constant name="PROPERTY_HINT_LAYERS_3D_RENDER" value="10" enum="PropertyHint">
-			Hints that an [int] property is a bitmask using the optionally named 3D render layers.
-		</constant>
-		<constant name="PROPERTY_HINT_LAYERS_3D_PHYSICS" value="11" enum="PropertyHint">
-			Hints that an [int] property is a bitmask using the optionally named 3D physics layers.
-		</constant>
-		<constant name="PROPERTY_HINT_LAYERS_3D_NAVIGATION" value="12" enum="PropertyHint">
-			Hints that an [int] property is a bitmask using the optionally named 3D navigation layers.
-		</constant>
-		<constant name="PROPERTY_HINT_LAYERS_AVOIDANCE" value="37" enum="PropertyHint">
-			Hints that an integer property is a bitmask using the optionally named avoidance layers.
-		</constant>
-		<constant name="PROPERTY_HINT_FILE" value="13" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_FILE" value="8" enum="PropertyHint">
 			Hints that a [String] property is a path to a file. Editing it will show a file dialog for picking the path. The hint string can be a set of filters with wildcards like [code]"*.png,*.jpg"[/code].
 		</constant>
-		<constant name="PROPERTY_HINT_DIR" value="14" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_DIR" value="9" enum="PropertyHint">
 			Hints that a [String] property is a path to a directory. Editing it will show a file dialog for picking the path.
 		</constant>
-		<constant name="PROPERTY_HINT_GLOBAL_FILE" value="15" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_GLOBAL_FILE" value="10" enum="PropertyHint">
 			Hints that a [String] property is an absolute path to a file outside the project folder. Editing it will show a file dialog for picking the path. The hint string can be a set of filters with wildcards, like [code]"*.png,*.jpg"[/code].
 		</constant>
-		<constant name="PROPERTY_HINT_GLOBAL_DIR" value="16" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_GLOBAL_DIR" value="11" enum="PropertyHint">
 			Hints that a [String] property is an absolute path to a directory outside the project folder. Editing it will show a file dialog for picking the path.
 		</constant>
-		<constant name="PROPERTY_HINT_RESOURCE_TYPE" value="17" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_RESOURCE_TYPE" value="12" enum="PropertyHint">
 			Hints that a property is an instance of a [Resource]-derived type, optionally specified via the hint string (e.g. [code]"Texture2D"[/code]). Editing it will show a popup menu of valid resource types to instantiate.
 		</constant>
-		<constant name="PROPERTY_HINT_MULTILINE_TEXT" value="18" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_MULTILINE_TEXT" value="13" enum="PropertyHint">
 			Hints that a [String] property is text with line breaks. Editing it will show a text input field where line breaks can be typed.
 		</constant>
-		<constant name="PROPERTY_HINT_EXPRESSION" value="19" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_EXPRESSION" value="14" enum="PropertyHint">
 			Hints that a [String] property is an [Expression].
 		</constant>
-		<constant name="PROPERTY_HINT_PLACEHOLDER_TEXT" value="20" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_PLACEHOLDER_TEXT" value="15" enum="PropertyHint">
 			Hints that a [String] property should show a placeholder text on its input field, if empty. The hint string is the placeholder text to use.
 		</constant>
-		<constant name="PROPERTY_HINT_COLOR_NO_ALPHA" value="21" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_COLOR_NO_ALPHA" value="16" enum="PropertyHint">
 			Hints that a [Color] property should be edited without affecting its transparency ([member Color.a] is not editable).
 		</constant>
-		<constant name="PROPERTY_HINT_OBJECT_ID" value="22" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_OBJECT_ID" value="17" enum="PropertyHint">
 			Hints that the property's value is an object encoded as object ID, with its type specified in the hint string. Used by the debugger.
 		</constant>
-		<constant name="PROPERTY_HINT_TYPE_STRING" value="23" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_TYPE_STRING" value="18" enum="PropertyHint">
 			If a property is [String], hints that the property represents a particular type (class). This allows to select a type from the create dialog. The property will store the selected type as a string.
 			If a property is [Array], hints the editor how to show elements. The [code]hint_string[/code] must encode nested types using [code]":"[/code] and [code]"/"[/code].
 			[codeblocks]
@@ -2836,17 +2699,6 @@
 			hint_string = "%d:%d:%d:" % [TYPE_ARRAY, TYPE_ARRAY, elem_type]
 			hint_string = "%d:%d:%d/%d:%s" % [TYPE_ARRAY, TYPE_ARRAY, elem_type, elem_hint, elem_hint_string]
 			[/gdscript]
-			[csharp]
-			// Array of elemType.
-			hintString = $"{elemType:D}:";
-			hintString = $"{elemType:}/{elemHint:D}:{elemHintString}";
-			// Two-dimensional array of elemType (array of arrays of elemType).
-			hintString = $"{Variant.Type.Array:D}:{elemType:D}:";
-			hintString = $"{Variant.Type.Array:D}:{elemType:D}/{elemHint:D}:{elemHintString}";
-			// Three-dimensional array of elemType (array of arrays of arrays of elemType).
-			hintString = $"{Variant.Type.Array:D}:{Variant.Type.Array:D}:{elemType:D}:";
-			hintString = $"{Variant.Type.Array:D}:{Variant.Type.Array:D}:{elemType:D}/{elemHint:D}:{elemHintString}";
-			[/csharp]
 			[/codeblocks]
 			Examples:
 			[codeblocks]
@@ -2863,62 +2715,47 @@
 			hint_string = "%d:%d/%d:-1,1,0.1" % [TYPE_ARRAY, TYPE_FLOAT, PROPERTY_HINT_RANGE] # Two-dimensional array of floats (in range from -1 to 1).
 			hint_string = "%d:%d/%d:Texture2D" % [TYPE_ARRAY, TYPE_OBJECT, PROPERTY_HINT_RESOURCE_TYPE] # Two-dimensional array of textures.
 			[/gdscript]
-			[csharp]
-			hintString = $"{Variant.Type.Int:D}/{PropertyHint.Range:D}:1,10,1"; // Array of integers (in range from 1 to 10).
-			hintString = $"{Variant.Type.Int:D}/{PropertyHint.Enum:D}:Zero,One,Two"; // Array of integers (an enum).
-			hintString = $"{Variant.Type.Int:D}/{PropertyHint.Enum:D}:Zero,One,Three:3,Six:6"; // Array of integers (an enum).
-			hintString = $"{Variant.Type.String:D}/{PropertyHint.File:D}:*.png"; // Array of strings (file paths).
-			hintString = $"{Variant.Type.Object:D}/{PropertyHint.ResourceType:D}:Texture2D"; // Array of textures.
-
-			hintString = $"{Variant.Type.Array:D}:{Variant.Type.Float:D}:"; // Two-dimensional array of floats.
-			hintString = $"{Variant.Type.Array:D}:{Variant.Type.String:D}/{PropertyHint.MultilineText:D}:"; // Two-dimensional array of multiline strings.
-			hintString = $"{Variant.Type.Array:D}:{Variant.Type.Float:D}/{PropertyHint.Range:D}:-1,1,0.1"; // Two-dimensional array of floats (in range from -1 to 1).
-			hintString = $"{Variant.Type.Array:D}:{Variant.Type.Object:D}/{PropertyHint.ResourceType:D}:Texture2D"; // Two-dimensional array of textures.
-			[/csharp]
 			[/codeblocks]
 			[b]Note:[/b] The trailing colon is required for properly detecting built-in types.
 		</constant>
-		<constant name="PROPERTY_HINT_NODE_PATH_TO_EDITED_NODE" value="24" enum="PropertyHint" is_deprecated="true">
+		<constant name="PROPERTY_HINT_NODE_PATH_TO_EDITED_NODE" value="19" enum="PropertyHint" is_deprecated="true">
 			[i]Deprecated.[/i] This hint is not used anywhere and will be removed in the future.
 		</constant>
-		<constant name="PROPERTY_HINT_OBJECT_TOO_BIG" value="25" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_OBJECT_TOO_BIG" value="20" enum="PropertyHint">
 			Hints that an object is too big to be sent via the debugger.
 		</constant>
-		<constant name="PROPERTY_HINT_NODE_PATH_VALID_TYPES" value="26" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_NODE_PATH_VALID_TYPES" value="21" enum="PropertyHint">
 			Hints that the hint string specifies valid node types for property of type [NodePath].
 		</constant>
-		<constant name="PROPERTY_HINT_SAVE_FILE" value="27" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_SAVE_FILE" value="22" enum="PropertyHint">
 			Hints that a [String] property is a path to a file. Editing it will show a file dialog for picking the path for the file to be saved at. The dialog has access to the project's directory. The hint string can be a set of filters with wildcards like [code]"*.png,*.jpg"[/code]. See also [member FileDialog.filters].
 		</constant>
-		<constant name="PROPERTY_HINT_GLOBAL_SAVE_FILE" value="28" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_GLOBAL_SAVE_FILE" value="23" enum="PropertyHint">
 			Hints that a [String] property is a path to a file. Editing it will show a file dialog for picking the path for the file to be saved at. The dialog has access to the entire filesystem. The hint string can be a set of filters with wildcards like [code]"*.png,*.jpg"[/code]. See also [member FileDialog.filters].
 		</constant>
-		<constant name="PROPERTY_HINT_INT_IS_OBJECTID" value="29" enum="PropertyHint" is_deprecated="true">
+		<constant name="PROPERTY_HINT_INT_IS_OBJECTID" value="24" enum="PropertyHint" is_deprecated="true">
 			Hints that an [int] property is an object ID.
 			[i]Deprecated.[/i] This hint is not used anywhere and will be removed in the future.
 		</constant>
-		<constant name="PROPERTY_HINT_INT_IS_POINTER" value="30" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_INT_IS_POINTER" value="25" enum="PropertyHint">
 			Hints that an [int] property is a pointer. Used by GDExtension.
 		</constant>
-		<constant name="PROPERTY_HINT_ARRAY_TYPE" value="31" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_ARRAY_TYPE" value="26" enum="PropertyHint">
 			Hints that a property is an [Array] with the stored type specified in the hint string.
 		</constant>
-		<constant name="PROPERTY_HINT_LOCALE_ID" value="32" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_LOCALE_ID" value="27" enum="PropertyHint">
 			Hints that a string property is a locale code. Editing it will show a locale dialog for picking language and country.
 		</constant>
-		<constant name="PROPERTY_HINT_LOCALIZABLE_STRING" value="33" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_LOCALIZABLE_STRING" value="28" enum="PropertyHint">
 			Hints that a dictionary property is string translation map. Dictionary keys are locale codes and, values are translated strings.
 		</constant>
-		<constant name="PROPERTY_HINT_NODE_TYPE" value="34" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_NODE_TYPE" value="29" enum="PropertyHint">
 			Hints that a property is an instance of a [Node]-derived type, optionally specified via the hint string (e.g. [code]"Node2D"[/code]). Editing it will show a dialog for picking a node from the scene.
 		</constant>
-		<constant name="PROPERTY_HINT_HIDE_QUATERNION_EDIT" value="35" enum="PropertyHint">
-			Hints that a quaternion property should disable the temporary euler editor.
-		</constant>
-		<constant name="PROPERTY_HINT_PASSWORD" value="36" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_PASSWORD" value="30" enum="PropertyHint">
 			Hints that a string property is a password, and every character is replaced with the secret character.
 		</constant>
-		<constant name="PROPERTY_HINT_MAX" value="38" enum="PropertyHint">
+		<constant name="PROPERTY_HINT_MAX" value="32" enum="PropertyHint">
 			Represents the size of the [enum PropertyHint] enum.
 		</constant>
 		<constant name="PROPERTY_USAGE_NONE" value="0" enum="PropertyUsageFlags" is_bitfield="true">
@@ -3088,76 +2925,73 @@
 		<constant name="TYPE_PLANE" value="14" enum="Variant.Type">
 			Variable is of type [Plane].
 		</constant>
-		<constant name="TYPE_QUATERNION" value="15" enum="Variant.Type">
-			Variable is of type [Quaternion].
-		</constant>
-		<constant name="TYPE_AABB" value="16" enum="Variant.Type">
+		<constant name="TYPE_AABB" value="15" enum="Variant.Type">
 			Variable is of type [AABB].
 		</constant>
-		<constant name="TYPE_BASIS" value="17" enum="Variant.Type">
+		<constant name="TYPE_BASIS" value="16" enum="Variant.Type">
 			Variable is of type [Basis].
 		</constant>
-		<constant name="TYPE_TRANSFORM3D" value="18" enum="Variant.Type">
+		<constant name="TYPE_TRANSFORM3D" value="17" enum="Variant.Type">
 			Variable is of type [Transform3D].
 		</constant>
-		<constant name="TYPE_PROJECTION" value="19" enum="Variant.Type">
+		<constant name="TYPE_PROJECTION" value="18" enum="Variant.Type">
 			Variable is of type [Projection].
 		</constant>
-		<constant name="TYPE_COLOR" value="20" enum="Variant.Type">
+		<constant name="TYPE_COLOR" value="19" enum="Variant.Type">
 			Variable is of type [Color].
 		</constant>
-		<constant name="TYPE_STRING_NAME" value="21" enum="Variant.Type">
+		<constant name="TYPE_STRING_NAME" value="20" enum="Variant.Type">
 			Variable is of type [StringName].
 		</constant>
-		<constant name="TYPE_NODE_PATH" value="22" enum="Variant.Type">
+		<constant name="TYPE_NODE_PATH" value="21" enum="Variant.Type">
 			Variable is of type [NodePath].
 		</constant>
-		<constant name="TYPE_RID" value="23" enum="Variant.Type">
+		<constant name="TYPE_RID" value="22" enum="Variant.Type">
 			Variable is of type [RID].
 		</constant>
-		<constant name="TYPE_OBJECT" value="24" enum="Variant.Type">
+		<constant name="TYPE_OBJECT" value="23" enum="Variant.Type">
 			Variable is of type [Object].
 		</constant>
-		<constant name="TYPE_CALLABLE" value="25" enum="Variant.Type">
+		<constant name="TYPE_CALLABLE" value="24" enum="Variant.Type">
 			Variable is of type [Callable].
 		</constant>
-		<constant name="TYPE_SIGNAL" value="26" enum="Variant.Type">
+		<constant name="TYPE_SIGNAL" value="25" enum="Variant.Type">
 			Variable is of type [Signal].
 		</constant>
-		<constant name="TYPE_DICTIONARY" value="27" enum="Variant.Type">
+		<constant name="TYPE_DICTIONARY" value="26" enum="Variant.Type">
 			Variable is of type [Dictionary].
 		</constant>
-		<constant name="TYPE_ARRAY" value="28" enum="Variant.Type">
+		<constant name="TYPE_ARRAY" value="27" enum="Variant.Type">
 			Variable is of type [Array].
 		</constant>
-		<constant name="TYPE_PACKED_BYTE_ARRAY" value="29" enum="Variant.Type">
+		<constant name="TYPE_PACKED_BYTE_ARRAY" value="28" enum="Variant.Type">
 			Variable is of type [PackedByteArray].
 		</constant>
-		<constant name="TYPE_PACKED_INT32_ARRAY" value="30" enum="Variant.Type">
+		<constant name="TYPE_PACKED_INT32_ARRAY" value="29" enum="Variant.Type">
 			Variable is of type [PackedInt32Array].
 		</constant>
-		<constant name="TYPE_PACKED_INT64_ARRAY" value="31" enum="Variant.Type">
+		<constant name="TYPE_PACKED_INT64_ARRAY" value="30" enum="Variant.Type">
 			Variable is of type [PackedInt64Array].
 		</constant>
-		<constant name="TYPE_PACKED_FLOAT32_ARRAY" value="32" enum="Variant.Type">
+		<constant name="TYPE_PACKED_FLOAT32_ARRAY" value="31" enum="Variant.Type">
 			Variable is of type [PackedFloat32Array].
 		</constant>
-		<constant name="TYPE_PACKED_FLOAT64_ARRAY" value="33" enum="Variant.Type">
+		<constant name="TYPE_PACKED_FLOAT64_ARRAY" value="32" enum="Variant.Type">
 			Variable is of type [PackedFloat64Array].
 		</constant>
-		<constant name="TYPE_PACKED_STRING_ARRAY" value="34" enum="Variant.Type">
+		<constant name="TYPE_PACKED_STRING_ARRAY" value="33" enum="Variant.Type">
 			Variable is of type [PackedStringArray].
 		</constant>
-		<constant name="TYPE_PACKED_VECTOR2_ARRAY" value="35" enum="Variant.Type">
+		<constant name="TYPE_PACKED_VECTOR2_ARRAY" value="34" enum="Variant.Type">
 			Variable is of type [PackedVector2Array].
 		</constant>
-		<constant name="TYPE_PACKED_VECTOR3_ARRAY" value="36" enum="Variant.Type">
+		<constant name="TYPE_PACKED_VECTOR3_ARRAY" value="35" enum="Variant.Type">
 			Variable is of type [PackedVector3Array].
 		</constant>
-		<constant name="TYPE_PACKED_COLOR_ARRAY" value="37" enum="Variant.Type">
+		<constant name="TYPE_PACKED_COLOR_ARRAY" value="36" enum="Variant.Type">
 			Variable is of type [PackedColorArray].
 		</constant>
-		<constant name="TYPE_MAX" value="38" enum="Variant.Type">
+		<constant name="TYPE_MAX" value="37" enum="Variant.Type">
 			Represents the size of the [enum Variant.Type] enum.
 		</constant>
 		<constant name="OP_EQUAL" value="0" enum="Variant.Operator">

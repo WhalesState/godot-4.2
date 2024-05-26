@@ -34,7 +34,6 @@
 
 #include "config.h"
 #include "material_storage.h"
-#include "particles_storage.h"
 #include "texture_storage.h"
 
 #include "drivers/gles3/rasterizer_canvas_gles3.h"
@@ -671,14 +670,6 @@ static const GLenum target_from_type[ShaderLanguage::TYPE_MAX] = {
 	GL_TEXTURE_2D, // TYPE_SAMPLER2D,
 	GL_TEXTURE_2D, // TYPE_ISAMPLER2D,
 	GL_TEXTURE_2D, // TYPE_USAMPLER2D,
-	GL_TEXTURE_2D_ARRAY, // TYPE_SAMPLER2DARRAY,
-	GL_TEXTURE_2D_ARRAY, // TYPE_ISAMPLER2DARRAY,
-	GL_TEXTURE_2D_ARRAY, // TYPE_USAMPLER2DARRAY,
-	GL_TEXTURE_3D, // TYPE_SAMPLER3D,
-	GL_TEXTURE_3D, // TYPE_ISAMPLER3D,
-	GL_TEXTURE_3D, // TYPE_USAMPLER3D,
-	GL_TEXTURE_CUBE_MAP, // TYPE_SAMPLERCUBE,
-	GL_TEXTURE_CUBE_MAP, // TYPE_SAMPLERCUBEARRAY,
 	GL_TEXTURE_2D, // TYPE_STRUCT
 };
 
@@ -936,39 +927,6 @@ void MaterialData::update_textures(const HashMap<StringName, Variant> &p_paramet
 					}
 				} break;
 
-				case ShaderLanguage::TYPE_SAMPLERCUBE: {
-					switch (p_texture_uniforms[i].hint) {
-						case ShaderLanguage::ShaderNode::Uniform::HINT_DEFAULT_BLACK: {
-							gl_texture = texture_storage->texture_gl_get_default(DEFAULT_GL_TEXTURE_CUBEMAP_BLACK);
-						} break;
-						default: {
-							gl_texture = texture_storage->texture_gl_get_default(DEFAULT_GL_TEXTURE_CUBEMAP_WHITE);
-						} break;
-					}
-				} break;
-				case ShaderLanguage::TYPE_SAMPLERCUBEARRAY: {
-					ERR_PRINT_ONCE("Type: SamplerCubeArray not supported in GL Compatibility rendering backend, please use another type.");
-				} break;
-
-				case ShaderLanguage::TYPE_ISAMPLER3D:
-				case ShaderLanguage::TYPE_USAMPLER3D:
-				case ShaderLanguage::TYPE_SAMPLER3D: {
-					switch (p_texture_uniforms[i].hint) {
-						case ShaderLanguage::ShaderNode::Uniform::HINT_DEFAULT_BLACK: {
-							gl_texture = texture_storage->texture_gl_get_default(DEFAULT_GL_TEXTURE_3D_BLACK);
-						} break;
-						default: {
-							gl_texture = texture_storage->texture_gl_get_default(DEFAULT_GL_TEXTURE_3D_WHITE);
-						} break;
-					}
-				} break;
-
-				case ShaderLanguage::TYPE_ISAMPLER2DARRAY:
-				case ShaderLanguage::TYPE_USAMPLER2DARRAY:
-				case ShaderLanguage::TYPE_SAMPLER2DARRAY: {
-					gl_texture = texture_storage->texture_gl_get_default(DEFAULT_GL_TEXTURE_2D_ARRAY_WHITE);
-				} break;
-
 				default: {
 				}
 			}
@@ -1094,17 +1052,9 @@ MaterialStorage *MaterialStorage::get_singleton() {
 MaterialStorage::MaterialStorage() {
 	singleton = this;
 
-	shader_data_request_func[RS::SHADER_SPATIAL] = _create_scene_shader_func;
 	shader_data_request_func[RS::SHADER_CANVAS_ITEM] = _create_canvas_shader_func;
-	shader_data_request_func[RS::SHADER_PARTICLES] = _create_particles_shader_func;
-	shader_data_request_func[RS::SHADER_SKY] = _create_sky_shader_func;
-	shader_data_request_func[RS::SHADER_FOG] = nullptr;
 
-	material_data_request_func[RS::SHADER_SPATIAL] = _create_scene_material_func;
 	material_data_request_func[RS::SHADER_CANVAS_ITEM] = _create_canvas_material_func;
-	material_data_request_func[RS::SHADER_PARTICLES] = _create_particles_material_func;
-	material_data_request_func[RS::SHADER_SKY] = _create_sky_material_func;
-	material_data_request_func[RS::SHADER_FOG] = nullptr;
 
 	static_assert(sizeof(GlobalShaderUniforms::Value) == 16);
 
@@ -1189,303 +1139,6 @@ MaterialStorage::MaterialStorage() {
 		actions.global_buffer_array_variable = "global_shader_uniforms";
 
 		shaders.compiler_canvas.initialize(actions);
-	}
-
-	{
-		// Setup Scene compiler
-
-		//shader compiler
-		ShaderCompiler::DefaultIdentifierActions actions;
-
-		actions.renames["MODEL_MATRIX"] = "model_matrix";
-		actions.renames["MODEL_NORMAL_MATRIX"] = "model_normal_matrix";
-		actions.renames["VIEW_MATRIX"] = "scene_data.view_matrix";
-		actions.renames["INV_VIEW_MATRIX"] = "scene_data.inv_view_matrix";
-		actions.renames["PROJECTION_MATRIX"] = "projection_matrix";
-		actions.renames["INV_PROJECTION_MATRIX"] = "inv_projection_matrix";
-		actions.renames["MODELVIEW_MATRIX"] = "modelview";
-		actions.renames["MODELVIEW_NORMAL_MATRIX"] = "modelview_normal";
-
-		actions.renames["VERTEX"] = "vertex";
-		actions.renames["NORMAL"] = "normal";
-		actions.renames["TANGENT"] = "tangent";
-		actions.renames["BINORMAL"] = "binormal";
-		actions.renames["POSITION"] = "position";
-		actions.renames["UV"] = "uv_interp";
-		actions.renames["UV2"] = "uv2_interp";
-		actions.renames["COLOR"] = "color_interp";
-		actions.renames["POINT_SIZE"] = "point_size";
-		actions.renames["INSTANCE_ID"] = "gl_InstanceID";
-		actions.renames["VERTEX_ID"] = "gl_VertexID";
-
-		actions.renames["ALPHA_SCISSOR_THRESHOLD"] = "alpha_scissor_threshold";
-		actions.renames["ALPHA_HASH_SCALE"] = "alpha_hash_scale";
-		actions.renames["ALPHA_ANTIALIASING_EDGE"] = "alpha_antialiasing_edge";
-		actions.renames["ALPHA_TEXTURE_COORDINATE"] = "alpha_texture_coordinate";
-
-		//builtins
-
-		actions.renames["TIME"] = "scene_data.time";
-		actions.renames["EXPOSURE"] = "(1.0 / scene_data.emissive_exposure_normalization)";
-		actions.renames["PI"] = _MKSTR(Math_PI);
-		actions.renames["TAU"] = _MKSTR(Math_TAU);
-		actions.renames["E"] = _MKSTR(Math_E);
-		actions.renames["VIEWPORT_SIZE"] = "scene_data.viewport_size";
-
-		actions.renames["FRAGCOORD"] = "gl_FragCoord";
-		actions.renames["FRONT_FACING"] = "gl_FrontFacing";
-		actions.renames["NORMAL_MAP"] = "normal_map";
-		actions.renames["NORMAL_MAP_DEPTH"] = "normal_map_depth";
-		actions.renames["ALBEDO"] = "albedo";
-		actions.renames["ALPHA"] = "alpha";
-		actions.renames["METALLIC"] = "metallic";
-		actions.renames["SPECULAR"] = "specular";
-		actions.renames["ROUGHNESS"] = "roughness";
-		actions.renames["RIM"] = "rim";
-		actions.renames["RIM_TINT"] = "rim_tint";
-		actions.renames["CLEARCOAT"] = "clearcoat";
-		actions.renames["CLEARCOAT_ROUGHNESS"] = "clearcoat_roughness";
-		actions.renames["ANISOTROPY"] = "anisotropy";
-		actions.renames["ANISOTROPY_FLOW"] = "anisotropy_flow";
-		actions.renames["SSS_STRENGTH"] = "sss_strength";
-		actions.renames["SSS_TRANSMITTANCE_COLOR"] = "transmittance_color";
-		actions.renames["SSS_TRANSMITTANCE_DEPTH"] = "transmittance_depth";
-		actions.renames["SSS_TRANSMITTANCE_BOOST"] = "transmittance_boost";
-		actions.renames["BACKLIGHT"] = "backlight";
-		actions.renames["AO"] = "ao";
-		actions.renames["AO_LIGHT_AFFECT"] = "ao_light_affect";
-		actions.renames["EMISSION"] = "emission";
-		actions.renames["POINT_COORD"] = "gl_PointCoord";
-		actions.renames["INSTANCE_CUSTOM"] = "instance_custom";
-		actions.renames["SCREEN_UV"] = "screen_uv";
-		actions.renames["DEPTH"] = "gl_FragDepth";
-		actions.renames["FOG"] = "fog";
-		actions.renames["RADIANCE"] = "custom_radiance";
-		actions.renames["IRRADIANCE"] = "custom_irradiance";
-		actions.renames["BONE_INDICES"] = "bone_attrib";
-		actions.renames["BONE_WEIGHTS"] = "weight_attrib";
-		actions.renames["CUSTOM0"] = "custom0_attrib";
-		actions.renames["CUSTOM1"] = "custom1_attrib";
-		actions.renames["CUSTOM2"] = "custom2_attrib";
-		actions.renames["CUSTOM3"] = "custom3_attrib";
-		actions.renames["OUTPUT_IS_SRGB"] = "SHADER_IS_SRGB";
-
-		actions.renames["NODE_POSITION_WORLD"] = "model_matrix[3].xyz";
-		actions.renames["CAMERA_POSITION_WORLD"] = "scene_data.inv_view_matrix[3].xyz";
-		actions.renames["CAMERA_DIRECTION_WORLD"] = "scene_data.view_matrix[3].xyz";
-		actions.renames["CAMERA_VISIBLE_LAYERS"] = "scene_data.camera_visible_layers";
-		actions.renames["NODE_POSITION_VIEW"] = "(scene_data.view_matrix * model_matrix)[3].xyz";
-
-		actions.renames["VIEW_INDEX"] = "ViewIndex";
-		actions.renames["VIEW_MONO_LEFT"] = "uint(0)";
-		actions.renames["VIEW_RIGHT"] = "uint(1)";
-		actions.renames["EYE_OFFSET"] = "eye_offset";
-
-		//for light
-		actions.renames["VIEW"] = "view";
-		actions.renames["SPECULAR_AMOUNT"] = "specular_amount";
-		actions.renames["LIGHT_COLOR"] = "light_color";
-		actions.renames["LIGHT_IS_DIRECTIONAL"] = "is_directional";
-		actions.renames["LIGHT"] = "light";
-		actions.renames["ATTENUATION"] = "attenuation";
-		actions.renames["DIFFUSE_LIGHT"] = "diffuse_light";
-		actions.renames["SPECULAR_LIGHT"] = "specular_light";
-
-		actions.usage_defines["NORMAL"] = "#define NORMAL_USED\n";
-		actions.usage_defines["TANGENT"] = "#define TANGENT_USED\n";
-		actions.usage_defines["BINORMAL"] = "@TANGENT";
-		actions.usage_defines["RIM"] = "#define LIGHT_RIM_USED\n";
-		actions.usage_defines["RIM_TINT"] = "@RIM";
-		actions.usage_defines["CLEARCOAT"] = "#define LIGHT_CLEARCOAT_USED\n";
-		actions.usage_defines["CLEARCOAT_ROUGHNESS"] = "@CLEARCOAT";
-		actions.usage_defines["ANISOTROPY"] = "#define LIGHT_ANISOTROPY_USED\n";
-		actions.usage_defines["ANISOTROPY_FLOW"] = "@ANISOTROPY";
-		actions.usage_defines["AO"] = "#define AO_USED\n";
-		actions.usage_defines["AO_LIGHT_AFFECT"] = "#define AO_USED\n";
-		actions.usage_defines["UV"] = "#define UV_USED\n";
-		actions.usage_defines["UV2"] = "#define UV2_USED\n";
-		actions.usage_defines["BONE_INDICES"] = "#define BONES_USED\n";
-		actions.usage_defines["BONE_WEIGHTS"] = "#define WEIGHTS_USED\n";
-		actions.usage_defines["CUSTOM0"] = "#define CUSTOM0_USED\n";
-		actions.usage_defines["CUSTOM1"] = "#define CUSTOM1_USED\n";
-		actions.usage_defines["CUSTOM2"] = "#define CUSTOM2_USED\n";
-		actions.usage_defines["CUSTOM3"] = "#define CUSTOM3_USED\n";
-		actions.usage_defines["NORMAL_MAP"] = "#define NORMAL_MAP_USED\n";
-		actions.usage_defines["NORMAL_MAP_DEPTH"] = "@NORMAL_MAP";
-		actions.usage_defines["COLOR"] = "#define COLOR_USED\n";
-		actions.usage_defines["INSTANCE_CUSTOM"] = "#define ENABLE_INSTANCE_CUSTOM\n";
-		actions.usage_defines["POSITION"] = "#define OVERRIDE_POSITION\n";
-
-		actions.usage_defines["ALPHA_SCISSOR_THRESHOLD"] = "#define ALPHA_SCISSOR_USED\n";
-		actions.usage_defines["ALPHA_HASH_SCALE"] = "#define ALPHA_HASH_USED\n";
-		actions.usage_defines["ALPHA_ANTIALIASING_EDGE"] = "#define ALPHA_ANTIALIASING_EDGE_USED\n";
-		actions.usage_defines["ALPHA_TEXTURE_COORDINATE"] = "@ALPHA_ANTIALIASING_EDGE";
-
-		actions.usage_defines["SSS_STRENGTH"] = "#define ENABLE_SSS\n";
-		actions.usage_defines["SSS_TRANSMITTANCE_DEPTH"] = "#define ENABLE_TRANSMITTANCE\n";
-		actions.usage_defines["BACKLIGHT"] = "#define LIGHT_BACKLIGHT_USED\n";
-		actions.usage_defines["SCREEN_UV"] = "#define SCREEN_UV_USED\n";
-
-		actions.usage_defines["DIFFUSE_LIGHT"] = "#define USE_LIGHT_SHADER_CODE\n";
-		actions.usage_defines["SPECULAR_LIGHT"] = "#define USE_LIGHT_SHADER_CODE\n";
-
-		actions.usage_defines["FOG"] = "#define CUSTOM_FOG_USED\n";
-		actions.usage_defines["RADIANCE"] = "#define CUSTOM_RADIANCE_USED\n";
-		actions.usage_defines["IRRADIANCE"] = "#define CUSTOM_IRRADIANCE_USED\n";
-
-		actions.render_mode_defines["skip_vertex_transform"] = "#define SKIP_TRANSFORM_USED\n";
-		actions.render_mode_defines["world_vertex_coords"] = "#define VERTEX_WORLD_COORDS_USED\n";
-		actions.render_mode_defines["ensure_correct_normals"] = "#define ENSURE_CORRECT_NORMALS\n";
-		actions.render_mode_defines["cull_front"] = "#define DO_SIDE_CHECK\n";
-		actions.render_mode_defines["cull_disabled"] = "#define DO_SIDE_CHECK\n";
-		actions.render_mode_defines["particle_trails"] = "#define USE_PARTICLE_TRAILS\n";
-		actions.render_mode_defines["depth_prepass_alpha"] = "#define USE_OPAQUE_PREPASS\n";
-
-		bool force_lambert = GLOBAL_GET("rendering/shading/overrides/force_lambert_over_burley");
-
-		if (!force_lambert) {
-			actions.render_mode_defines["diffuse_burley"] = "#define DIFFUSE_BURLEY\n";
-		}
-
-		actions.render_mode_defines["diffuse_lambert_wrap"] = "#define DIFFUSE_LAMBERT_WRAP\n";
-		actions.render_mode_defines["diffuse_toon"] = "#define DIFFUSE_TOON\n";
-
-		actions.render_mode_defines["sss_mode_skin"] = "#define SSS_MODE_SKIN\n";
-
-		actions.render_mode_defines["specular_schlick_ggx"] = "#define SPECULAR_SCHLICK_GGX\n";
-		actions.render_mode_defines["specular_toon"] = "#define SPECULAR_TOON\n";
-		actions.render_mode_defines["specular_disabled"] = "#define SPECULAR_DISABLED\n";
-		actions.render_mode_defines["shadows_disabled"] = "#define SHADOWS_DISABLED\n";
-		actions.render_mode_defines["ambient_light_disabled"] = "#define AMBIENT_LIGHT_DISABLED\n";
-		actions.render_mode_defines["shadow_to_opacity"] = "#define USE_SHADOW_TO_OPACITY\n";
-		actions.render_mode_defines["unshaded"] = "#define MODE_UNSHADED\n";
-		actions.render_mode_defines["fog_disabled"] = "#define FOG_DISABLED\n";
-
-		actions.default_filter = ShaderLanguage::FILTER_LINEAR_MIPMAP;
-		actions.default_repeat = ShaderLanguage::REPEAT_ENABLE;
-
-		actions.check_multiview_samplers = RasterizerGLES3::get_singleton()->is_xr_enabled();
-		actions.global_buffer_array_variable = "global_shader_uniforms";
-
-		shaders.compiler_scene.initialize(actions);
-	}
-
-	{
-		// Setup Particles compiler
-
-		ShaderCompiler::DefaultIdentifierActions actions;
-
-		actions.renames["COLOR"] = "out_color";
-		actions.renames["VELOCITY"] = "out_velocity_flags.xyz";
-		//actions.renames["MASS"] = "mass"; ?
-		actions.renames["ACTIVE"] = "particle_active";
-		actions.renames["RESTART"] = "restart";
-		actions.renames["CUSTOM"] = "out_custom";
-		for (int i = 0; i < PARTICLES_MAX_USERDATAS; i++) {
-			String udname = "USERDATA" + itos(i + 1);
-			actions.renames[udname] = "out_userdata" + itos(i + 1);
-			actions.usage_defines[udname] = "#define USERDATA" + itos(i + 1) + "_USED\n";
-		}
-		actions.renames["TRANSFORM"] = "xform";
-		actions.renames["TIME"] = "time";
-		actions.renames["PI"] = _MKSTR(Math_PI);
-		actions.renames["TAU"] = _MKSTR(Math_TAU);
-		actions.renames["E"] = _MKSTR(Math_E);
-		actions.renames["LIFETIME"] = "lifetime";
-		actions.renames["DELTA"] = "local_delta";
-		actions.renames["NUMBER"] = "particle_number";
-		actions.renames["INDEX"] = "index";
-		actions.renames["AMOUNT_RATIO"] = "amount_ratio";
-		//actions.renames["GRAVITY"] = "current_gravity";
-		actions.renames["EMISSION_TRANSFORM"] = "emission_transform";
-		actions.renames["RANDOM_SEED"] = "random_seed";
-		actions.renames["RESTART_POSITION"] = "restart_position";
-		actions.renames["RESTART_ROT_SCALE"] = "restart_rotation_scale";
-		actions.renames["RESTART_VELOCITY"] = "restart_velocity";
-		actions.renames["RESTART_COLOR"] = "restart_color";
-		actions.renames["RESTART_CUSTOM"] = "restart_custom";
-		actions.renames["COLLIDED"] = "collided";
-		actions.renames["COLLISION_NORMAL"] = "collision_normal";
-		actions.renames["COLLISION_DEPTH"] = "collision_depth";
-		actions.renames["ATTRACTOR_FORCE"] = "attractor_force";
-		actions.renames["EMITTER_VELOCITY"] = "emitter_velocity";
-		actions.renames["INTERPOLATE_TO_END"] = "interp_to_end";
-
-		// These are unsupported, but may be used by users. To avoid compile time overhead, we add the stub only when used.
-		actions.renames["FLAG_EMIT_POSITION"] = "uint(1)";
-		actions.renames["FLAG_EMIT_ROT_SCALE"] = "uint(2)";
-		actions.renames["FLAG_EMIT_VELOCITY"] = "uint(4)";
-		actions.renames["FLAG_EMIT_COLOR"] = "uint(8)";
-		actions.renames["FLAG_EMIT_CUSTOM"] = "uint(16)";
-		actions.renames["emit_subparticle"] = "emit_subparticle";
-		actions.usage_defines["emit_subparticle"] = "\nbool emit_subparticle(mat4 p_xform, vec3 p_velocity, vec4 p_color, vec4 p_custom, uint p_flags) {\n\treturn false;\n}\n";
-
-		actions.render_mode_defines["disable_force"] = "#define DISABLE_FORCE\n";
-		actions.render_mode_defines["disable_velocity"] = "#define DISABLE_VELOCITY\n";
-		actions.render_mode_defines["keep_data"] = "#define ENABLE_KEEP_DATA\n";
-		actions.render_mode_defines["collision_use_scale"] = "#define USE_COLLISION_SCALE\n";
-
-		actions.default_filter = ShaderLanguage::FILTER_LINEAR_MIPMAP;
-		actions.default_repeat = ShaderLanguage::REPEAT_ENABLE;
-
-		actions.global_buffer_array_variable = "global_shader_uniforms";
-
-		shaders.compiler_particles.initialize(actions);
-	}
-
-	{
-		// Setup Sky compiler
-		ShaderCompiler::DefaultIdentifierActions actions;
-
-		actions.renames["COLOR"] = "color";
-		actions.renames["ALPHA"] = "alpha";
-		actions.renames["EYEDIR"] = "cube_normal";
-		actions.renames["POSITION"] = "position";
-		actions.renames["SKY_COORDS"] = "panorama_coords";
-		actions.renames["SCREEN_UV"] = "uv";
-		actions.renames["TIME"] = "time";
-		actions.renames["FRAGCOORD"] = "gl_FragCoord";
-		actions.renames["PI"] = _MKSTR(Math_PI);
-		actions.renames["TAU"] = _MKSTR(Math_TAU);
-		actions.renames["E"] = _MKSTR(Math_E);
-		actions.renames["HALF_RES_COLOR"] = "half_res_color";
-		actions.renames["QUARTER_RES_COLOR"] = "quarter_res_color";
-		actions.renames["RADIANCE"] = "radiance";
-		actions.renames["FOG"] = "custom_fog";
-		actions.renames["LIGHT0_ENABLED"] = "directional_lights.data[0].enabled";
-		actions.renames["LIGHT0_DIRECTION"] = "directional_lights.data[0].direction_energy.xyz";
-		actions.renames["LIGHT0_ENERGY"] = "directional_lights.data[0].direction_energy.w";
-		actions.renames["LIGHT0_COLOR"] = "directional_lights.data[0].color_size.xyz";
-		actions.renames["LIGHT0_SIZE"] = "directional_lights.data[0].color_size.w";
-		actions.renames["LIGHT1_ENABLED"] = "directional_lights.data[1].enabled";
-		actions.renames["LIGHT1_DIRECTION"] = "directional_lights.data[1].direction_energy.xyz";
-		actions.renames["LIGHT1_ENERGY"] = "directional_lights.data[1].direction_energy.w";
-		actions.renames["LIGHT1_COLOR"] = "directional_lights.data[1].color_size.xyz";
-		actions.renames["LIGHT1_SIZE"] = "directional_lights.data[1].color_size.w";
-		actions.renames["LIGHT2_ENABLED"] = "directional_lights.data[2].enabled";
-		actions.renames["LIGHT2_DIRECTION"] = "directional_lights.data[2].direction_energy.xyz";
-		actions.renames["LIGHT2_ENERGY"] = "directional_lights.data[2].direction_energy.w";
-		actions.renames["LIGHT2_COLOR"] = "directional_lights.data[2].color_size.xyz";
-		actions.renames["LIGHT2_SIZE"] = "directional_lights.data[2].color_size.w";
-		actions.renames["LIGHT3_ENABLED"] = "directional_lights.data[3].enabled";
-		actions.renames["LIGHT3_DIRECTION"] = "directional_lights.data[3].direction_energy.xyz";
-		actions.renames["LIGHT3_ENERGY"] = "directional_lights.data[3].direction_energy.w";
-		actions.renames["LIGHT3_COLOR"] = "directional_lights.data[3].color_size.xyz";
-		actions.renames["LIGHT3_SIZE"] = "directional_lights.data[3].color_size.w";
-		actions.renames["AT_CUBEMAP_PASS"] = "AT_CUBEMAP_PASS";
-		actions.renames["AT_HALF_RES_PASS"] = "AT_HALF_RES_PASS";
-		actions.renames["AT_QUARTER_RES_PASS"] = "AT_QUARTER_RES_PASS";
-		actions.usage_defines["HALF_RES_COLOR"] = "\n#define USES_HALF_RES_COLOR\n";
-		actions.usage_defines["QUARTER_RES_COLOR"] = "\n#define USES_QUARTER_RES_COLOR\n";
-		actions.render_mode_defines["disable_fog"] = "#define DISABLE_FOG\n";
-		actions.render_mode_defines["use_debanding"] = "#define USE_DEBANDING\n";
-
-		actions.default_filter = ShaderLanguage::FILTER_LINEAR_MIPMAP;
-		actions.default_repeat = ShaderLanguage::REPEAT_ENABLE;
-
-		actions.global_buffer_array_variable = "global_shader_uniforms";
-
-		shaders.compiler_sky.initialize(actions);
 	}
 }
 
@@ -1941,9 +1594,6 @@ void MaterialStorage::global_shader_parameters_load_settings(bool p_load_texture
 				"transform_2d",
 				"transform",
 				"sampler2D",
-				"sampler2DArray",
-				"sampler3D",
-				"samplerCube",
 			};
 
 			RS::GlobalShaderParameterType gvtype = RS::GLOBAL_VAR_TYPE_MAX;
@@ -2040,7 +1690,6 @@ void MaterialStorage::global_shader_parameters_instance_update(RID p_instance, i
 		ShaderLanguage::TYPE_VEC4, //vec4
 		ShaderLanguage::TYPE_IVEC4, //vec4i
 		ShaderLanguage::TYPE_VEC4, //plane
-		ShaderLanguage::TYPE_VEC4, //quat
 		ShaderLanguage::TYPE_MAX, //aabb not supported here
 		ShaderLanguage::TYPE_MAX, //basis not supported here
 		ShaderLanguage::TYPE_MAX, //xform not supported here
@@ -2166,14 +1815,6 @@ void MaterialStorage::shader_set_code(RID p_shader, const String &p_code) {
 	RS::ShaderMode new_mode;
 	if (mode_string == "canvas_item") {
 		new_mode = RS::SHADER_CANVAS_ITEM;
-	} else if (mode_string == "particles") {
-		new_mode = RS::SHADER_PARTICLES;
-	} else if (mode_string == "spatial") {
-		new_mode = RS::SHADER_SPATIAL;
-	} else if (mode_string == "sky") {
-		new_mode = RS::SHADER_SKY;
-		//} else if (mode_string == "fog") {
-		//	new_mode = RS::SHADER_FOG;
 	} else {
 		new_mode = RS::SHADER_MAX;
 		ERR_PRINT("shader type " + mode_string + " not supported in OpenGL renderer");
@@ -2207,8 +1848,6 @@ void MaterialStorage::shader_set_code(RID p_shader, const String &p_code) {
 			if (shader->data) {
 				material->data = material_data_request_func[new_mode](shader->data);
 				material->data->self = material->self;
-				material->data->set_next_pass(material->next_pass);
-				material->data->set_render_priority(material->priority);
 			}
 			material->shader_mode = new_mode;
 		}
@@ -2403,8 +2042,6 @@ void MaterialStorage::material_set_shader(RID p_material, RID p_shader) {
 
 	material->data = material_data_request_func[shader->mode](shader->data);
 	material->data->self = p_material;
-	material->data->set_next_pass(material->next_pass);
-	material->data->set_render_priority(material->priority);
 	//updating happens later
 	material->dependency.changed_notify(Dependency::DEPENDENCY_CHANGED_MATERIAL);
 	_material_queue_update(material, true, true);
@@ -2439,43 +2076,12 @@ Variant MaterialStorage::material_get_param(RID p_material, const StringName &p_
 	}
 }
 
-void MaterialStorage::material_set_next_pass(RID p_material, RID p_next_material) {
-	GLES3::Material *material = material_owner.get_or_null(p_material);
-	ERR_FAIL_NULL(material);
-
-	if (material->next_pass == p_next_material) {
-		return;
-	}
-
-	material->next_pass = p_next_material;
-	if (material->data) {
-		material->data->set_next_pass(p_next_material);
-	}
-
-	material->dependency.changed_notify(Dependency::DEPENDENCY_CHANGED_MATERIAL);
-}
-
-void MaterialStorage::material_set_render_priority(RID p_material, int priority) {
-	ERR_FAIL_COND(priority < RS::MATERIAL_RENDER_PRIORITY_MIN);
-	ERR_FAIL_COND(priority > RS::MATERIAL_RENDER_PRIORITY_MAX);
-
-	GLES3::Material *material = material_owner.get_or_null(p_material);
-	ERR_FAIL_NULL(material);
-	material->priority = priority;
-	if (material->data) {
-		material->data->set_render_priority(priority);
-	}
-	material->dependency.changed_notify(Dependency::DEPENDENCY_CHANGED_MATERIAL);
-}
-
 bool MaterialStorage::material_is_animated(RID p_material) {
 	GLES3::Material *material = material_owner.get_or_null(p_material);
 	ERR_FAIL_NULL_V(material, false);
 	if (material->shader && material->shader->data) {
 		if (material->shader->data->is_animated()) {
 			return true;
-		} else if (material->next_pass.is_valid()) {
-			return material_is_animated(material->next_pass);
 		}
 	}
 	return false; //by default nothing is animated
@@ -2487,8 +2093,6 @@ bool MaterialStorage::material_casts_shadows(RID p_material) {
 	if (material->shader && material->shader->data) {
 		if (material->shader->data->casts_shadows()) {
 			return true;
-		} else if (material->next_pass.is_valid()) {
-			return material_casts_shadows(material->next_pass);
 		}
 	}
 	return true; //by default everything casts shadows
@@ -2499,10 +2103,6 @@ void MaterialStorage::material_get_instance_shader_parameters(RID p_material, Li
 	ERR_FAIL_NULL(material);
 	if (material->shader && material->shader->data) {
 		material->shader->data->get_instance_param_list(r_parameters);
-
-		if (material->next_pass.is_valid()) {
-			material_get_instance_shader_parameters(material->next_pass, r_parameters);
-		}
 	}
 }
 
@@ -2510,9 +2110,6 @@ void MaterialStorage::material_update_dependency(RID p_material, DependencyTrack
 	Material *material = material_owner.get_or_null(p_material);
 	ERR_FAIL_NULL(material);
 	p_instance->update_dependency(&material->dependency);
-	if (material->next_pass.is_valid()) {
-		material_update_dependency(material->next_pass, p_instance);
-	}
 }
 
 LocalVector<ShaderGLES3::TextureUniformData> get_texture_uniform_data(const Vector<ShaderCompiler::GeneratedCode::Texture> &texture_uniforms) {
@@ -2683,532 +2280,6 @@ GLES3::MaterialData *GLES3::_create_canvas_material_func(ShaderData *p_shader) {
 	material_data->shader_data = static_cast<CanvasShaderData *>(p_shader);
 	//update will happen later anyway so do nothing.
 	return material_data;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// SKY SHADER
-
-void SkyShaderData::set_code(const String &p_code) {
-	// Initialize and compile the shader.
-
-	code = p_code;
-	valid = false;
-	ubo_size = 0;
-	uniforms.clear();
-
-	uses_time = false;
-	uses_position = false;
-	uses_half_res = false;
-	uses_quarter_res = false;
-	uses_light = false;
-
-	if (code.is_empty()) {
-		return; // Just invalid, but no error.
-	}
-
-	ShaderCompiler::GeneratedCode gen_code;
-
-	ShaderCompiler::IdentifierActions actions;
-	actions.entry_point_stages["sky"] = ShaderCompiler::STAGE_FRAGMENT;
-
-	actions.render_mode_flags["use_half_res_pass"] = &uses_half_res;
-	actions.render_mode_flags["use_quarter_res_pass"] = &uses_quarter_res;
-
-	actions.usage_flag_pointers["TIME"] = &uses_time;
-	actions.usage_flag_pointers["POSITION"] = &uses_position;
-	actions.usage_flag_pointers["LIGHT0_ENABLED"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT0_ENERGY"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT0_DIRECTION"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT0_COLOR"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT0_SIZE"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT1_ENABLED"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT1_ENERGY"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT1_DIRECTION"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT1_COLOR"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT1_SIZE"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT2_ENABLED"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT2_ENERGY"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT2_DIRECTION"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT2_COLOR"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT2_SIZE"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT3_ENABLED"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT3_ENERGY"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT3_DIRECTION"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT3_COLOR"] = &uses_light;
-	actions.usage_flag_pointers["LIGHT3_SIZE"] = &uses_light;
-
-	actions.uniforms = &uniforms;
-
-	Error err = MaterialStorage::get_singleton()->shaders.compiler_sky.compile(RS::SHADER_SKY, code, &actions, path, gen_code);
-	ERR_FAIL_COND_MSG(err != OK, "Shader compilation failed.");
-
-	if (version.is_null()) {
-		version = MaterialStorage::get_singleton()->shaders.sky_shader.version_create();
-	}
-
-#if 0
-	print_line("**compiling shader:");
-	print_line("**defines:\n");
-	for (int i = 0; i < gen_code.defines.size(); i++) {
-		print_line(gen_code.defines[i]);
-	}
-
-	HashMap<String, String>::Iterator el = gen_code.code.begin();
-	while (el) {
-		print_line("\n**code " + el->key + ":\n" + el->value);
-		++el;
-	}
-
-	print_line("\n**uniforms:\n" + gen_code.uniforms);
-	print_line("\n**vertex_globals:\n" + gen_code.stage_globals[ShaderCompiler::STAGE_VERTEX]);
-	print_line("\n**fragment_globals:\n" + gen_code.stage_globals[ShaderCompiler::STAGE_FRAGMENT]);
-#endif
-
-	LocalVector<ShaderGLES3::TextureUniformData> texture_uniform_data = get_texture_uniform_data(gen_code.texture_uniforms);
-
-	MaterialStorage::get_singleton()->shaders.sky_shader.version_set_code(version, gen_code.code, gen_code.uniforms, gen_code.stage_globals[ShaderCompiler::STAGE_VERTEX], gen_code.stage_globals[ShaderCompiler::STAGE_FRAGMENT], gen_code.defines, texture_uniform_data);
-	ERR_FAIL_COND(!MaterialStorage::get_singleton()->shaders.sky_shader.version_is_valid(version));
-
-	ubo_size = gen_code.uniform_total_size;
-	ubo_offsets = gen_code.uniform_offsets;
-	texture_uniforms = gen_code.texture_uniforms;
-
-	valid = true;
-}
-
-bool SkyShaderData::is_animated() const {
-	return false;
-}
-
-bool SkyShaderData::casts_shadows() const {
-	return false;
-}
-
-RS::ShaderNativeSourceCode SkyShaderData::get_native_source_code() const {
-	return MaterialStorage::get_singleton()->shaders.sky_shader.version_get_native_source_code(version);
-}
-
-SkyShaderData::SkyShaderData() {
-	valid = false;
-}
-
-SkyShaderData::~SkyShaderData() {
-	if (version.is_valid()) {
-		MaterialStorage::get_singleton()->shaders.sky_shader.version_free(version);
-	}
-}
-
-GLES3::ShaderData *GLES3::_create_sky_shader_func() {
-	SkyShaderData *shader_data = memnew(SkyShaderData);
-	return shader_data;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Sky material
-
-void SkyMaterialData::update_parameters(const HashMap<StringName, Variant> &p_parameters, bool p_uniform_dirty, bool p_textures_dirty) {
-	uniform_set_updated = true;
-	update_parameters_internal(p_parameters, p_uniform_dirty, p_textures_dirty, shader_data->uniforms, shader_data->ubo_offsets.ptr(), shader_data->texture_uniforms, shader_data->default_texture_params, shader_data->ubo_size, true);
-}
-
-SkyMaterialData::~SkyMaterialData() {
-}
-GLES3::MaterialData *GLES3::_create_sky_material_func(ShaderData *p_shader) {
-	SkyMaterialData *material_data = memnew(SkyMaterialData);
-	material_data->shader_data = static_cast<SkyShaderData *>(p_shader);
-	//update will happen later anyway so do nothing.
-	return material_data;
-}
-
-void SkyMaterialData::bind_uniforms() {
-	// Bind Material Uniforms
-	glBindBufferBase(GL_UNIFORM_BUFFER, SKY_MATERIAL_UNIFORM_LOCATION, uniform_buffer);
-
-	bind_uniforms_generic(texture_cache, shader_data->texture_uniforms);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Scene SHADER
-
-void SceneShaderData::set_code(const String &p_code) {
-	// Initialize and compile the shader.
-
-	code = p_code;
-	valid = false;
-	ubo_size = 0;
-	uniforms.clear();
-
-	uses_point_size = false;
-	uses_alpha = false;
-	uses_alpha_clip = false;
-	uses_blend_alpha = false;
-	uses_depth_prepass_alpha = false;
-	uses_discard = false;
-	uses_roughness = false;
-	uses_normal = false;
-	uses_particle_trails = false;
-	wireframe = false;
-
-	unshaded = false;
-	uses_vertex = false;
-	uses_position = false;
-	uses_sss = false;
-	uses_transmittance = false;
-	uses_screen_texture = false;
-	uses_screen_texture_mipmaps = false;
-	uses_depth_texture = false;
-	uses_normal_texture = false;
-	uses_time = false;
-	uses_vertex_time = false;
-	uses_fragment_time = false;
-	writes_modelview_or_projection = false;
-	uses_world_coordinates = false;
-	uses_tangent = false;
-	uses_color = false;
-	uses_uv = false;
-	uses_uv2 = false;
-	uses_custom0 = false;
-	uses_custom1 = false;
-	uses_custom2 = false;
-	uses_custom3 = false;
-	uses_bones = false;
-	uses_weights = false;
-
-	if (code.is_empty()) {
-		return; // Just invalid, but no error.
-	}
-
-	ShaderCompiler::GeneratedCode gen_code;
-
-	// Actual enums set further down after compilation.
-	int blend_modei = BLEND_MODE_MIX;
-	int depth_testi = DEPTH_TEST_ENABLED;
-	int alpha_antialiasing_modei = ALPHA_ANTIALIASING_OFF;
-	int cull_modei = CULL_BACK;
-	int depth_drawi = DEPTH_DRAW_OPAQUE;
-
-	ShaderCompiler::IdentifierActions actions;
-	actions.entry_point_stages["vertex"] = ShaderCompiler::STAGE_VERTEX;
-	actions.entry_point_stages["fragment"] = ShaderCompiler::STAGE_FRAGMENT;
-	actions.entry_point_stages["light"] = ShaderCompiler::STAGE_FRAGMENT;
-
-	actions.render_mode_values["blend_add"] = Pair<int *, int>(&blend_modei, BLEND_MODE_ADD);
-	actions.render_mode_values["blend_mix"] = Pair<int *, int>(&blend_modei, BLEND_MODE_MIX);
-	actions.render_mode_values["blend_sub"] = Pair<int *, int>(&blend_modei, BLEND_MODE_SUB);
-	actions.render_mode_values["blend_mul"] = Pair<int *, int>(&blend_modei, BLEND_MODE_MUL);
-
-	actions.render_mode_values["alpha_to_coverage"] = Pair<int *, int>(&alpha_antialiasing_modei, ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE);
-	actions.render_mode_values["alpha_to_coverage_and_one"] = Pair<int *, int>(&alpha_antialiasing_modei, ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE);
-
-	actions.render_mode_values["depth_draw_never"] = Pair<int *, int>(&depth_drawi, DEPTH_DRAW_DISABLED);
-	actions.render_mode_values["depth_draw_opaque"] = Pair<int *, int>(&depth_drawi, DEPTH_DRAW_OPAQUE);
-	actions.render_mode_values["depth_draw_always"] = Pair<int *, int>(&depth_drawi, DEPTH_DRAW_ALWAYS);
-
-	actions.render_mode_values["depth_test_disabled"] = Pair<int *, int>(&depth_testi, DEPTH_TEST_DISABLED);
-
-	actions.render_mode_values["cull_disabled"] = Pair<int *, int>(&cull_modei, CULL_DISABLED);
-	actions.render_mode_values["cull_front"] = Pair<int *, int>(&cull_modei, CULL_FRONT);
-	actions.render_mode_values["cull_back"] = Pair<int *, int>(&cull_modei, CULL_BACK);
-
-	actions.render_mode_flags["unshaded"] = &unshaded;
-	actions.render_mode_flags["wireframe"] = &wireframe;
-	actions.render_mode_flags["particle_trails"] = &uses_particle_trails;
-	actions.render_mode_flags["world_vertex_coords"] = &uses_world_coordinates;
-
-	actions.usage_flag_pointers["ALPHA"] = &uses_alpha;
-	actions.usage_flag_pointers["ALPHA_SCISSOR_THRESHOLD"] = &uses_alpha_clip;
-	// Use alpha clip pipeline for alpha hash/dither.
-	// This prevents sorting issues inherent to alpha blending and allows such materials to cast shadows.
-	actions.usage_flag_pointers["ALPHA_HASH_SCALE"] = &uses_alpha_clip;
-	actions.render_mode_flags["depth_prepass_alpha"] = &uses_depth_prepass_alpha;
-
-	actions.usage_flag_pointers["SSS_STRENGTH"] = &uses_sss;
-	actions.usage_flag_pointers["SSS_TRANSMITTANCE_DEPTH"] = &uses_transmittance;
-
-	actions.usage_flag_pointers["DISCARD"] = &uses_discard;
-	actions.usage_flag_pointers["TIME"] = &uses_time;
-	actions.usage_flag_pointers["ROUGHNESS"] = &uses_roughness;
-	actions.usage_flag_pointers["NORMAL"] = &uses_normal;
-	actions.usage_flag_pointers["NORMAL_MAP"] = &uses_normal;
-
-	actions.usage_flag_pointers["POINT_SIZE"] = &uses_point_size;
-	actions.usage_flag_pointers["POINT_COORD"] = &uses_point_size;
-
-	actions.write_flag_pointers["MODELVIEW_MATRIX"] = &writes_modelview_or_projection;
-	actions.write_flag_pointers["PROJECTION_MATRIX"] = &writes_modelview_or_projection;
-	actions.write_flag_pointers["VERTEX"] = &uses_vertex;
-	actions.write_flag_pointers["POSITION"] = &uses_position;
-
-	actions.usage_flag_pointers["TANGENT"] = &uses_tangent;
-	actions.usage_flag_pointers["BINORMAL"] = &uses_tangent;
-	actions.usage_flag_pointers["ANISOTROPY"] = &uses_tangent;
-	actions.usage_flag_pointers["ANISOTROPY_FLOW"] = &uses_tangent;
-	actions.usage_flag_pointers["COLOR"] = &uses_color;
-	actions.usage_flag_pointers["UV"] = &uses_uv;
-	actions.usage_flag_pointers["UV2"] = &uses_uv2;
-	actions.usage_flag_pointers["CUSTOM0"] = &uses_custom0;
-	actions.usage_flag_pointers["CUSTOM1"] = &uses_custom1;
-	actions.usage_flag_pointers["CUSTOM2"] = &uses_custom2;
-	actions.usage_flag_pointers["CUSTOM3"] = &uses_custom3;
-	actions.usage_flag_pointers["BONE_INDICES"] = &uses_bones;
-	actions.usage_flag_pointers["BONE_WEIGHTS"] = &uses_weights;
-
-	actions.uniforms = &uniforms;
-
-	Error err = MaterialStorage::get_singleton()->shaders.compiler_scene.compile(RS::SHADER_SPATIAL, code, &actions, path, gen_code);
-	ERR_FAIL_COND_MSG(err != OK, "Shader compilation failed.");
-
-	if (version.is_null()) {
-		version = MaterialStorage::get_singleton()->shaders.scene_shader.version_create();
-	}
-
-	blend_mode = BlendMode(blend_modei);
-	alpha_antialiasing_mode = AlphaAntiAliasing(alpha_antialiasing_modei);
-	depth_draw = DepthDraw(depth_drawi);
-	depth_test = DepthTest(depth_testi);
-	cull_mode = Cull(cull_modei);
-
-	vertex_input_mask = RS::ARRAY_FORMAT_VERTEX | RS::ARRAY_FORMAT_NORMAL; // We can always read vertices and normals.
-	vertex_input_mask |= uses_tangent << RS::ARRAY_TANGENT;
-	vertex_input_mask |= uses_color << RS::ARRAY_COLOR;
-	vertex_input_mask |= uses_uv << RS::ARRAY_TEX_UV;
-	vertex_input_mask |= uses_uv2 << RS::ARRAY_TEX_UV2;
-	vertex_input_mask |= uses_custom0 << RS::ARRAY_CUSTOM0;
-	vertex_input_mask |= uses_custom1 << RS::ARRAY_CUSTOM1;
-	vertex_input_mask |= uses_custom2 << RS::ARRAY_CUSTOM2;
-	vertex_input_mask |= uses_custom3 << RS::ARRAY_CUSTOM3;
-	vertex_input_mask |= uses_bones << RS::ARRAY_BONES;
-	vertex_input_mask |= uses_weights << RS::ARRAY_WEIGHTS;
-
-	uses_screen_texture = gen_code.uses_screen_texture;
-	uses_screen_texture_mipmaps = gen_code.uses_screen_texture_mipmaps;
-	uses_depth_texture = gen_code.uses_depth_texture;
-	uses_normal_texture = gen_code.uses_normal_roughness_texture;
-	uses_vertex_time = gen_code.uses_vertex_time;
-	uses_fragment_time = gen_code.uses_fragment_time;
-
-#ifdef DEBUG_ENABLED
-	if (uses_particle_trails) {
-		WARN_PRINT_ONCE_ED("Particle trails are only available when using the Forward+ or Mobile rendering backends.");
-	}
-
-	if (uses_sss) {
-		WARN_PRINT_ONCE_ED("Sub-surface scattering is only available when using the Forward+ rendering backend.");
-	}
-
-	if (uses_transmittance) {
-		WARN_PRINT_ONCE_ED("Transmittance is only available when using the Forward+ rendering backend.");
-	}
-
-	if (uses_depth_texture) {
-		WARN_PRINT_ONCE_ED("Reading from the depth texture is not supported when using the GL Compatibility backend yet. Support will be added in a future release.");
-	}
-
-	if (uses_normal_texture) {
-		WARN_PRINT_ONCE_ED("Reading from the normal-roughness texture is only available when using the Forward+ or Mobile rendering backends.");
-	}
-#endif
-
-#if 0
-	print_line("**compiling shader:");
-	print_line("**defines:\n");
-	for (int i = 0; i < gen_code.defines.size(); i++) {
-		print_line(gen_code.defines[i]);
-	}
-
-	HashMap<String, String>::Iterator el = gen_code.code.begin();
-	while (el) {
-		print_line("\n**code " + el->key + ":\n" + el->value);
-		++el;
-	}
-
-	print_line("\n**uniforms:\n" + gen_code.uniforms);
-	print_line("\n**vertex_globals:\n" + gen_code.stage_globals[ShaderCompiler::STAGE_VERTEX]);
-	print_line("\n**fragment_globals:\n" + gen_code.stage_globals[ShaderCompiler::STAGE_FRAGMENT]);
-#endif
-
-	LocalVector<ShaderGLES3::TextureUniformData> texture_uniform_data = get_texture_uniform_data(gen_code.texture_uniforms);
-
-	MaterialStorage::get_singleton()->shaders.scene_shader.version_set_code(version, gen_code.code, gen_code.uniforms, gen_code.stage_globals[ShaderCompiler::STAGE_VERTEX], gen_code.stage_globals[ShaderCompiler::STAGE_FRAGMENT], gen_code.defines, texture_uniform_data);
-	ERR_FAIL_COND(!MaterialStorage::get_singleton()->shaders.scene_shader.version_is_valid(version));
-
-	ubo_size = gen_code.uniform_total_size;
-	ubo_offsets = gen_code.uniform_offsets;
-	texture_uniforms = gen_code.texture_uniforms;
-
-	// If any form of Alpha Antialiasing is enabled, set the blend mode to alpha to coverage.
-	if (alpha_antialiasing_mode != ALPHA_ANTIALIASING_OFF) {
-		blend_mode = BLEND_MODE_ALPHA_TO_COVERAGE;
-	}
-
-	if (blend_mode == BLEND_MODE_ADD || blend_mode == BLEND_MODE_SUB || blend_mode == BLEND_MODE_MUL) {
-		uses_blend_alpha = true; // Force alpha used because of blend.
-	}
-
-	valid = true;
-}
-
-bool SceneShaderData::is_animated() const {
-	return (uses_fragment_time && uses_discard) || (uses_vertex_time && uses_vertex);
-}
-
-bool SceneShaderData::casts_shadows() const {
-	bool has_read_screen_alpha = uses_screen_texture || uses_depth_texture || uses_normal_texture;
-	bool has_base_alpha = (uses_alpha && !uses_alpha_clip) || has_read_screen_alpha;
-	bool has_alpha = has_base_alpha || uses_blend_alpha;
-
-	return !has_alpha || (uses_depth_prepass_alpha && !(depth_draw == DEPTH_DRAW_DISABLED || depth_test == DEPTH_TEST_DISABLED));
-}
-
-RS::ShaderNativeSourceCode SceneShaderData::get_native_source_code() const {
-	return MaterialStorage::get_singleton()->shaders.scene_shader.version_get_native_source_code(version);
-}
-
-SceneShaderData::SceneShaderData() {
-	valid = false;
-	uses_screen_texture = false;
-}
-
-SceneShaderData::~SceneShaderData() {
-	if (version.is_valid()) {
-		MaterialStorage::get_singleton()->shaders.scene_shader.version_free(version);
-	}
-}
-
-GLES3::ShaderData *GLES3::_create_scene_shader_func() {
-	SceneShaderData *shader_data = memnew(SceneShaderData);
-	return shader_data;
-}
-
-void SceneMaterialData::set_render_priority(int p_priority) {
-	priority = p_priority - RS::MATERIAL_RENDER_PRIORITY_MIN; //8 bits
-}
-
-void SceneMaterialData::set_next_pass(RID p_pass) {
-	next_pass = p_pass;
-}
-
-void SceneMaterialData::update_parameters(const HashMap<StringName, Variant> &p_parameters, bool p_uniform_dirty, bool p_textures_dirty) {
-	update_parameters_internal(p_parameters, p_uniform_dirty, p_textures_dirty, shader_data->uniforms, shader_data->ubo_offsets.ptr(), shader_data->texture_uniforms, shader_data->default_texture_params, shader_data->ubo_size, true);
-}
-
-SceneMaterialData::~SceneMaterialData() {
-}
-
-GLES3::MaterialData *GLES3::_create_scene_material_func(ShaderData *p_shader) {
-	SceneMaterialData *material_data = memnew(SceneMaterialData);
-	material_data->shader_data = static_cast<SceneShaderData *>(p_shader);
-	//update will happen later anyway so do nothing.
-	return material_data;
-}
-
-void SceneMaterialData::bind_uniforms() {
-	// Bind Material Uniforms
-	glBindBufferBase(GL_UNIFORM_BUFFER, SCENE_MATERIAL_UNIFORM_LOCATION, uniform_buffer);
-
-	bind_uniforms_generic(texture_cache, shader_data->texture_uniforms);
-}
-
-/* Particles SHADER */
-
-void ParticlesShaderData::set_code(const String &p_code) {
-	// Initialize and compile the shader.
-
-	code = p_code;
-	valid = false;
-	ubo_size = 0;
-	uniforms.clear();
-
-	uses_collision = false;
-	uses_time = false;
-
-	if (code.is_empty()) {
-		return; // Just invalid, but no error.
-	}
-
-	ShaderCompiler::GeneratedCode gen_code;
-
-	ShaderCompiler::IdentifierActions actions;
-	actions.entry_point_stages["start"] = ShaderCompiler::STAGE_VERTEX;
-	actions.entry_point_stages["process"] = ShaderCompiler::STAGE_VERTEX;
-
-	actions.usage_flag_pointers["COLLIDED"] = &uses_collision;
-
-	userdata_count = 0;
-	for (uint32_t i = 0; i < PARTICLES_MAX_USERDATAS; i++) {
-		userdatas_used[i] = false;
-		actions.usage_flag_pointers["USERDATA" + itos(i + 1)] = &userdatas_used[i];
-	}
-
-	actions.uniforms = &uniforms;
-
-	Error err = MaterialStorage::get_singleton()->shaders.compiler_particles.compile(RS::SHADER_PARTICLES, code, &actions, path, gen_code);
-	ERR_FAIL_COND_MSG(err != OK, "Shader compilation failed.");
-
-	if (version.is_null()) {
-		version = MaterialStorage::get_singleton()->shaders.particles_process_shader.version_create();
-	}
-
-	for (uint32_t i = 0; i < PARTICLES_MAX_USERDATAS; i++) {
-		if (userdatas_used[i]) {
-			userdata_count++;
-		}
-	}
-
-	LocalVector<ShaderGLES3::TextureUniformData> texture_uniform_data = get_texture_uniform_data(gen_code.texture_uniforms);
-
-	MaterialStorage::get_singleton()->shaders.particles_process_shader.version_set_code(version, gen_code.code, gen_code.uniforms, gen_code.stage_globals[ShaderCompiler::STAGE_VERTEX], gen_code.stage_globals[ShaderCompiler::STAGE_FRAGMENT], gen_code.defines, texture_uniform_data);
-	ERR_FAIL_COND(!MaterialStorage::get_singleton()->shaders.particles_process_shader.version_is_valid(version));
-
-	ubo_size = gen_code.uniform_total_size;
-	ubo_offsets = gen_code.uniform_offsets;
-	texture_uniforms = gen_code.texture_uniforms;
-
-	valid = true;
-}
-
-bool ParticlesShaderData::is_animated() const {
-	return false;
-}
-
-bool ParticlesShaderData::casts_shadows() const {
-	return false;
-}
-
-RS::ShaderNativeSourceCode ParticlesShaderData::get_native_source_code() const {
-	return MaterialStorage::get_singleton()->shaders.particles_process_shader.version_get_native_source_code(version);
-}
-
-ParticlesShaderData::~ParticlesShaderData() {
-	if (version.is_valid()) {
-		MaterialStorage::get_singleton()->shaders.particles_process_shader.version_free(version);
-	}
-}
-
-GLES3::ShaderData *GLES3::_create_particles_shader_func() {
-	ParticlesShaderData *shader_data = memnew(ParticlesShaderData);
-	return shader_data;
-}
-
-void ParticleProcessMaterialData::update_parameters(const HashMap<StringName, Variant> &p_parameters, bool p_uniform_dirty, bool p_textures_dirty) {
-	update_parameters_internal(p_parameters, p_uniform_dirty, p_textures_dirty, shader_data->uniforms, shader_data->ubo_offsets.ptr(), shader_data->texture_uniforms, shader_data->default_texture_params, shader_data->ubo_size, true);
-}
-
-ParticleProcessMaterialData::~ParticleProcessMaterialData() {
-}
-
-GLES3::MaterialData *GLES3::_create_particles_material_func(ShaderData *p_shader) {
-	ParticleProcessMaterialData *material_data = memnew(ParticleProcessMaterialData);
-	material_data->shader_data = static_cast<ParticlesShaderData *>(p_shader);
-	//update will happen later anyway so do nothing.
-	return material_data;
-}
-
-void ParticleProcessMaterialData::bind_uniforms() {
-	// Bind Material Uniforms
-	glBindBufferBase(GL_UNIFORM_BUFFER, GLES3::PARTICLES_MATERIAL_UNIFORM_LOCATION, uniform_buffer);
-
-	bind_uniforms_generic(texture_cache, shader_data->texture_uniforms, 1); // Start at GL_TEXTURE1 because texture slot 0 is reserved for the heightmap texture.
 }
 
 #endif // !GLES3_ENABLED

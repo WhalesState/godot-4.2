@@ -48,9 +48,6 @@ def make_default_controller_mappings(target, source, env):
         "Linux": "#if LINUXBSD_ENABLED",
         "Windows": "#ifdef WINDOWS_ENABLED",
         "Mac OS X": "#ifdef MACOS_ENABLED",
-        "Android": "#if defined(__ANDROID__)",
-        "iOS": "#ifdef IOS_ENABLED",
-        "Web": "#ifdef WEB_ENABLED",
     }
 
     g.write("const char* DefaultControllerMappings::mappings[] = {\n")

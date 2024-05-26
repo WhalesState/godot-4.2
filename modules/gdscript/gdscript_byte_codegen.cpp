@@ -84,7 +84,6 @@ uint32_t GDScriptByteCodeGenerator::add_temporary(const GDScriptDataType &p_type
 			case Variant::VECTOR4:
 			case Variant::VECTOR4I:
 			case Variant::PLANE:
-			case Variant::QUATERNION:
 			case Variant::AABB:
 			case Variant::BASIS:
 			case Variant::TRANSFORM3D:
@@ -159,7 +158,7 @@ void GDScriptByteCodeGenerator::end_parameters() {
 	function->default_arguments.reverse();
 }
 
-void GDScriptByteCodeGenerator::write_start(GDScript *p_script, const StringName &p_function_name, bool p_static, Variant p_rpc_config, const GDScriptDataType &p_return_type) {
+void GDScriptByteCodeGenerator::write_start(GDScript *p_script, const StringName &p_function_name, bool p_static, const GDScriptDataType &p_return_type) {
 	function = memnew(GDScriptFunction);
 	debug_stack = EngineDebugger::is_active();
 
@@ -174,7 +173,6 @@ void GDScriptByteCodeGenerator::write_start(GDScript *p_script, const StringName
 
 	function->_static = p_static;
 	function->return_type = p_return_type;
-	function->rpc_config = p_rpc_config;
 	function->_argument_count = 0;
 }
 
@@ -474,9 +472,6 @@ void GDScriptByteCodeGenerator::write_type_adjust(const Address &p_target, Varia
 			break;
 		case Variant::PLANE:
 			append_opcode(GDScriptFunction::OPCODE_TYPE_ADJUST_PLANE);
-			break;
-		case Variant::QUATERNION:
-			append_opcode(GDScriptFunction::OPCODE_TYPE_ADJUST_QUATERNION);
 			break;
 		case Variant::AABB:
 			append_opcode(GDScriptFunction::OPCODE_TYPE_ADJUST_AABB);

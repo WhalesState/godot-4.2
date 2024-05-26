@@ -148,7 +148,6 @@ MAKE_TYPE_INFO(Vector4, Variant::VECTOR4)
 MAKE_TYPE_INFO(Vector4i, Variant::VECTOR4I)
 MAKE_TYPE_INFO(Transform2D, Variant::TRANSFORM2D)
 MAKE_TYPE_INFO(Plane, Variant::PLANE)
-MAKE_TYPE_INFO(Quaternion, Variant::QUATERNION)
 MAKE_TYPE_INFO(AABB, Variant::AABB)
 MAKE_TYPE_INFO(Basis, Variant::BASIS)
 MAKE_TYPE_INFO(Transform3D, Variant::TRANSFORM3D)
@@ -223,7 +222,6 @@ struct GetTypeInfo<const Variant &> {
 MAKE_TEMPLATE_TYPE_INFO(Vector, Variant, Variant::ARRAY)
 MAKE_TEMPLATE_TYPE_INFO(Vector, RID, Variant::ARRAY)
 MAKE_TEMPLATE_TYPE_INFO(Vector, Plane, Variant::ARRAY)
-MAKE_TEMPLATE_TYPE_INFO(Vector, Face3, Variant::PACKED_VECTOR3_ARRAY)
 MAKE_TEMPLATE_TYPE_INFO(Vector, StringName, Variant::PACKED_STRING_ARRAY)
 
 template <typename T>

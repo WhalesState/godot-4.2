@@ -396,9 +396,7 @@ void ScriptTextEditor::set_edit_state(const Variant &p_state) {
 	}
 
 	if (editor_enabled) {
-#ifndef ANDROID_ENABLED
 		ensure_focus();
-#endif
 	}
 }
 

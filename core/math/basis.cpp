@@ -361,14 +361,6 @@ void Basis::rotate(const Vector3 &p_euler, EulerOrder p_order) {
 	*this = rotated(p_euler, p_order);
 }
 
-Basis Basis::rotated(const Quaternion &p_quaternion) const {
-	return Basis(p_quaternion) * (*this);
-}
-
-void Basis::rotate(const Quaternion &p_quaternion) {
-	*this = rotated(p_quaternion);
-}
-
 Vector3 Basis::get_euler_normalized(EulerOrder p_order) const {
 	// Assumes that the matrix can be decomposed into a proper rotation and scaling matrix as M = R.S,
 	// and returns the Euler angles corresponding to the rotation part, complementing get_scale().
@@ -381,20 +373,6 @@ Vector3 Basis::get_euler_normalized(EulerOrder p_order) const {
 	}
 
 	return m.get_euler(p_order);
-}
-
-Quaternion Basis::get_rotation_quaternion() const {
-	// Assumes that the matrix can be decomposed into a proper rotation and scaling matrix as M = R.S,
-	// and returns the Euler angles corresponding to the rotation part, complementing get_scale().
-	// See the comment in get_scale() for further information.
-	Basis m = orthonormalized();
-	real_t det = m.determinant();
-	if (det < 0) {
-		// Ensure that the determinant is 1, such that result is a proper rotation matrix which can be represented by Euler angles.
-		m.scale(Vector3(-1, -1, -1));
-	}
-
-	return m.get_quaternion();
 }
 
 void Basis::rotate_to_align(Vector3 p_start_direction, Vector3 p_end_direction) {
@@ -705,42 +683,6 @@ Basis::operator String() const {
 			", Z: " + get_column(2).operator String() + "]";
 }
 
-Quaternion Basis::get_quaternion() const {
-#ifdef MATH_CHECKS
-	ERR_FAIL_COND_V_MSG(!is_rotation(), Quaternion(), "Basis must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.");
-#endif
-	/* Allow getting a quaternion from an unnormalized transform */
-	Basis m = *this;
-	real_t trace = m.rows[0][0] + m.rows[1][1] + m.rows[2][2];
-	real_t temp[4];
-
-	if (trace > 0.0f) {
-		real_t s = Math::sqrt(trace + 1.0f);
-		temp[3] = (s * 0.5f);
-		s = 0.5f / s;
-
-		temp[0] = ((m.rows[2][1] - m.rows[1][2]) * s);
-		temp[1] = ((m.rows[0][2] - m.rows[2][0]) * s);
-		temp[2] = ((m.rows[1][0] - m.rows[0][1]) * s);
-	} else {
-		int i = m.rows[0][0] < m.rows[1][1]
-				? (m.rows[1][1] < m.rows[2][2] ? 2 : 1)
-				: (m.rows[0][0] < m.rows[2][2] ? 2 : 0);
-		int j = (i + 1) % 3;
-		int k = (i + 2) % 3;
-
-		real_t s = Math::sqrt(m.rows[i][i] - m.rows[j][j] - m.rows[k][k] + 1.0f);
-		temp[i] = s * 0.5f;
-		s = 0.5f / s;
-
-		temp[3] = (m.rows[k][j] - m.rows[j][k]) * s;
-		temp[j] = (m.rows[j][i] + m.rows[i][j]) * s;
-		temp[k] = (m.rows[k][i] + m.rows[i][k]) * s;
-	}
-
-	return Quaternion(temp[0], temp[1], temp[2], temp[3]);
-}
-
 void Basis::get_axis_angle(Vector3 &r_axis, real_t &r_angle) const {
 	/* checking this is a bad idea, because obtaining from scaled transform is a valid use case
 #ifdef MATH_CHECKS
@@ -819,18 +761,6 @@ void Basis::get_axis_angle(Vector3 &r_axis, real_t &r_angle) const {
 	r_angle = Math::acos((rows[0][0] + rows[1][1] + rows[2][2] - 1) / 2);
 }
 
-void Basis::set_quaternion(const Quaternion &p_quaternion) {
-	real_t d = p_quaternion.length_squared();
-	real_t s = 2.0f / d;
-	real_t xs = p_quaternion.x * s, ys = p_quaternion.y * s, zs = p_quaternion.z * s;
-	real_t wx = p_quaternion.w * xs, wy = p_quaternion.w * ys, wz = p_quaternion.w * zs;
-	real_t xx = p_quaternion.x * xs, xy = p_quaternion.x * ys, xz = p_quaternion.x * zs;
-	real_t yy = p_quaternion.y * ys, yz = p_quaternion.y * zs, zz = p_quaternion.z * zs;
-	set(1.0f - (yy + zz), xy - wz, xz + wy,
-			xy + wz, 1.0f - (xx + zz), yz - wx,
-			xz - wy, yz + wx, 1.0f - (xx + yy));
-}
-
 void Basis::set_axis_angle(const Vector3 &p_axis, real_t p_angle) {
 // Rotation matrix from axis and angle, see https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_angle
 #ifdef MATH_CHECKS
@@ -871,11 +801,6 @@ void Basis::set_euler_scale(const Vector3 &p_euler, const Vector3 &p_scale, Eule
 	rotate(p_euler, p_order);
 }
 
-void Basis::set_quaternion_scale(const Quaternion &p_quaternion, const Vector3 &p_scale) {
-	_set_diagonal(p_scale);
-	rotate(p_quaternion);
-}
-
 // This also sets the non-diagonal elements to 0, which is misleading from the
 // name, so we want this method to be private. Use `from_scale` externally.
 void Basis::_set_diagonal(const Vector3 &p_diag) {
@@ -902,126 +827,12 @@ Basis Basis::lerp(const Basis &p_to, const real_t &p_weight) const {
 }
 
 Basis Basis::slerp(const Basis &p_to, const real_t &p_weight) const {
-	//consider scale
-	Quaternion from(*this);
-	Quaternion to(p_to);
-
-	Basis b(from.slerp(to, p_weight));
+	Basis b;
 	b.rows[0] *= Math::lerp(rows[0].length(), p_to.rows[0].length(), p_weight);
 	b.rows[1] *= Math::lerp(rows[1].length(), p_to.rows[1].length(), p_weight);
 	b.rows[2] *= Math::lerp(rows[2].length(), p_to.rows[2].length(), p_weight);
 
 	return b;
-}
-
-void Basis::rotate_sh(real_t *p_values) {
-	// code by John Hable
-	// http://filmicworlds.com/blog/simple-and-fast-spherical-harmonic-rotation/
-	// this code is Public Domain
-
-	const static real_t s_c3 = 0.94617469575; // (3*sqrt(5))/(4*sqrt(pi))
-	const static real_t s_c4 = -0.31539156525; // (-sqrt(5))/(4*sqrt(pi))
-	const static real_t s_c5 = 0.54627421529; // (sqrt(15))/(4*sqrt(pi))
-
-	const static real_t s_c_scale = 1.0 / 0.91529123286551084;
-	const static real_t s_c_scale_inv = 0.91529123286551084;
-
-	const static real_t s_rc2 = 1.5853309190550713 * s_c_scale;
-	const static real_t s_c4_div_c3 = s_c4 / s_c3;
-	const static real_t s_c4_div_c3_x2 = (s_c4 / s_c3) * 2.0;
-
-	const static real_t s_scale_dst2 = s_c3 * s_c_scale_inv;
-	const static real_t s_scale_dst4 = s_c5 * s_c_scale_inv;
-
-	const real_t src[9] = { p_values[0], p_values[1], p_values[2], p_values[3], p_values[4], p_values[5], p_values[6], p_values[7], p_values[8] };
-
-	real_t m00 = rows[0][0];
-	real_t m01 = rows[0][1];
-	real_t m02 = rows[0][2];
-	real_t m10 = rows[1][0];
-	real_t m11 = rows[1][1];
-	real_t m12 = rows[1][2];
-	real_t m20 = rows[2][0];
-	real_t m21 = rows[2][1];
-	real_t m22 = rows[2][2];
-
-	p_values[0] = src[0];
-	p_values[1] = m11 * src[1] - m12 * src[2] + m10 * src[3];
-	p_values[2] = -m21 * src[1] + m22 * src[2] - m20 * src[3];
-	p_values[3] = m01 * src[1] - m02 * src[2] + m00 * src[3];
-
-	real_t sh0 = src[7] + src[8] + src[8] - src[5];
-	real_t sh1 = src[4] + s_rc2 * src[6] + src[7] + src[8];
-	real_t sh2 = src[4];
-	real_t sh3 = -src[7];
-	real_t sh4 = -src[5];
-
-	// Rotations.  R0 and R1 just use the raw matrix columns
-	real_t r2x = m00 + m01;
-	real_t r2y = m10 + m11;
-	real_t r2z = m20 + m21;
-
-	real_t r3x = m00 + m02;
-	real_t r3y = m10 + m12;
-	real_t r3z = m20 + m22;
-
-	real_t r4x = m01 + m02;
-	real_t r4y = m11 + m12;
-	real_t r4z = m21 + m22;
-
-	// dense matrix multiplication one column at a time
-
-	// column 0
-	real_t sh0_x = sh0 * m00;
-	real_t sh0_y = sh0 * m10;
-	real_t d0 = sh0_x * m10;
-	real_t d1 = sh0_y * m20;
-	real_t d2 = sh0 * (m20 * m20 + s_c4_div_c3);
-	real_t d3 = sh0_x * m20;
-	real_t d4 = sh0_x * m00 - sh0_y * m10;
-
-	// column 1
-	real_t sh1_x = sh1 * m02;
-	real_t sh1_y = sh1 * m12;
-	d0 += sh1_x * m12;
-	d1 += sh1_y * m22;
-	d2 += sh1 * (m22 * m22 + s_c4_div_c3);
-	d3 += sh1_x * m22;
-	d4 += sh1_x * m02 - sh1_y * m12;
-
-	// column 2
-	real_t sh2_x = sh2 * r2x;
-	real_t sh2_y = sh2 * r2y;
-	d0 += sh2_x * r2y;
-	d1 += sh2_y * r2z;
-	d2 += sh2 * (r2z * r2z + s_c4_div_c3_x2);
-	d3 += sh2_x * r2z;
-	d4 += sh2_x * r2x - sh2_y * r2y;
-
-	// column 3
-	real_t sh3_x = sh3 * r3x;
-	real_t sh3_y = sh3 * r3y;
-	d0 += sh3_x * r3y;
-	d1 += sh3_y * r3z;
-	d2 += sh3 * (r3z * r3z + s_c4_div_c3_x2);
-	d3 += sh3_x * r3z;
-	d4 += sh3_x * r3x - sh3_y * r3y;
-
-	// column 4
-	real_t sh4_x = sh4 * r4x;
-	real_t sh4_y = sh4 * r4y;
-	d0 += sh4_x * r4y;
-	d1 += sh4_y * r4z;
-	d2 += sh4 * (r4z * r4z + s_c4_div_c3_x2);
-	d3 += sh4_x * r4z;
-	d4 += sh4_x * r4x - sh4_y * r4y;
-
-	// extra multipliers
-	p_values[4] = d0;
-	p_values[5] = -d1;
-	p_values[6] = d2 * s_scale_dst2;
-	p_values[7] = -d3;
-	p_values[8] = d4 * s_scale_dst4;
 }
 
 Basis Basis::looking_at(const Vector3 &p_target, const Vector3 &p_up, bool p_use_model_front) {

@@ -39,15 +39,14 @@
 	A* pathfinding algorithm.
 */
 
-class AStar3D : public RefCounted {
-	GDCLASS(AStar3D, RefCounted);
-	friend class AStar2D;
+class AStar2D : public RefCounted {
+	GDCLASS(AStar2D, RefCounted);
 
 	struct Point {
 		Point() {}
 
 		int64_t id = 0;
-		Vector3 pos;
+		Vector2 pos;
 		real_t weight_scale = 0;
 		bool enabled = false;
 
@@ -124,9 +123,9 @@ protected:
 public:
 	int64_t get_available_point_id() const;
 
-	void add_point(int64_t p_id, const Vector3 &p_pos, real_t p_weight_scale = 1);
-	Vector3 get_point_position(int64_t p_id) const;
-	void set_point_position(int64_t p_id, const Vector3 &p_pos);
+	void add_point(int64_t p_id, const Vector2 &p_pos, real_t p_weight_scale = 1);
+	Vector2 get_point_position(int64_t p_id) const;
+	void set_point_position(int64_t p_id, const Vector2 &p_pos);
 	real_t get_point_weight_scale(int64_t p_id) const;
 	void set_point_weight_scale(int64_t p_id, real_t p_weight_scale);
 	void remove_point(int64_t p_id);
@@ -146,56 +145,6 @@ public:
 	void reserve_space(int64_t p_num_nodes);
 	void clear();
 
-	int64_t get_closest_point(const Vector3 &p_point, bool p_include_disabled = false) const;
-	Vector3 get_closest_position_in_segment(const Vector3 &p_point) const;
-
-	Vector<Vector3> get_point_path(int64_t p_from_id, int64_t p_to_id);
-	Vector<int64_t> get_id_path(int64_t p_from_id, int64_t p_to_id);
-
-	AStar3D() {}
-	~AStar3D();
-};
-
-class AStar2D : public RefCounted {
-	GDCLASS(AStar2D, RefCounted);
-	AStar3D astar;
-
-	bool _solve(AStar3D::Point *begin_point, AStar3D::Point *end_point);
-
-protected:
-	static void _bind_methods();
-
-	virtual real_t _estimate_cost(int64_t p_from_id, int64_t p_to_id);
-	virtual real_t _compute_cost(int64_t p_from_id, int64_t p_to_id);
-
-	GDVIRTUAL2RC(real_t, _estimate_cost, int64_t, int64_t)
-	GDVIRTUAL2RC(real_t, _compute_cost, int64_t, int64_t)
-
-public:
-	int64_t get_available_point_id() const;
-
-	void add_point(int64_t p_id, const Vector2 &p_pos, real_t p_weight_scale = 1);
-	Vector2 get_point_position(int64_t p_id) const;
-	void set_point_position(int64_t p_id, const Vector2 &p_pos);
-	real_t get_point_weight_scale(int64_t p_id) const;
-	void set_point_weight_scale(int64_t p_id, real_t p_weight_scale);
-	void remove_point(int64_t p_id);
-	bool has_point(int64_t p_id) const;
-	Vector<int64_t> get_point_connections(int64_t p_id);
-	PackedInt64Array get_point_ids();
-
-	void set_point_disabled(int64_t p_id, bool p_disabled = true);
-	bool is_point_disabled(int64_t p_id) const;
-
-	void connect_points(int64_t p_id, int64_t p_with_id, bool p_bidirectional = true);
-	void disconnect_points(int64_t p_id, int64_t p_with_id, bool p_bidirectional = true);
-	bool are_points_connected(int64_t p_id, int64_t p_with_id, bool p_bidirectional = true) const;
-
-	int64_t get_point_count() const;
-	int64_t get_point_capacity() const;
-	void reserve_space(int64_t p_num_nodes);
-	void clear();
-
 	int64_t get_closest_point(const Vector2 &p_point, bool p_include_disabled = false) const;
 	Vector2 get_closest_position_in_segment(const Vector2 &p_point) const;
 
@@ -203,7 +152,7 @@ public:
 	Vector<int64_t> get_id_path(int64_t p_from_id, int64_t p_to_id);
 
 	AStar2D() {}
-	~AStar2D() {}
+	~AStar2D();
 };
 
 #endif // A_STAR_H

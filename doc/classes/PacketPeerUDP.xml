@@ -120,22 +120,6 @@
 				    if data == "Time to stop":
 				        return
 				[/gdscript]
-				[csharp]
-				var socket = new PacketPeerUdp();
-				// Server
-				socket.SetDestAddress("127.0.0.1", 789);
-				socket.PutPacket("Time to stop".ToAsciiBuffer());
-
-				// Client
-				while (socket.Wait() == OK)
-				{
-				    string data = socket.GetPacket().GetStringFromASCII();
-				    if (data == "Time to stop")
-				    {
-				        return;
-				    }
-				}
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>

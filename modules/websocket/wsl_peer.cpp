@@ -29,9 +29,6 @@
 /**************************************************************************/
 
 #include "wsl_peer.h"
-
-#ifndef WEB_ENABLED
-
 #include "core/io/stream_peer_tls.h"
 
 CryptoCore::RandomGenerator *WSLPeer::_static_rng = nullptr;
@@ -844,5 +841,3 @@ WSLPeer::WSLPeer() {
 WSLPeer::~WSLPeer() {
 	close(-1);
 }
-
-#endif // WEB_ENABLED

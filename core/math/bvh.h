@@ -404,27 +404,7 @@ public:
 			return 0;
 		}
 
-		Vector<Vector3> convex_points = Geometry3D::compute_convex_mesh_points(&p_convex[0], p_convex.size());
-		if (convex_points.size() == 0) {
-			return 0;
-		}
-
-		typename BVHTREE_CLASS::CullParams params;
-		params.result_count_overall = 0;
-		params.result_max = p_result_max;
-		params.result_array = p_result_array;
-		params.subindex_array = nullptr;
-		params.tester = p_tester;
-		params.tree_collision_mask = p_tree_collision_mask;
-
-		params.hull.planes = &p_convex[0];
-		params.hull.num_planes = p_convex.size();
-		params.hull.points = &convex_points[0];
-		params.hull.num_points = convex_points.size();
-
-		tree.cull_convex(params);
-
-		return params.result_count_overall;
+		return 0;
 	}
 
 private:

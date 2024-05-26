@@ -63,6 +63,8 @@ public:
 
 	float get_margin(Side p_side) const;
 	Point2 get_offset() const;
+	virtual Point2 get_expand_margin_begin() const { return Point2(0, 0); }
+	virtual Point2 get_expand_margin_end() const { return Point2(0, 0); }
 
 	virtual void draw(RID p_canvas_item, const Rect2 &p_rect) const;
 	virtual Rect2 get_draw_rect(const Rect2 &p_rect) const;

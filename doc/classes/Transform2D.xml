@@ -56,6 +56,12 @@
 		</constructor>
 	</constructors>
 	<methods>
+		<method name="_xform" qualifiers="const">
+			<return type="Vector2" />
+			<param index="0" name="v" type="Vector2" />
+			<description>
+			</description>
+		</method>
 		<method name="affine_inverse" qualifiers="const">
 			<return type="Transform2D" />
 			<description>

@@ -68,13 +68,11 @@
 		</constant>
 		<constant name="COMPRESSION_MODE_LOSSY" value="1" enum="CompressionMode">
 		</constant>
-		<constant name="COMPRESSION_MODE_BASIS_UNIVERSAL" value="2" enum="CompressionMode">
+		<constant name="COMPRESSION_MODE_S3TC" value="2" enum="CompressionMode">
 		</constant>
-		<constant name="COMPRESSION_MODE_S3TC" value="3" enum="CompressionMode">
+		<constant name="COMPRESSION_MODE_ETC2" value="3" enum="CompressionMode">
 		</constant>
-		<constant name="COMPRESSION_MODE_ETC2" value="4" enum="CompressionMode">
-		</constant>
-		<constant name="COMPRESSION_MODE_BPTC" value="5" enum="CompressionMode">
+		<constant name="COMPRESSION_MODE_BPTC" value="4" enum="CompressionMode">
 		</constant>
 	</constants>
 </class>

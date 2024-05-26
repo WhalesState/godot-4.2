@@ -16,14 +16,6 @@
 		settings.get_setting("some/property")
 		var list_of_settings = settings.get_property_list()
 		[/gdscript]
-		[csharp]
-		EditorSettings settings = EditorInterface.Singleton.GetEditorSettings();
-		// `settings.set("some/property", value)` also works as this class overrides `_set()` internally.
-		settings.SetSetting("some/property", Value);
-		// `settings.get("some/property", value)` also works as this class overrides `_get()` internally.
-		settings.GetSetting("some/property");
-		Godot.Collections.Array&lt;Godot.Collections.Dictionary&gt; listOfSettings = settings.GetPropertyList();
-		[/csharp]
 		[/codeblocks]
 		[b]Note:[/b] This class shouldn't be instantiated directly. Instead, access the singleton using [method EditorInterface.get_editor_settings].
 	</description>
@@ -53,20 +45,6 @@
 
 				settings.add_property_info(property_info)
 				[/gdscript]
-				[csharp]
-				var settings = GetEditorInterface().GetEditorSettings();
-				settings.Set("category/property_name", 0);
-
-				var propertyInfo = new Godot.Collections.Dictionary
-				{
-				    {"name", "category/propertyName"},
-				    {"type", Variant.Type.Int},
-				    {"hint", PropertyHint.Enum},
-				    {"hint_string", "one,two,three"}
-				};
-
-				settings.AddPropertyInfo(propertyInfo);
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -220,29 +198,6 @@
 		<member name="docks/scene_tree/start_create_dialog_fully_expanded" type="bool" setter="" getter="">
 			If [code]true[/code], the Create dialog (Create New Node/Create New Resource) will start with all its sections expanded. Otherwise, sections will be collapsed until the user starts searching (which will automatically expand sections as needed).
 		</member>
-		<member name="editors/2d/bone_color1" type="Color" setter="" getter="">
-			The "start" stop of the color gradient to use for bones in the 2D skeleton editor.
-		</member>
-		<member name="editors/2d/bone_color2" type="Color" setter="" getter="">
-			The "end" stop of the color gradient to use for bones in the 2D skeleton editor.
-		</member>
-		<member name="editors/2d/bone_ik_color" type="Color" setter="" getter="">
-			The color to use for inverse kinematics-enabled bones in the 2D skeleton editor.
-		</member>
-		<member name="editors/2d/bone_outline_color" type="Color" setter="" getter="">
-			The outline color to use for non-selected bones in the 2D skeleton editor. See also [member editors/2d/bone_selected_color].
-		</member>
-		<member name="editors/2d/bone_outline_size" type="float" setter="" getter="">
-			The outline size in the 2D skeleton editor (in pixels). See also [member editors/2d/bone_width].
-			[b]Note:[/b] Changes to this value only apply after modifying a [Bone2D] node in any way, or closing and reopening the scene.
-		</member>
-		<member name="editors/2d/bone_selected_color" type="Color" setter="" getter="">
-			The color to use for selected bones in the 2D skeleton editor. See also [member editors/2d/bone_outline_color].
-		</member>
-		<member name="editors/2d/bone_width" type="float" setter="" getter="">
-			The bone width in the 2D skeleton editor (in pixels). See also [member editors/2d/bone_outline_size].
-			[b]Note:[/b] Changes to this value only apply after modifying a [Bone2D] node in any way, or closing and reopening the scene.
-		</member>
 		<member name="editors/2d/grid_color" type="Color" setter="" getter="">
 			The grid color to use in the 2D editor.
 		</member>
@@ -252,139 +207,8 @@
 		<member name="editors/2d/smart_snapping_line_color" type="Color" setter="" getter="">
 			The color to use when drawing smart snapping lines in the 2D editor. The smart snapping lines will automatically display when moving 2D nodes if smart snapping is enabled in the Snapping Options menu at the top of the 2D editor viewport.
 		</member>
-		<member name="editors/2d/use_integer_zoom_by_default" type="bool" setter="" getter="">
-			If [code]true[/code], the 2D editor will snap to integer zoom values while not holding the [kbd]Alt[/kbd] key and powers of two while holding it. If [code]false[/code], this behavior is swapped.
-		</member>
 		<member name="editors/2d/viewport_border_color" type="Color" setter="" getter="">
 			The color of the viewport border in the 2D editor. This border represents the viewport's size at the base resolution defined in the Project Settings. Objects placed outside this border will not be visible unless a [Camera2D] node is used, or unless the window is resized and the stretch mode is set to [code]disabled[/code].
-		</member>
-		<member name="editors/3d/default_fov" type="float" setter="" getter="">
-			The default camera field of view to use in the 3D editor (in degrees). The camera field of view can be adjusted on a per-scene basis using the [b]View[/b] menu at the top of the 3D editor. If a scene had its camera field of view adjusted using the [b]View[/b] menu, this setting is ignored in the scene in question. This setting is also ignored while a Camera3D node is being previewed in the editor.
-		</member>
-		<member name="editors/3d/default_z_far" type="float" setter="" getter="">
-			The default camera far clip distance to use in the 3D editor (in degrees). Higher values make it possible to view objects placed further away from the camera, at the cost of lower precision in the depth buffer (which can result in visible Z-fighting in the distance). The camera far clip distance can be adjusted on a per-scene basis using the [b]View[/b] menu at the top of the 3D editor. If a scene had its camera far clip distance adjusted using the [b]View[/b] menu, this setting is ignored in the scene in question. This setting is also ignored while a Camera3D node is being previewed in the editor.
-		</member>
-		<member name="editors/3d/default_z_near" type="float" setter="" getter="">
-			The default camera near clip distance to use in the 3D editor (in degrees). Lower values make it possible to view objects placed closer to the camera, at the cost of lower precision in the depth buffer (which can result in visible Z-fighting in the distance). The camera near clip distance can be adjusted on a per-scene basis using the [b]View[/b] menu at the top of the 3D editor. If a scene had its camera near clip distance adjusted using the [b]View[/b] menu, this setting is ignored in the scene in question. This setting is also ignored while a Camera3D node is being previewed in the editor.
-		</member>
-		<member name="editors/3d/freelook/freelook_activation_modifier" type="int" setter="" getter="">
-			The modifier key to use to enable freelook in the 3D editor (on top of pressing the right mouse button).
-			[b]Note:[/b] Regardless of this setting, the freelook toggle keyboard shortcut ([kbd]Shift + F[/kbd] by default) is always available.
-			[b]Note:[/b] On certain window managers on Linux, the [kbd]Alt[/kbd] key will be intercepted by the window manager when clicking a mouse button at the same time. This means Godot will not see the modifier key as being pressed.
-		</member>
-		<member name="editors/3d/freelook/freelook_base_speed" type="float" setter="" getter="">
-			The base 3D freelook speed in units per second. This can be adjusted by using the mouse wheel while in freelook mode, or by holding down the "fast" or "slow" modifier keys ([kbd]Shift[/kbd] and [kbd]Alt[/kbd] by default, respectively).
-		</member>
-		<member name="editors/3d/freelook/freelook_inertia" type="float" setter="" getter="">
-			The inertia of the 3D freelook camera. Higher values make the camera start and stop slower, which looks smoother but adds latency.
-		</member>
-		<member name="editors/3d/freelook/freelook_navigation_scheme" type="int" setter="" getter="">
-			The navigation scheme to use when freelook is enabled in the 3D editor. Some of the navigation schemes below may be more convenient when designing specific levels in the 3D editor.
-			- [b]Default:[/b] The "Freelook Forward", "Freelook Backward", "Freelook Up" and "Freelook Down" keys will move relative to the camera, taking its pitch angle into account for the movement.
-			- [b]Partially Axis-Locked:[/b] The "Freelook Forward" and "Freelook Backward" keys will move relative to the camera, taking its pitch angle into account for the movement. The "Freelook Up" and "Freelook Down" keys will move in an "absolute" manner, [i]not[/i] taking the camera's pitch angle into account for the movement.
-			- [b]Fully Axis-Locked:[/b] The "Freelook Forward", "Freelook Backward", "Freelook Up" and "Freelook Down" keys will move in an "absolute" manner, [i]not[/i] taking the camera's pitch angle into account for the movement.
-			See also [member editors/3d/navigation/navigation_scheme].
-		</member>
-		<member name="editors/3d/freelook/freelook_sensitivity" type="float" setter="" getter="">
-			The mouse sensitivity to use while freelook mode is active in the 3D editor. See also [member editors/3d/navigation_feel/orbit_sensitivity].
-		</member>
-		<member name="editors/3d/freelook/freelook_speed_zoom_link" type="bool" setter="" getter="">
-			If [code]true[/code], freelook speed is linked to the zoom value used in the camera orbit mode in the 3D editor.
-		</member>
-		<member name="editors/3d/grid_division_level_bias" type="float" setter="" getter="">
-			The grid division bias to use in the 3D editor. Negative values will cause small grid divisions to appear earlier, whereas positive values will cause small grid divisions to appear later.
-		</member>
-		<member name="editors/3d/grid_division_level_max" type="int" setter="" getter="">
-			The largest grid division to use in the 3D editor. Together with [member editors/3d/primary_grid_steps], this determines how large the grid divisions can be. The grid divisions will not be able to get larger than [code]primary_grid_steps ^ grid_division_level_max[/code] units. By default, when [member editors/3d/primary_grid_steps] is [code]8[/code], this means grid divisions cannot get larger than [code]64[/code] units each (so primary grid lines are [code]512[/code] units apart), no matter how far away the camera is from the grid.
-		</member>
-		<member name="editors/3d/grid_division_level_min" type="int" setter="" getter="">
-			The smallest grid division to use in the 3D editor. Together with [member editors/3d/primary_grid_steps], this determines how small the grid divisions can be. The grid divisions will not be able to get smaller than [code]primary_grid_steps ^ grid_division_level_min[/code] units. By default, this means grid divisions cannot get smaller than 1 unit each, no matter how close the camera is from the grid.
-		</member>
-		<member name="editors/3d/grid_size" type="int" setter="" getter="">
-			The grid size in units. Higher values prevent the grid from appearing "cut off" at certain angles, but make the grid more demanding to render. Depending on the camera's position, the grid may not be fully visible since a shader is used to fade it progressively.
-		</member>
-		<member name="editors/3d/grid_xy_plane" type="bool" setter="" getter="">
-			If [code]true[/code], render the grid on an XY plane. This can be useful for 3D side-scrolling games.
-		</member>
-		<member name="editors/3d/grid_xz_plane" type="bool" setter="" getter="">
-			If [code]true[/code], render the grid on an XZ plane.
-		</member>
-		<member name="editors/3d/grid_yz_plane" type="bool" setter="" getter="">
-			If [code]true[/code], render the grid on a YZ plane. This can be useful for 3D side-scrolling games.
-		</member>
-		<member name="editors/3d/navigation/emulate_3_button_mouse" type="bool" setter="" getter="">
-			If [code]true[/code], enables 3-button mouse emulation mode. This is useful on laptops when using a trackpad.
-			When 3-button mouse emulation mode is enabled, the pan, zoom and orbit modifiers can always be used in the 3D editor viewport, even when not holding down any mouse button.
-			[b]Note:[/b] No matter the orbit modifier configured in [member editors/3d/navigation/orbit_modifier], [kbd]Alt[/kbd] will always remain usable for orbiting in this mode to improve usability with graphics tablets.
-		</member>
-		<member name="editors/3d/navigation/emulate_numpad" type="bool" setter="" getter="">
-			If [code]true[/code], allows using the top row [kbd]0[/kbd]-[kbd]9[/kbd] keys to function as their equivalent numpad keys for 3D editor navigation. This should be enabled on keyboards that have no numeric keypad available.
-		</member>
-		<member name="editors/3d/navigation/invert_x_axis" type="bool" setter="" getter="">
-			If [code]true[/code], invert the horizontal mouse axis when panning or orbiting in the 3D editor. This setting does [i]not[/i] apply to freelook mode.
-		</member>
-		<member name="editors/3d/navigation/invert_y_axis" type="bool" setter="" getter="">
-			If [code]true[/code], invert the vertical mouse axis when panning, orbiting, or using freelook mode in the 3D editor.
-		</member>
-		<member name="editors/3d/navigation/navigation_scheme" type="int" setter="" getter="">
-			The navigation scheme to use in the 3D editor. Changing this setting will affect the mouse buttons that must be held down to perform certain operations in the 3D editor viewport.
-			- [b]Godot[/b] Middle mouse button to orbit, [kbd]Shift + Middle mouse button[/kbd] to pan. [kbd]Mouse wheel[/kbd] to zoom.
-			- [b]Maya:[/b] [kbd]Alt + Left mouse button[/kbd] to orbit. [kbd]Middle mouse button[/kbd] to pan, [kbd]Shift + Middle mouse button[/kbd] to pan 10 times faster. [kbd]Mouse wheel[/kbd] to zoom.
-			- [b]Modo:[/b] [kbd]Alt + Left mouse button[/kbd] to orbit. [kbd]Alt + Shift + Left mouse button[/kbd] to pan. [kbd]Ctrl + Alt + Left mouse button[/kbd] to zoom.
-			See also [member editors/3d/freelook/freelook_navigation_scheme].
-			[b]Note:[/b] On certain window managers on Linux, the [kbd]Alt[/kbd] key will be intercepted by the window manager when clicking a mouse button at the same time. This means Godot will not see the modifier key as being pressed.
-		</member>
-		<member name="editors/3d/navigation/orbit_modifier" type="int" setter="" getter="">
-			The modifier key that must be held to orbit in the 3D editor.
-			[b]Note:[/b] If [member editors/3d/navigation/emulate_3_button_mouse] is [code]true[/code], [kbd]Alt[/kbd] will always remain usable for orbiting to improve usability with graphics tablets.
-			[b]Note:[/b] On certain window managers on Linux, the [kbd]Alt[/kbd] key will be intercepted by the window manager when clicking a mouse button at the same time. This means Godot will not see the modifier key as being pressed.
-		</member>
-		<member name="editors/3d/navigation/pan_modifier" type="int" setter="" getter="">
-			The modifier key that must be held to pan in the 3D editor.
-			[b]Note:[/b] On certain window managers on Linux, the [kbd]Alt[/kbd] key will be intercepted by the window manager when clicking a mouse button at the same time. This means Godot will not see the modifier key as being pressed.
-		</member>
-		<member name="editors/3d/navigation/warped_mouse_panning" type="bool" setter="" getter="">
-			If [code]true[/code], warps the mouse around the 3D viewport while panning in the 3D editor. This makes it possible to pan over a large area without having to exit panning and adjust the mouse cursor.
-		</member>
-		<member name="editors/3d/navigation/zoom_modifier" type="int" setter="" getter="">
-			The modifier key that must be held to zoom in the 3D editor.
-			[b]Note:[/b] On certain window managers on Linux, the [kbd]Alt[/kbd] key will be intercepted by the window manager when clicking a mouse button at the same time. This means Godot will not see the modifier key as being pressed.
-		</member>
-		<member name="editors/3d/navigation/zoom_style" type="int" setter="" getter="">
-			The mouse cursor movement direction to use when zooming by moving the mouse. This does not affect zooming with the mouse wheel.
-		</member>
-		<member name="editors/3d/navigation_feel/orbit_inertia" type="float" setter="" getter="">
-			The inertia to use when orbiting in the 3D editor. Higher values make the camera start and stop slower, which looks smoother but adds latency.
-		</member>
-		<member name="editors/3d/navigation_feel/orbit_sensitivity" type="float" setter="" getter="">
-			The mouse sensitivity to use when orbiting in the 3D editor. See also [member editors/3d/freelook/freelook_sensitivity].
-		</member>
-		<member name="editors/3d/navigation_feel/translation_inertia" type="float" setter="" getter="">
-			The inertia to use when panning in the 3D editor. Higher values make the camera start and stop slower, which looks smoother but adds latency.
-		</member>
-		<member name="editors/3d/navigation_feel/zoom_inertia" type="float" setter="" getter="">
-			The inertia to use when zooming in the 3D editor. Higher values make the camera start and stop slower, which looks smoother but adds latency.
-		</member>
-		<member name="editors/3d/primary_grid_color" type="Color" setter="" getter="">
-			The color to use for the primary 3D grid. The color's alpha channel affects the grid's opacity.
-		</member>
-		<member name="editors/3d/primary_grid_steps" type="int" setter="" getter="">
-			If set above 0, where a primary grid line should be drawn. By default, primary lines are configured to be more visible than secondary lines. This helps with measurements in the 3D editor. See also [member editors/3d/primary_grid_color] and [member editors/3d/secondary_grid_color].
-		</member>
-		<member name="editors/3d/secondary_grid_color" type="Color" setter="" getter="">
-			The color to use for the secondary 3D grid. This is generally a less visible color than [member editors/3d/primary_grid_color]. The color's alpha channel affects the grid's opacity.
-		</member>
-		<member name="editors/3d/selection_box_color" type="Color" setter="" getter="">
-			The color to use for the selection box that surrounds selected nodes in the 3D editor viewport. The color's alpha channel influences the selection box's opacity.
-		</member>
-		<member name="editors/3d_gizmos/gizmo_colors/instantiated" type="Color" setter="" getter="">
-			The color override to use for 3D editor gizmos if the [Node3D] in question is part of an instantiated scene file (from the perspective of the current scene).
-		</member>
-		<member name="editors/3d_gizmos/gizmo_colors/joint" type="Color" setter="" getter="">
-			The 3D editor gizmo color for [Joint3D]s and [PhysicalBone3D]s.
-		</member>
-		<member name="editors/3d_gizmos/gizmo_colors/shape" type="Color" setter="" getter="">
-			The 3D editor gizmo color for [CollisionShape3D]s, [VehicleWheel3D]s, [RayCast3D]s and [SpringArm3D]s.
 		</member>
 		<member name="editors/animation/autorename_animation_tracks" type="bool" setter="" getter="">
 			If [code]true[/code], automatically updates animation tracks' target paths when renaming or reparenting nodes in the Scene tree dock.
@@ -401,9 +225,6 @@
 		<member name="editors/animation/onion_layers_past_color" type="Color" setter="" getter="">
 			The modulate color to use for "past" frames displayed in the animation editor's onion skinning feature.
 		</member>
-		<member name="editors/grid_map/pick_distance" type="float" setter="" getter="">
-			The maximum distance at which tiles can be placed on a GridMap, relative to the camera position (in 3D units).
-		</member>
 		<member name="editors/panning/2d_editor_pan_speed" type="int" setter="" getter="">
 			The panning speed when using the mouse wheel or touchscreen events in the 2D editor. This setting does not apply to panning by holding down the middle or right mouse buttons.
 		</member>
@@ -417,13 +238,13 @@
 			If [code]true[/code], allows panning by holding down [kbd]Space[/kbd] in the 2D editor viewport (in addition to panning with the middle or right mouse buttons). If [code]false[/code], the left mouse button must be held down while holding down [kbd]Space[/kbd] to pan in the 2D editor viewport.
 		</member>
 		<member name="editors/panning/sub_editors_panning_scheme" type="int" setter="" getter="">
-			Controls whether the mouse wheel scroll zooms or pans in subeditors. The list of affected subeditors is: animation blend tree editor, [Polygon2D] editor, tileset editor, texture region editor and visual shader editor. See also [member editors/panning/2d_editor_panning_scheme] and [member editors/panning/animation_editors_panning_scheme].
+			Controls whether the mouse wheel scroll zooms or pans in subeditors. The list of affected subeditors is: animation blend tree editor, Polygon2D editor and texture region editor. See also [member editors/panning/2d_editor_panning_scheme] and [member editors/panning/animation_editors_panning_scheme].
 		</member>
 		<member name="editors/panning/warped_mouse_panning" type="bool" setter="" getter="">
 			If [code]true[/code], warps the mouse around the 2D viewport while panning in the 2D editor. This makes it possible to pan over a large area without having to exit panning and adjust the mouse cursor.
 		</member>
 		<member name="editors/polygon_editor/point_grab_radius" type="int" setter="" getter="">
-			The radius in which points can be selected in the [Polygon2D] and [CollisionPolygon2D] editors (in pixels). Higher values make it easier to select points quickly, but can make it more difficult to select the expected point when several points are located close to each other.
+			The radius in which points can be selected in the Polygon2D editor (in pixels). Higher values make it easier to select points quickly, but can make it more difficult to select the expected point when several points are located close to each other.
 		</member>
 		<member name="editors/polygon_editor/show_previous_outline" type="bool" setter="" getter="">
 			If [code]true[/code], displays the polygon's previous shape in the 2D polygon editors with an opaque gray outline. This outline is displayed while dragging a point until the left mouse button is released.
@@ -431,21 +252,11 @@
 		<member name="editors/shader_editor/behavior/files/restore_shaders_on_load" type="bool" setter="" getter="">
 			If [code]true[/code], reopens shader files that were open in the shader editor when the project was last closed.
 		</member>
-		<member name="editors/tiles_editor/display_grid" type="bool" setter="" getter="">
-			If [code]true[/code], displays a grid while the TileMap editor is active. See also [member editors/tiles_editor/grid_color].
-		</member>
-		<member name="editors/tiles_editor/grid_color" type="Color" setter="" getter="">
-			The color to use for the TileMap editor's grid.
-			[b]Note:[/b] Only effective if [member editors/tiles_editor/display_grid] is [code]true[/code].
-		</member>
 		<member name="editors/visual_editors/lines_curvature" type="float" setter="" getter="">
 			The curvature to use for connection lines in the visual shader editor. Higher values will make connection lines appear more curved, with values above [code]0.5[/code] resulting in more "angular" turns in the middle of connection lines.
 		</member>
 		<member name="editors/visual_editors/minimap_opacity" type="float" setter="" getter="">
 			The opacity of the minimap displayed in the bottom-right corner of the visual shader editor.
-		</member>
-		<member name="editors/visual_editors/visual_shader/port_preview_size" type="int" setter="" getter="">
-			The size to use for port previews in the visual shader uniforms (toggled by clicking the "eye" icon next to an output). The value is defined in pixels at 100% zoom, and will scale with zoom automatically.
 		</member>
 		<member name="filesystem/directories/autoscan_project_path" type="String" setter="" getter="">
 			The folder where projects should be scanned for (recursively), in a way similar to the project manager's [b]Scan[/b] button. This can be set to the same value as [member filesystem/directories/default_project_path] for convenience.
@@ -453,9 +264,6 @@
 		</member>
 		<member name="filesystem/directories/default_project_path" type="String" setter="" getter="">
 			The folder where new projects should be created by default when clicking the project manager's [b]New Project[/b] button. This can be set to the same value as [member filesystem/directories/autoscan_project_path] for convenience.
-		</member>
-		<member name="filesystem/external_programs/3d_model_editor" type="String" setter="" getter="">
-			The program that opens 3D model scene files when clicking "Open in External Program" option in Filesystem Dock. If not specified, the file will be opened in the system's default program.
 		</member>
 		<member name="filesystem/external_programs/audio_editor" type="String" setter="" getter="">
 			The program that opens audio files when clicking "Open in External Program" option in Filesystem Dock. If not specified, the file will be opened in the system's default program.
@@ -477,32 +285,12 @@
 		<member name="filesystem/file_dialog/thumbnail_size" type="int" setter="" getter="">
 			The thumbnail size to use in the editor's file dialogs (in pixels). See also [member docks/filesystem/thumbnail_size].
 		</member>
-		<member name="filesystem/import/blender/blender3_path" type="String" setter="" getter="">
-			The path to the directory containing the Blender executable used for converting the Blender 3D scene files [code].blend[/code] to glTF 2.0 format during import. Blender 3.0 or later is required.
-			To enable this feature for your specific project, use [member ProjectSettings.filesystem/import/blender/enabled].
-		</member>
-		<member name="filesystem/import/blender/rpc_port" type="int" setter="" getter="">
-			The port number used for Remote Procedure Call (RPC) communication with Godot's created process of the blender executable.
-			Setting this to 0 effectively disables communication with Godot and the blender process, making performance slower.
-		</member>
-		<member name="filesystem/import/blender/rpc_server_uptime" type="float" setter="" getter="">
-			The maximum idle uptime (in seconds) of the Blender process.
-			This prevents Godot from having to create a new process for each import within the given seconds.
-		</member>
-		<member name="filesystem/import/fbx/fbx2gltf_path" type="String" setter="" getter="">
-			The path to the FBX2glTF executable used for converting Autodesk FBX 3D scene files [code].fbx[/code] to glTF 2.0 format during import.
-			To enable this feature for your specific project, use [member ProjectSettings.filesystem/import/fbx/enabled].
-		</member>
 		<member name="filesystem/on_save/compress_binary_resources" type="bool" setter="" getter="">
 			If [code]true[/code], uses lossless compression for binary resources.
 		</member>
 		<member name="filesystem/on_save/safe_save_on_backup_then_rename" type="bool" setter="" getter="">
 			If [code]true[/code], when saving a file, the editor will rename the old file to a different name, save a new file, then only remove the old file once the new file has been saved. This makes loss of data less likely to happen if the editor or operating system exits unexpectedly while saving (e.g. due to a crash or power outage).
 			[b]Note:[/b] On Windows, this feature can interact negatively with certain antivirus programs. In this case, you may have to set this to [code]false[/code] to prevent file locking issues.
-		</member>
-		<member name="filesystem/tools/oidn/oidn_denoise_path" type="String" setter="" getter="">
-			The path to the directory containing the Open Image Denoise (OIDN) executable, used optionally for denoising lightmaps. It can be downloaded from [url=https://www.openimagedenoise.org/downloads.html]openimagedenoise.org[/url].
-			To enable this feature for your specific project, use [member ProjectSettings.rendering/lightmapping/denoising/denoiser].
 		</member>
 		<member name="interface/editor/accept_dialog_cancel_ok_buttons" type="int" setter="" getter="">
 			How to position the Cancel and OK buttons in the editor's [AcceptDialog]s. Different platforms have different standard behaviors for this, which can be overridden using this setting. This is useful if you use Godot both on Windows and macOS/Linux and your Godot muscle memory is stronger than your OS specific one.
@@ -563,7 +351,7 @@
 			- [b]None:[/b] Don't use font hinting when rasterizing the font. This results in a smooth font, but it can look blurry.
 			- [b]Light:[/b] Use hinting on the X axis only. This is a compromise between font sharpness and smoothness.
 			- [b]Normal:[/b] Use hinting on both X and Y axes. This results in a sharp font, but it doesn't look very smooth.
-			If set to [b]Auto[/b], the font hinting mode will be set to match the current operating system in use. This means the [b]Light[/b] hinting mode will be used on Windows and Linux, and the [b]None[/b] hinting mode will be used on macOS.
+			If set to [b]Auto[/b], the font hinting mode will be set to match the current operating system in use. This means the [b]Normal[/b] hinting mode will be used on Windows and Linux, and the [b]None[/b] hinting mode will be used on macOS.
 		</member>
 		<member name="interface/editor/font_subpixel_positioning" type="int" setter="" getter="">
 			The subpixel positioning mode to use when rendering editor font glyphs. This affects both the main and code fonts. [b]Disabled[/b] is the fastest to render and uses the least memory. [b]Auto[/b] only uses subpixel positioning for small font sizes (where the benefit is the most noticeable). [b]One Half of a Pixel[/b] and [b]One Quarter of a Pixel[/b] force the same subpixel positioning mode for all editor fonts, regardless of their size (with [b]One Quarter of a Pixel[/b] being the highest-quality option).
@@ -732,10 +520,6 @@
 		<member name="run/output/font_size" type="int" setter="" getter="">
 			The size of the font in the [b]Output[/b] panel at the bottom of the editor. This setting does not impact the font size of the script editor (see [member interface/editor/code_font_size]).
 		</member>
-		<member name="run/window_placement/android_window" type="int" setter="" getter="">
-			The Android window to display the project on when starting the project from the editor.
-			[b]Note:[/b] Only available in the Android editor.
-		</member>
 		<member name="run/window_placement/rect" type="int" setter="" getter="">
 			The window mode to use to display the project when starting the project from the editor.
 		</member>
@@ -877,9 +661,6 @@
 		<member name="text_editor/completion/use_single_quotes" type="bool" setter="" getter="">
 			If [code]true[/code], performs string autocompletion with single quotes. If [code]false[/code], performs string autocompletion with double quotes (which matches the [url=$DOCS_URL/tutorials/scripting/gdscript/gdscript_styleguide.html]GDScript style guide[/url]).
 		</member>
-		<member name="text_editor/help/class_reference_examples" type="int" setter="" getter="">
-			Controls which multi-line code blocks should be displayed in the editor help. This setting does not affect single-line code literals in the editor help.
-		</member>
 		<member name="text_editor/help/help_font_size" type="int" setter="" getter="">
 			The font size to use for the editor help (built-in class reference).
 		</member>
@@ -933,6 +714,10 @@
 			The script editor's comment color.
 			[b]Note:[/b] In GDScript, unlike Python, multiline strings are not considered to be comments, and will use the string highlighting color instead.
 		</member>
+		<member name="text_editor/theme/highlighting/comment_question" type="Color" setter="" getter="">
+		</member>
+		<member name="text_editor/theme/highlighting/comment_warning" type="Color" setter="" getter="">
+		</member>
 		<member name="text_editor/theme/highlighting/completion_background_color" type="Color" setter="" getter="">
 			The script editor's autocompletion box background color.
 		</member>
@@ -958,7 +743,7 @@
 			The script editor's background color for the line the caret is currently on. This should be set to a translucent color so that it can display on top of other line color modifiers such as [member text_editor/theme/highlighting/mark_color].
 		</member>
 		<member name="text_editor/theme/highlighting/doc_comment_color" type="Color" setter="" getter="">
-			The script editor's documentation comment color. In GDScript, this is used for comments starting with [code]##[/code]. In C#, this is used for comments starting with [code]///[/code] or [code]/**[/code].
+			The script editor's documentation comment color. In GDScript, this is used for comments starting with [code]##[/code].
 		</member>
 		<member name="text_editor/theme/highlighting/engine_type_color" type="Color" setter="" getter="">
 			The script editor's engine type color ([Vector2], [Vector3], [Color], ...).

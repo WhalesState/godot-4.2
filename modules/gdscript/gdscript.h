@@ -108,7 +108,6 @@ class GDScript : public Script {
 	HashMap<StringName, GDScriptFunction *> member_functions;
 	HashMap<StringName, Ref<GDScript>> subclasses;
 	HashMap<StringName, MethodInfo> _signals;
-	Dictionary rpc_config;
 
 	struct LambdaInfo {
 		int capture_count;
@@ -319,8 +318,6 @@ public:
 	virtual void get_constants(HashMap<StringName, Variant> *p_constants) override;
 	virtual void get_members(HashSet<StringName> *p_members) override;
 
-	virtual const Variant get_rpc_config() const override;
-
 	void unload_static() const;
 
 #ifdef TOOLS_ENABLED
@@ -379,8 +376,6 @@ public:
 	void set_path(const String &p_path);
 
 	void reload_members();
-
-	virtual const Variant get_rpc_config() const;
 
 	GDScriptInstance();
 	~GDScriptInstance();
@@ -542,9 +537,6 @@ public:
 	virtual Vector<ScriptTemplate> get_built_in_templates(StringName p_object) override;
 	virtual bool validate(const String &p_script, const String &p_path = "", List<String> *r_functions = nullptr, List<ScriptLanguage::ScriptError> *r_errors = nullptr, List<ScriptLanguage::Warning> *r_warnings = nullptr, HashSet<int> *r_safe_lines = nullptr) const override;
 	virtual Script *create_script() const override;
-#ifndef DISABLE_DEPRECATED
-	virtual bool has_named_classes() const override { return false; }
-#endif
 	virtual bool supports_builtin_mode() const override;
 	virtual bool supports_documentation() const override;
 	virtual bool can_inherit_from_file() const override { return true; }

@@ -38,7 +38,6 @@
 #include "scene/gui/scroll_container.h"
 
 class CheckBox;
-class EditorAssetLibrary;
 class EditorFileDialog;
 class HFlowContainer;
 class PanelContainer;
@@ -115,7 +114,6 @@ private:
 
 	void _text_changed(const String &p_text);
 	void _nonempty_confirmation_ok_pressed();
-	void _renderer_selected();
 	void _remove_created_folder();
 
 	void ok_pressed() override;
@@ -358,7 +356,6 @@ class ProjectManager : public Control {
 	Button *about_btn = nullptr;
 
 	VBoxContainer *local_projects_vb = nullptr;
-	EditorAssetLibrary *asset_library = nullptr;
 
 	Ref<StyleBox> tag_stylebox;
 
@@ -374,7 +371,6 @@ class ProjectManager : public Control {
 	ConfirmationDialog *erase_missing_ask = nullptr;
 	ConfirmationDialog *multi_open_ask = nullptr;
 	ConfirmationDialog *multi_run_ask = nullptr;
-	ConfirmationDialog *ask_full_convert_dialog = nullptr;
 	ConfirmationDialog *ask_update_settings = nullptr;
 	ConfirmationDialog *open_templates = nullptr;
 	EditorAbout *about = nullptr;
@@ -385,7 +381,6 @@ class ProjectManager : public Control {
 	AcceptDialog *dialog_error = nullptr;
 	ProjectDialog *npdialog = nullptr;
 
-	Button *full_convert_button = nullptr;
 	OptionButton *language_btn = nullptr;
 	LinkButton *version_btn = nullptr;
 
@@ -401,14 +396,11 @@ class ProjectManager : public Control {
 	LineEdit *new_tag_name = nullptr;
 	Label *tag_error = nullptr;
 
-	void _open_asset_library();
 	void _scan_projects();
 	void _run_project();
 	void _run_project_confirm();
 	void _open_selected_projects();
 	void _open_selected_projects_ask();
-	void _full_convert_button_pressed();
-	void _perform_full_project_conversion();
 	void _import_project();
 	void _new_project();
 	void _rename_project();

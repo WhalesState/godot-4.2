@@ -379,32 +379,6 @@ Error decode_variant(Variant &r_variant, const uint8_t *p_buffer, int p_len, int
 			r_variant = val;
 
 		} break;
-		case Variant::QUATERNION: {
-			Quaternion val;
-			if (type & ENCODE_FLAG_64) {
-				ERR_FAIL_COND_V((size_t)len < sizeof(double) * 4, ERR_INVALID_DATA);
-				val.x = decode_double(&buf[0]);
-				val.y = decode_double(&buf[sizeof(double)]);
-				val.z = decode_double(&buf[sizeof(double) * 2]);
-				val.w = decode_double(&buf[sizeof(double) * 3]);
-
-				if (r_len) {
-					(*r_len) += sizeof(double) * 4;
-				}
-			} else {
-				ERR_FAIL_COND_V((size_t)len < sizeof(float) * 4, ERR_INVALID_DATA);
-				val.x = decode_float(&buf[0]);
-				val.y = decode_float(&buf[sizeof(float)]);
-				val.z = decode_float(&buf[sizeof(float) * 2]);
-				val.w = decode_float(&buf[sizeof(float) * 3]);
-
-				if (r_len) {
-					(*r_len) += sizeof(float) * 4;
-				}
-			}
-			r_variant = val;
-
-		} break;
 		case Variant::AABB: {
 			AABB val;
 			if (type & ENCODE_FLAG_64) {
@@ -1161,7 +1135,6 @@ Error encode_variant(const Variant &p_variant, uint8_t *r_buffer, int &r_len, bo
 		case Variant::TRANSFORM2D:
 		case Variant::TRANSFORM3D:
 		case Variant::PROJECTION:
-		case Variant::QUATERNION:
 		case Variant::PLANE:
 		case Variant::BASIS:
 		case Variant::RECT2:
@@ -1386,18 +1359,6 @@ Error encode_variant(const Variant &p_variant, uint8_t *r_buffer, int &r_len, bo
 				encode_real(p.normal.y, &buf[sizeof(real_t)]);
 				encode_real(p.normal.z, &buf[sizeof(real_t) * 2]);
 				encode_real(p.d, &buf[sizeof(real_t) * 3]);
-			}
-
-			r_len += 4 * sizeof(real_t);
-
-		} break;
-		case Variant::QUATERNION: {
-			if (buf) {
-				Quaternion q = p_variant;
-				encode_real(q.x, &buf[0]);
-				encode_real(q.y, &buf[sizeof(real_t)]);
-				encode_real(q.z, &buf[sizeof(real_t) * 2]);
-				encode_real(q.w, &buf[sizeof(real_t) * 3]);
 			}
 
 			r_len += 4 * sizeof(real_t);

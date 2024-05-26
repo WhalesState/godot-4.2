@@ -125,17 +125,6 @@ public:
 
 	virtual void base_update_dependency(RID p_base, DependencyTracker *p_instance) override;
 
-	/* VISIBILITY NOTIFIER */
-	virtual RID visibility_notifier_allocate() override;
-	virtual void visibility_notifier_initialize(RID p_notifier) override;
-	virtual void visibility_notifier_free(RID p_notifier) override;
-
-	virtual void visibility_notifier_set_aabb(RID p_notifier, const AABB &p_aabb) override;
-	virtual void visibility_notifier_set_callbacks(RID p_notifier, const Callable &p_enter_callbable, const Callable &p_exit_callable) override;
-
-	virtual AABB visibility_notifier_get_aabb(RID p_notifier) const override;
-	virtual void visibility_notifier_call(RID p_notifier, bool p_enter, bool p_deferred) override;
-
 	/* TIMING */
 
 #define MAX_QUERIES 256
@@ -180,7 +169,6 @@ public:
 	virtual uint64_t get_rendering_info(RS::RenderingInfo p_info) override;
 	virtual String get_video_adapter_name() const override;
 	virtual String get_video_adapter_vendor() const override;
-	virtual RenderingDevice::DeviceType get_video_adapter_type() const override;
 	virtual String get_video_adapter_api_version() const override;
 
 	virtual Size2i get_maximum_viewport_size() const override;

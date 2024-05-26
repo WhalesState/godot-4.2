@@ -51,9 +51,7 @@
 #include "editor/inspector_dock.h"
 #include "editor/plugins/canvas_item_editor_plugin.h"
 #include "editor/plugins/editor_debugger_plugin.h"
-#include "editor/plugins/node_3d_editor_plugin.h"
 #include "main/performance.h"
-#include "scene/3d/camera_3d.h"
 #include "scene/debugger/scene_debugger.h"
 #include "scene/gui/dialogs.h"
 #include "scene/gui/grid_container.h"
@@ -903,24 +901,6 @@ void ScriptEditorDebugger::_notification(int p_what) {
 					Array msg;
 					msg.push_back(transform);
 					_put_msg("scene:override_camera_2D:transform", msg);
-
-				} else if (camera_override >= CameraOverride::OVERRIDE_3D_1) {
-					int viewport_idx = camera_override - CameraOverride::OVERRIDE_3D_1;
-					Node3DEditorViewport *viewport = Node3DEditor::get_singleton()->get_editor_viewport(viewport_idx);
-					Camera3D *const cam = viewport->get_camera_3d();
-
-					Array msg;
-					msg.push_back(cam->get_camera_transform());
-					if (cam->get_projection() == Camera3D::PROJECTION_ORTHOGONAL) {
-						msg.push_back(false);
-						msg.push_back(cam->get_size());
-					} else {
-						msg.push_back(true);
-						msg.push_back(cam->get_fov());
-					}
-					msg.push_back(cam->get_near());
-					msg.push_back(cam->get_far());
-					_put_msg("scene:override_camera_3D:transform", msg);
 				}
 				if (is_breaked() && can_request_idle_draw) {
 					_put_msg("servers:draw", Array());

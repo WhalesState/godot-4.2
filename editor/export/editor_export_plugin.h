@@ -55,14 +55,6 @@ class EditorExportPlugin : public RefCounted {
 	Vector<ExtraFile> extra_files;
 	bool skipped = false;
 
-	Vector<String> ios_frameworks;
-	Vector<String> ios_embedded_frameworks;
-	Vector<String> ios_project_static_libs;
-	String ios_plist_content;
-	String ios_linker_flags;
-	Vector<String> ios_bundle_files;
-	String ios_cpp_code;
-
 	Vector<String> macos_plugin_files;
 
 	_FORCE_INLINE_ void _clear() {
@@ -72,12 +64,6 @@ class EditorExportPlugin : public RefCounted {
 	}
 
 	_FORCE_INLINE_ void _export_end() {
-		ios_frameworks.clear();
-		ios_embedded_frameworks.clear();
-		ios_bundle_files.clear();
-		ios_plist_content = "";
-		ios_linker_flags = "";
-		ios_cpp_code = "";
 		macos_plugin_files.clear();
 	}
 
@@ -95,13 +81,6 @@ protected:
 	void add_file(const String &p_path, const Vector<uint8_t> &p_file, bool p_remap);
 	void add_shared_object(const String &p_path, const Vector<String> &tags, const String &p_target = String());
 
-	void add_ios_framework(const String &p_path);
-	void add_ios_embedded_framework(const String &p_path);
-	void add_ios_project_static_lib(const String &p_path);
-	void add_ios_plist_content(const String &p_plist_content);
-	void add_ios_linker_flags(const String &p_flags);
-	void add_ios_bundle_file(const String &p_path);
-	void add_ios_cpp_code(const String &p_code);
 	void add_macos_plugin_file(const String &p_path);
 
 	void skip();
@@ -134,13 +113,6 @@ protected:
 
 	GDVIRTUAL1RC(bool, _supports_platform, const Ref<EditorExportPlatform> &);
 
-	GDVIRTUAL2RC(PackedStringArray, _get_android_dependencies, const Ref<EditorExportPlatform> &, bool);
-	GDVIRTUAL2RC(PackedStringArray, _get_android_dependencies_maven_repos, const Ref<EditorExportPlatform> &, bool);
-	GDVIRTUAL2RC(PackedStringArray, _get_android_libraries, const Ref<EditorExportPlatform> &, bool);
-	GDVIRTUAL2RC(String, _get_android_manifest_activity_element_contents, const Ref<EditorExportPlatform> &, bool);
-	GDVIRTUAL2RC(String, _get_android_manifest_application_element_contents, const Ref<EditorExportPlatform> &, bool);
-	GDVIRTUAL2RC(String, _get_android_manifest_element_contents, const Ref<EditorExportPlatform> &, bool);
-
 	virtual bool _begin_customize_resources(const Ref<EditorExportPlatform> &p_platform, const Vector<String> &p_features); // Return true if this plugin does property export customization
 	virtual Ref<Resource> _customize_resource(const Ref<Resource> &p_resource, const String &p_path); // If nothing is returned, it means do not touch (nothing changed). If something is returned (either the same or a different resource) it means changes are made.
 
@@ -161,21 +133,6 @@ public:
 	virtual String get_name() const;
 
 	virtual bool supports_platform(const Ref<EditorExportPlatform> &p_export_platform) const;
-
-	virtual PackedStringArray get_android_dependencies(const Ref<EditorExportPlatform> &p_export_platform, bool p_debug) const;
-	virtual PackedStringArray get_android_dependencies_maven_repos(const Ref<EditorExportPlatform> &p_export_platform, bool p_debug) const;
-	virtual PackedStringArray get_android_libraries(const Ref<EditorExportPlatform> &p_export_platform, bool p_debug) const;
-	virtual String get_android_manifest_activity_element_contents(const Ref<EditorExportPlatform> &p_export_platform, bool p_debug) const;
-	virtual String get_android_manifest_application_element_contents(const Ref<EditorExportPlatform> &p_export_platform, bool p_debug) const;
-	virtual String get_android_manifest_element_contents(const Ref<EditorExportPlatform> &p_export_platform, bool p_debug) const;
-
-	Vector<String> get_ios_frameworks() const;
-	Vector<String> get_ios_embedded_frameworks() const;
-	Vector<String> get_ios_project_static_libs() const;
-	String get_ios_plist_content() const;
-	String get_ios_linker_flags() const;
-	Vector<String> get_ios_bundle_files() const;
-	String get_ios_cpp_code() const;
 	const Vector<String> &get_macos_plugin_files() const;
 	Variant get_option(const StringName &p_name) const;
 

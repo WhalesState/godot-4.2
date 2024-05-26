@@ -71,6 +71,8 @@ public:
 	void set_expand_margin_all(float p_expand_margin_size);
 	void set_expand_margin_individual(float p_left, float p_top, float p_right, float p_bottom);
 	float get_expand_margin(Side p_expand_side) const;
+	Point2 get_expand_margin_begin() const override;
+	Point2 get_expand_margin_end() const override;
 
 	void set_region_rect(const Rect2 &p_region_rect);
 	Rect2 get_region_rect() const;

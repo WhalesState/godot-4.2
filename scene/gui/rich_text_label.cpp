@@ -29,7 +29,6 @@
 /**************************************************************************/
 
 #include "rich_text_label.h"
-#include "rich_text_label.compat.inc"
 
 #include "core/input/input_map.h"
 #include "core/math/math_defs.h"
@@ -1143,7 +1142,7 @@ int RichTextLabel::_draw_line(ItemFrame *p_frame, int p_line, const Vector2 &p_o
 			}
 
 			if (is_inside_tree() && get_viewport()->is_snap_2d_transforms_to_pixel_enabled()) {
-				fx_offset = fx_offset.round();
+				fx_offset = fx_offset.floor();
 			}
 			Vector2 char_off = char_xform.get_origin();
 
@@ -1418,7 +1417,7 @@ int RichTextLabel::_draw_line(ItemFrame *p_frame, int p_line, const Vector2 &p_o
 			}
 
 			if (is_inside_tree() && get_viewport()->is_snap_2d_transforms_to_pixel_enabled()) {
-				fx_offset = fx_offset.round();
+				fx_offset = fx_offset.floor();
 			}
 			Vector2 char_off = char_xform.get_origin();
 
@@ -2239,7 +2238,6 @@ void RichTextLabel::gui_input(const Ref<InputEvent> &p_event) {
 			queue_redraw();
 		}
 
-		_find_click(main, m->get_position(), nullptr, nullptr, &c_item, nullptr, &outside, true);
 		Variant meta;
 		ItemMeta *item_meta;
 		if (c_item && !outside && _find_meta(c_item, &meta, &item_meta)) {
@@ -5784,18 +5782,6 @@ int RichTextLabel::get_content_width() const {
 	return total_width;
 }
 
-#ifndef DISABLE_DEPRECATED
-// People will be very angry, if their texts get erased, because of #39148. (3.x -> 4.0)
-// Although some people may not used bbcode_text, so we only overwrite, if bbcode_text is not empty.
-bool RichTextLabel::_set(const StringName &p_name, const Variant &p_value) {
-	if (p_name == "bbcode_text" && !((String)p_value).is_empty()) {
-		set_text(p_value);
-		return true;
-	}
-	return false;
-}
-#endif
-
 void RichTextLabel::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_parsed_text"), &RichTextLabel::get_parsed_text);
 	ClassDB::bind_method(D_METHOD("add_text", "text"), &RichTextLabel::add_text);
@@ -5950,11 +5936,6 @@ void RichTextLabel::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("menu_option", "option"), &RichTextLabel::menu_option);
 
 	ClassDB::bind_method(D_METHOD("_thread_end"), &RichTextLabel::_thread_end);
-
-#ifndef DISABLE_DEPRECATED
-	ClassDB::bind_compatibility_method(D_METHOD("push_font", "font", "font_size"), &RichTextLabel::push_font);
-	ClassDB::bind_compatibility_method(D_METHOD("set_table_column_expand", "column", "expand", "ratio"), &RichTextLabel::set_table_column_expand);
-#endif // DISABLE_DEPRECATED
 
 	// Note: set "bbcode_enabled" first, to avoid unnecessary "text" resets.
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "bbcode_enabled"), "set_use_bbcode", "is_using_bbcode");

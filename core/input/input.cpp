@@ -121,14 +121,6 @@ void Input::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("start_joy_vibration", "device", "weak_magnitude", "strong_magnitude", "duration"), &Input::start_joy_vibration, DEFVAL(0));
 	ClassDB::bind_method(D_METHOD("stop_joy_vibration", "device"), &Input::stop_joy_vibration);
 	ClassDB::bind_method(D_METHOD("vibrate_handheld", "duration_ms"), &Input::vibrate_handheld, DEFVAL(500));
-	ClassDB::bind_method(D_METHOD("get_gravity"), &Input::get_gravity);
-	ClassDB::bind_method(D_METHOD("get_accelerometer"), &Input::get_accelerometer);
-	ClassDB::bind_method(D_METHOD("get_magnetometer"), &Input::get_magnetometer);
-	ClassDB::bind_method(D_METHOD("get_gyroscope"), &Input::get_gyroscope);
-	ClassDB::bind_method(D_METHOD("set_gravity", "value"), &Input::set_gravity);
-	ClassDB::bind_method(D_METHOD("set_accelerometer", "value"), &Input::set_accelerometer);
-	ClassDB::bind_method(D_METHOD("set_magnetometer", "value"), &Input::set_magnetometer);
-	ClassDB::bind_method(D_METHOD("set_gyroscope", "value"), &Input::set_gyroscope);
 	ClassDB::bind_method(D_METHOD("get_last_mouse_velocity"), &Input::get_last_mouse_velocity);
 	ClassDB::bind_method(D_METHOD("get_mouse_button_mask"), &Input::get_mouse_button_mask);
 	ClassDB::bind_method(D_METHOD("set_mouse_mode", "mode"), &Input::set_mouse_mode);
@@ -480,26 +472,6 @@ void Input::joy_connection_changed(int p_idx, bool p_connected, String p_name, S
 	call_deferred("emit_signal", SNAME("joy_connection_changed"), p_idx, p_connected);
 }
 
-Vector3 Input::get_gravity() const {
-	_THREAD_SAFE_METHOD_
-	return gravity;
-}
-
-Vector3 Input::get_accelerometer() const {
-	_THREAD_SAFE_METHOD_
-	return accelerometer;
-}
-
-Vector3 Input::get_magnetometer() const {
-	_THREAD_SAFE_METHOD_
-	return magnetometer;
-}
-
-Vector3 Input::get_gyroscope() const {
-	_THREAD_SAFE_METHOD_
-	return gyroscope;
-}
-
 void Input::_parse_input_event_impl(const Ref<InputEvent> &p_event, bool p_is_emulated) {
 	// This function does the final delivery of the input event to user land.
 	// Regardless where the event came from originally, this has to happen on the main thread.
@@ -764,30 +736,6 @@ void Input::stop_joy_vibration(int p_device) {
 
 void Input::vibrate_handheld(int p_duration_ms) {
 	OS::get_singleton()->vibrate_handheld(p_duration_ms);
-}
-
-void Input::set_gravity(const Vector3 &p_gravity) {
-	_THREAD_SAFE_METHOD_
-
-	gravity = p_gravity;
-}
-
-void Input::set_accelerometer(const Vector3 &p_accel) {
-	_THREAD_SAFE_METHOD_
-
-	accelerometer = p_accel;
-}
-
-void Input::set_magnetometer(const Vector3 &p_magnetometer) {
-	_THREAD_SAFE_METHOD_
-
-	magnetometer = p_magnetometer;
-}
-
-void Input::set_gyroscope(const Vector3 &p_gyroscope) {
-	_THREAD_SAFE_METHOD_
-
-	gyroscope = p_gyroscope;
 }
 
 void Input::set_mouse_position(const Point2 &p_posf) {

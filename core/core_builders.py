@@ -63,16 +63,22 @@ def make_certs_header(target, source, env):
 
 def make_authors_header(target, source, env):
     sections = [
-        "Project Founders",
-        "Lead Developer",
-        "Project Manager",
-        "Developers",
+        "Godot Project Founders",
+        "Godot Lead Developer",
+        "Pixel Engine Lead Developer",
+        "Godot Project Manager",
+        "Pixel Engine Project Manager",
+        "Godot Developers",
+        "Pixel Engine Developers",
     ]
     sections_id = [
-        "AUTHORS_FOUNDERS",
-        "AUTHORS_LEAD_DEVELOPERS",
-        "AUTHORS_PROJECT_MANAGERS",
-        "AUTHORS_DEVELOPERS",
+        "GODOT_AUTHORS_FOUNDERS",
+        "GODOT_AUTHORS_LEAD_DEVELOPERS",
+        "PIXEL_ENGINE_AUTHORS_LEAD_DEVELOPERS",
+        "GODOT_AUTHORS_PROJECT_MANAGERS",
+        "PIXEL_ENGINE_AUTHORS_PROJECT_MANAGERS",
+        "GODOT_AUTHORS_DEVELOPERS",
+        "PIXEL_ENGINE_AUTHORS_DEVELOPERS",
     ]
 
     src = source[0]
@@ -117,24 +123,24 @@ def make_authors_header(target, source, env):
 
 def make_donors_header(target, source, env):
     sections = [
-        "Patrons",
-        "Platinum sponsors",
-        "Gold sponsors",
-        "Silver sponsors",
-        "Diamond members",
-        "Titanium members",
-        "Platinum members",
-        "Gold members",
+        "Godot Engine Patrons",
+        "Godot Engine Platinum sponsors",
+        "Godot Engine Gold sponsors",
+        "Godot Engine Silver sponsors",
+        "Godot Engine Diamond members",
+        "Godot Engine Titanium members",
+        "Godot Engine Platinum members",
+        "Godot Engine Gold members",
     ]
     sections_id = [
-        "DONORS_PATRONS",
-        "DONORS_SPONSORS_PLATINUM",
-        "DONORS_SPONSORS_GOLD",
-        "DONORS_SPONSORS_SILVER",
-        "DONORS_MEMBERS_DIAMOND",
-        "DONORS_MEMBERS_TITANIUM",
-        "DONORS_MEMBERS_PLATINUM",
-        "DONORS_MEMBERS_GOLD",
+        "GODOT_ENGINE_DONORS_PATRONS",
+        "GODOT_ENGINE_DONORS_SPONSORS_PLATINUM",
+        "GODOT_ENGINE_DONORS_SPONSORS_GOLD",
+        "GODOT_ENGINE_DONORS_SPONSORS_SILVER",
+        "GODOT_ENGINE_DONORS_MEMBERS_DIAMOND",
+        "GODOT_ENGINE_DONORS_MEMBERS_TITANIUM",
+        "GODOT_ENGINE_DONORS_MEMBERS_PLATINUM",
+        "GODOT_ENGINE_DONORS_MEMBERS_GOLD",
     ]
 
     src = source[0]
@@ -242,7 +248,7 @@ def make_license_header(target, source, env):
         f.write("/* THIS FILE IS GENERATED DO NOT EDIT */\n")
         f.write("#ifndef LICENSE_GEN_H\n")
         f.write("#define LICENSE_GEN_H\n")
-        f.write("const char *const GODOT_LICENSE_TEXT =")
+        f.write("const char *const PIXEL_ENGINE_LICENSE_TEXT =")
 
         with open(src_license, "r", encoding="utf-8") as license_file:
             for line in license_file:

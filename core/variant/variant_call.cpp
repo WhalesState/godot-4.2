@@ -1029,25 +1029,6 @@ struct _VariantCall {
 		callable->call_deferredp(p_args, p_argcount);
 	}
 
-	static void func_Callable_rpc(Variant *v, const Variant **p_args, int p_argcount, Variant &r_ret, Callable::CallError &r_error) {
-		Callable *callable = VariantGetInternalPtr<Callable>::get_ptr(v);
-		callable->rpcp(0, p_args, p_argcount, r_error);
-	}
-
-	static void func_Callable_rpc_id(Variant *v, const Variant **p_args, int p_argcount, Variant &r_ret, Callable::CallError &r_error) {
-		if (p_argcount == 0) {
-			r_error.error = Callable::CallError::CALL_ERROR_TOO_FEW_ARGUMENTS;
-			r_error.expected = 1;
-		} else if (p_args[0]->get_type() != Variant::INT) {
-			r_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
-			r_error.argument = 0;
-			r_error.expected = Variant::INT;
-		} else {
-			Callable *callable = VariantGetInternalPtr<Callable>::get_ptr(v);
-			callable->rpcp(*p_args[0], &p_args[1], p_argcount - 1, r_error);
-		}
-	}
-
 	static void func_Callable_bind(Variant *v, const Variant **p_args, int p_argcount, Variant &r_ret, Callable::CallError &r_error) {
 		Callable *callable = VariantGetInternalPtr<Callable>::get_ptr(v);
 		r_ret = callable->bindp(p_args, p_argcount);
@@ -1947,28 +1928,6 @@ static void _register_variant_builtin_methods() {
 	bind_methodv(Plane, intersects_ray, &Plane::intersects_ray_bind, sarray("from", "dir"), varray());
 	bind_methodv(Plane, intersects_segment, &Plane::intersects_segment_bind, sarray("from", "to"), varray());
 
-	/* Quaternion */
-
-	bind_method(Quaternion, length, sarray(), varray());
-	bind_method(Quaternion, length_squared, sarray(), varray());
-	bind_method(Quaternion, normalized, sarray(), varray());
-	bind_method(Quaternion, is_normalized, sarray(), varray());
-	bind_method(Quaternion, is_equal_approx, sarray("to"), varray());
-	bind_method(Quaternion, is_finite, sarray(), varray());
-	bind_method(Quaternion, inverse, sarray(), varray());
-	bind_method(Quaternion, log, sarray(), varray());
-	bind_method(Quaternion, exp, sarray(), varray());
-	bind_method(Quaternion, angle_to, sarray("to"), varray());
-	bind_method(Quaternion, dot, sarray("with"), varray());
-	bind_method(Quaternion, slerp, sarray("to", "weight"), varray());
-	bind_method(Quaternion, slerpni, sarray("to", "weight"), varray());
-	bind_method(Quaternion, spherical_cubic_interpolate, sarray("b", "pre_a", "post_b", "weight"), varray());
-	bind_method(Quaternion, spherical_cubic_interpolate_in_time, sarray("b", "pre_a", "post_b", "weight", "b_t", "pre_a_t", "post_b_t"), varray());
-	bind_method(Quaternion, get_euler, sarray("order"), varray((int64_t)EulerOrder::YXZ));
-	bind_static_method(Quaternion, from_euler, sarray("euler"), varray());
-	bind_method(Quaternion, get_axis, sarray(), varray());
-	bind_method(Quaternion, get_angle, sarray(), varray());
-
 	/* Color */
 
 	bind_method(Color, to_argb32, sarray(), varray());
@@ -2037,8 +1996,6 @@ static void _register_variant_builtin_methods() {
 
 	bind_custom(Callable, call, _VariantCall::func_Callable_call, true, Variant);
 	bind_custom(Callable, call_deferred, _VariantCall::func_Callable_call_deferred, false, Variant);
-	bind_custom(Callable, rpc, _VariantCall::func_Callable_rpc, false, Variant);
-	bind_custom1(Callable, rpc_id, _VariantCall::func_Callable_rpc_id, Variant::INT, "peer_id");
 	bind_custom(Callable, bind, _VariantCall::func_Callable_bind, true, Callable);
 
 	/* Signal */
@@ -2071,6 +2028,7 @@ static void _register_variant_builtin_methods() {
 	bind_method(Transform2D, translated, sarray("offset"), varray());
 	bind_method(Transform2D, translated_local, sarray("offset"), varray());
 	bind_method(Transform2D, determinant, sarray(), varray());
+	bind_method(Transform2D, _xform, sarray("v"), varray());
 	bind_method(Transform2D, basis_xform, sarray("v"), varray());
 	bind_method(Transform2D, basis_xform_inv, sarray("v"), varray());
 	bind_method(Transform2D, interpolate_with, sarray("xform", "weight"), varray());
@@ -2097,7 +2055,6 @@ static void _register_variant_builtin_methods() {
 	bind_method(Basis, is_conformal, sarray(), varray());
 	bind_method(Basis, is_equal_approx, sarray("b"), varray());
 	bind_method(Basis, is_finite, sarray(), varray());
-	bind_method(Basis, get_rotation_quaternion, sarray(), varray());
 	bind_static_method(Basis, looking_at, sarray("target", "up", "use_model_front"), varray(Vector3(0, 1, 0), false));
 	bind_static_method(Basis, from_scale, sarray("scale"), varray());
 	bind_static_method(Basis, from_euler, sarray("euler", "order"), varray((int64_t)EulerOrder::YXZ));
@@ -2637,8 +2594,6 @@ static void _register_variant_builtin_methods() {
 	_VariantCall::add_variant_constant(Variant::PLANE, "PLANE_YZ", Plane(Vector3(1, 0, 0), 0));
 	_VariantCall::add_variant_constant(Variant::PLANE, "PLANE_XZ", Plane(Vector3(0, 1, 0), 0));
 	_VariantCall::add_variant_constant(Variant::PLANE, "PLANE_XY", Plane(Vector3(0, 0, 1), 0));
-
-	_VariantCall::add_variant_constant(Variant::QUATERNION, "IDENTITY", Quaternion(0, 0, 0, 1));
 
 	_VariantCall::add_constant(Variant::PROJECTION, "PLANE_NEAR", Projection::PLANE_NEAR);
 	_VariantCall::add_constant(Variant::PROJECTION, "PLANE_FAR", Projection::PLANE_FAR);

@@ -62,11 +62,6 @@
 				print("0b101".bin_to_int()) # Prints 5
 				print("-0b10".bin_to_int()) # Prints -2
 				[/gdscript]
-				[csharp]
-				GD.Print("101".BinToInt());   // Prints 5
-				GD.Print("0b101".BinToInt()); // Prints 5
-				GD.Print("-0b10".BinToInt()); // Prints -2
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -93,11 +88,6 @@
 				"sceneFile_path".capitalize() # Returns "Scene File Path"
 				"2D, FPS, PNG".capitalize()   # Returns "2d, Fps, Png"
 				[/gdscript]
-				[csharp]
-				"move_local_x".Capitalize();   // Returns "Move Local X"
-				"sceneFile_path".Capitalize(); // Returns "Scene File Path"
-				"2D, FPS, PNG".Capitalize();   // Returns "2d, Fps, Png"
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -121,10 +111,6 @@
 				print("team".contains("I"))  # Prints false
 				print("I" in "team")         # Prints false
 				[/gdscript]
-				[csharp]
-				GD.Print("Node".Contains("de")); // Prints true
-				GD.Print("team".Contains("I"));  // Prints false
-				[/csharp]
 				[/codeblocks]
 				If you need to know where [param what] is within the string, use [method find].
 			</description>
@@ -182,13 +168,6 @@
 				print("Potato".find("t", 3)) # Prints 4
 				print("Potato".find("t", 5)) # Prints -1
 				[/gdscript]
-				[csharp]
-				GD.Print("Team".Find("I")); // Prints -1
-
-				GD.Print("Potato".Find("t"));    // Prints 2
-				GD.Print("Potato".Find("t", 3)); // Prints 4
-				GD.Print("Potato".Find("t", 5)); // Prints -1
-				[/csharp]
 				[/codeblocks]
 				[b]Note:[/b] If you just want to know whether the string contains [param what], use [method contains]. In GDScript, you may also use the [code]in[/code] operator.
 			</description>
@@ -223,7 +202,6 @@
 				print("User {id} is {name}.".format([["id", 42], ["name", "Godot"]]))
 				[/codeblock]
 				See also the [url=$DOCS_URL/tutorials/scripting/gdscript/gdscript_format_string.html]GDScript format string[/url] tutorial.
-				[b]Note:[/b] In C#, it's recommended to [url=https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/tokens/interpolated]interpolate strings with "$"[/url], instead.
 			</description>
 		</method>
 		<method name="get_base_dir" qualifiers="const">
@@ -316,11 +294,6 @@
 				var encoded = text.to_utf8_buffer().hex_encode() # outputs "68656c6c6f20776f726c64"
 				print(buf.hex_decode().get_string_from_utf8())
 				[/gdscript]
-				[csharp]
-				var text = "hello world";
-				var encoded = text.ToUtf8Buffer().HexEncode(); // outputs "68656c6c6f20776f726c64"
-				GD.Print(buf.HexDecode().GetStringFromUtf8());
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -333,10 +306,6 @@
 				print("0xff".hex_to_int()) # Prints 255
 				print("ab".hex_to_int())   # Prints 171
 				[/gdscript]
-				[csharp]
-				GD.Print("0xff".HexToInt()); // Prints 255
-				GD.Print("ab".HexToInt());   // Prints 171
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -480,13 +449,6 @@
 				print(", ".join(fruits))  # Prints "Apple, Orange, Pear, Kiwi"
 				print("---".join(fruits)) # Prints "Apple---Orange---Pear---Kiwi"
 				[/gdscript]
-				[csharp]
-				var fruits = new string[] {"Apple", "Orange", "Pear", "Kiwi"};
-
-				// In C#, this method is static.
-				GD.Print(string.Join(", ", fruits));  // Prints "Apple, Orange, Pear, Kiwi"
-				GD.Print(string.Join("---", fruits)); // Prints "Apple---Orange---Pear---Kiwi"
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -689,9 +651,6 @@
 				print(some_array[0])     # Prints "One,Two,Three"
 				print(some_array[1])     # Prints "Four"
 				[/gdscript]
-				[csharp]
-				// In C#, there is no String.RSplit() method.
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -769,14 +728,6 @@
 				print(some_array[1])     # Prints "Two"
 				print(some_array[2])     # Prints "Three,Four"
 				[/gdscript]
-				[csharp]
-				// C#'s `Split()` does not support the `maxsplit` parameter.
-				var someArray = "One,Two,Three".Split(",");
-
-				GD.Print(someArray[0]); // Prints "One"
-				GD.Print(someArray[1]); // Prints "Two"
-				GD.Print(someArray[2]); // Prints "Three"
-				[/csharp]
 				[/codeblocks]
 				[b]Note:[/b] If you only need one substring from the array, consider using [method get_slice] which is faster. If you need to split strings with more complex rules, use the [RegEx] class instead.
 			</description>
@@ -876,13 +827,8 @@
 				[gdscript]
 				"Node2D".to_snake_case()               # Returns "node_2d"
 				"2nd place".to_snake_case()            # Returns "2_nd_place"
-				"Texture3DAssetFolder".to_snake_case() # Returns "texture_3d_asset_folder"
+				"Texture2DAssetFolder".to_snake_case() # Returns "texture_2d_asset_folder"
 				[/gdscript]
-				[csharp]
-				"Node2D".ToSnakeCase();               // Returns "node_2d"
-				"2nd place".ToSnakeCase();            // Returns "2_nd_place"
-				"Texture3DAssetFolder".ToSnakeCase(); // Returns "texture_3d_asset_folder"
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -946,10 +892,6 @@
 				var url = "$DOCS_URL/?highlight=Godot%20Engine%3%docs"
 				print(url.uri_decode()) # Prints "$DOCS_URL/?highlight=Godot Engine:docs"
 				[/gdscript]
-				[csharp]
-				var url = "$DOCS_URL/?highlight=Godot%20Engine%3%docs"
-				GD.Print(url.URIDecode()) // Prints "$DOCS_URL/?highlight=Godot Engine:docs"
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -964,12 +906,6 @@
 
 				print(url) # Prints "$DOCS_URL/?highlight=Godot%20Engine%3%docs"
 				[/gdscript]
-				[csharp]
-				var prefix = "$DOCS_URL/?highlight=";
-				var url = prefix + "Godot Engine:docs".URIEncode();
-
-				GD.Print(url); // Prints "$DOCS_URL/?highlight=Godot%20Engine%3%docs"
-				[/csharp]
 				[/codeblocks]
 			</description>
 		</method>
@@ -1020,7 +956,6 @@
 			<description>
 				Formats the [StringName], replacing the placeholders with one or more parameters, returning a [String]. To pass multiple parameters, [param right] needs to be an [Array].
 				For more information, see the [url=$DOCS_URL/tutorials/scripting/gdscript/gdscript_format_string.html]GDScript format strings[/url] tutorial.
-				[b]Note:[/b] In C#, this operator is not available. Instead, see [url=https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/tokens/interpolated]how to interpolate strings with "$"[/url].
 			</description>
 		</operator>
 		<operator name="operator +">

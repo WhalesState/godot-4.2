@@ -191,9 +191,4 @@ ObjCBlockIndentWidth: 4
 # ObjCBreakBeforeNestedBlockParam: true
 # ObjCSpaceAfterProperty: false
 # ObjCSpaceBeforeProtocolList: true
----
-### Java specific config ###
-Language:        Java
-# BreakAfterJavaFieldAnnotations: false
-JavaImportGroups: ['org.godotengine', 'android', 'androidx', 'com.android', 'com.google', 'java', 'javax']
 ...

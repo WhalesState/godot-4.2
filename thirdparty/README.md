@@ -55,22 +55,6 @@ Files extracted from upstream source:
 - `astcenc_*` and `astcenc.h` files from `Source`
 - `LICENSE.txt`
 
-
-## basis_universal
-
-- Upstream: https://github.com/BinomialLLC/basis_universal
-- Version: 1.16.4 (900e40fb5d2502927360fe2f31762bdbb624455f, 2023)
-- License: Apache 2.0
-
-Files extracted from upstream source:
-
-- `encoder/` and `transcoder/` folders, minus `jpgd.{cpp,h}`
-- `LICENSE`
-
-Applied upstream PR https://github.com/BinomialLLC/basis_universal/pull/344 to
-fix build with our own copy of zstd (patch in `patches`).
-
-
 ## brotli
 
 - Upstream: https://github.com/google/brotli
@@ -89,19 +73,6 @@ Files extracted from upstream source:
 - Upstream: Mozilla, via https://github.com/bagder/ca-bundle
 - Version: git (c5a419971b1bec220368c619aaafd0b818aa119f, 2024)
 - License: MPL 2.0
-
-
-## clipper2
-
-- Upstream: https://github.com/AngusJohnson/Clipper2
-- Version: 1.2.2 (756c5079aacab5837e812a143c59dc48a09f22e7, 2023)
-- License: BSL 1.0
-
-Files extracted from upstream source:
-
-- `CPP/Clipper2Lib` folder
-- `LICENSE`
-
 
 ## cvtt
 
@@ -130,27 +101,6 @@ Files extracted from upstream source:
 
 - `doctest/doctest.h` as `doctest.h`
 - `LICENSE.txt`
-
-
-## embree
-
-- Upstream: https://github.com/embree/embree
-- Version: 3.13.5 (698442324ccddd11725fb8875275dc1384f7fb40, 2022)
-- License: Apache 2.0
-
-Files extracted from upstream:
-
-- All `.cpp` files listed in `modules/raycast/godot_update_embree.py`
-- All header files in the directories listed in `modules/raycast/godot_update_embree.py`
-
-The `modules/raycast/godot_update_embree.py` script can be used to pull the
-relevant files from the latest Embree release and apply some automatic changes.
-
-Some changes have been made in order to remove exceptions and fix minor build errors.
-They are marked with `// -- GODOT start --` and `// -- GODOT end --`
-comments. Apply the patches in the `patches/` folder when syncing on newer upstream
-commits.
-
 
 ## enet
 
@@ -390,24 +340,6 @@ Files extracted from upstream source:
 - `jpge*.{c,h}`
 
 
-## libktx
-
-- Upstream: https://github.com/KhronosGroup/KTX-Software
-- Version: 4.1.0 (d7255fe73cd53b856731ceb9f2c279181d0dbbca, 2023)
-- License: Apache-2.0
-
-Files extracted from upstream source:
-
-- `LICENSE.md`
-- `include/*`
-- `lib/dfdutils/{LICENSES/Apache-2.0.txt,KHR,*.c,*.h,*.inl}`
-- `lib/{basis_sgd.h,basis_transcode.cpp,checkheader.c,filestream.*,formatsize.h,gl_format.h,hashlist.c,ktxint.h,memstream.*,swap.c,texture*,uthash.h,vk_format.h,vkformat_enum.h}`
-- `utils/unused.h`
-- `other_include/KHR/*`
-
-Some Godot-specific changes are applied via `godot.patch`.
-
-
 ## libogg
 
 - Upstream: https://www.xiph.org/ogg
@@ -593,10 +525,6 @@ Collection of single-file libraries used in Godot components.
   * Upstream: https://sourceforge.net/projects/polyclipping
   * Version: 6.4.2 (2017) + Godot changes (added optional exceptions handling)
   * License: BSL-1.0
-- `cubemap_coeffs.h`
-  * Upstream: https://research.activision.com/publications/archives/fast-filtering-of-reflection-probes
-    File coeffs_const_8.txt (retrieved April 2020)
-  * License: MIT
 - `fastlz.{c,h}`
   * Upstream: https://github.com/ariya/FastLZ
   * Version: 0.5.0 (4f20f54d46f5a6dd4fae4def134933369b7602d2, 2020)

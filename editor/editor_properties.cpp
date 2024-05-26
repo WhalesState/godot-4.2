@@ -48,13 +48,9 @@
 #include "editor/project_settings_editor.h"
 #include "editor/property_selector.h"
 #include "editor/scene_tree_dock.h"
-#include "scene/2d/gpu_particles_2d.h"
-#include "scene/3d/fog_volume.h"
-#include "scene/3d/gpu_particles_3d.h"
 #include "scene/gui/color_picker.h"
 #include "scene/main/window.h"
 #include "scene/resources/font.h"
-#include "scene/resources/mesh.h"
 #include "scene/resources/packed_scene.h"
 
 ///////////////////// Nil /////////////////////////
@@ -80,7 +76,6 @@ void EditorPropertyText::_text_submitted(const String &p_string) {
 	}
 
 	if (text->has_focus()) {
-		text->release_focus();
 		_text_changed(p_string);
 	}
 }
@@ -268,7 +263,7 @@ void EditorPropertyTextEnum::_option_selected(int p_which) {
 void EditorPropertyTextEnum::_edit_custom_value() {
 	default_layout->hide();
 	edit_custom_layout->show();
-	custom_value_edit->grab_focus();
+	custom_value_edit->edit();
 }
 
 void EditorPropertyTextEnum::_custom_value_submitted(String p_value) {
@@ -817,9 +812,8 @@ void EditorPropertyLayersGrid::_rename_pressed(int p_menu) {
 	String name = names[renamed_layer_index];
 	rename_dialog->set_title(vformat(TTR("Renaming layer %d:"), renamed_layer_index + 1));
 	rename_dialog_text->set_text(name);
-	rename_dialog_text->select(0, name.length());
 	rename_dialog->popup_centered(Size2(300, 80) * EDSCALE);
-	rename_dialog_text->grab_focus();
+	rename_dialog_text->edit(true);
 }
 
 void EditorPropertyLayersGrid::_rename_operation_confirm() {
@@ -1143,51 +1137,9 @@ void EditorPropertyLayers::update_property() {
 
 void EditorPropertyLayers::setup(LayerType p_layer_type) {
 	layer_type = p_layer_type;
-	int layer_group_size = 0;
-	int layer_count = 0;
-	switch (p_layer_type) {
-		case LAYER_RENDER_2D: {
-			basename = "layer_names/2d_render";
-			layer_group_size = 5;
-			layer_count = 20;
-		} break;
-
-		case LAYER_PHYSICS_2D: {
-			basename = "layer_names/2d_physics";
-			layer_group_size = 4;
-			layer_count = 32;
-		} break;
-
-		case LAYER_NAVIGATION_2D: {
-			basename = "layer_names/2d_navigation";
-			layer_group_size = 4;
-			layer_count = 32;
-		} break;
-
-		case LAYER_RENDER_3D: {
-			basename = "layer_names/3d_render";
-			layer_group_size = 5;
-			layer_count = 20;
-		} break;
-
-		case LAYER_PHYSICS_3D: {
-			basename = "layer_names/3d_physics";
-			layer_group_size = 4;
-			layer_count = 32;
-		} break;
-
-		case LAYER_NAVIGATION_3D: {
-			basename = "layer_names/3d_navigation";
-			layer_group_size = 4;
-			layer_count = 32;
-		} break;
-
-		case LAYER_AVOIDANCE: {
-			basename = "layer_names/avoidance";
-			layer_group_size = 4;
-			layer_count = 32;
-		} break;
-	}
+	int layer_group_size = 5;
+	int layer_count = 20;
+	basename = "layer_names/2d_render";
 
 	Vector<String> names;
 	Vector<String> tooltips;
@@ -2007,223 +1959,6 @@ EditorPropertyPlane::EditorPropertyPlane(bool p_force_wide) {
 			spin[i]->set_h_size_flags(SIZE_EXPAND_FILL);
 		}
 	}
-
-	if (!horizontal) {
-		set_label_reference(spin[0]); //show text and buttons around this
-	}
-}
-
-///////////////////// QUATERNION /////////////////////////
-
-void EditorPropertyQuaternion::_set_read_only(bool p_read_only) {
-	for (int i = 0; i < 4; i++) {
-		spin[i]->set_read_only(p_read_only);
-	}
-	for (int i = 0; i < 3; i++) {
-		euler[i]->set_read_only(p_read_only);
-	}
-}
-
-void EditorPropertyQuaternion::_edit_custom_value() {
-	if (edit_button->is_pressed()) {
-		edit_custom_bc->show();
-		for (int i = 0; i < 3; i++) {
-			euler[i]->grab_focus();
-		}
-	} else {
-		edit_custom_bc->hide();
-		for (int i = 0; i < 4; i++) {
-			spin[i]->grab_focus();
-		}
-	}
-	update_property();
-}
-
-void EditorPropertyQuaternion::_custom_value_changed(double val) {
-	if (setting) {
-		return;
-	}
-
-	edit_euler.x = euler[0]->get_value();
-	edit_euler.y = euler[1]->get_value();
-	edit_euler.z = euler[2]->get_value();
-
-	Vector3 v;
-	v.x = Math::deg_to_rad(edit_euler.x);
-	v.y = Math::deg_to_rad(edit_euler.y);
-	v.z = Math::deg_to_rad(edit_euler.z);
-
-	Quaternion temp_q = Quaternion::from_euler(v);
-	spin[0]->set_value(temp_q.x);
-	spin[1]->set_value(temp_q.y);
-	spin[2]->set_value(temp_q.z);
-	spin[3]->set_value(temp_q.w);
-}
-
-void EditorPropertyQuaternion::_value_changed(double val, const String &p_name) {
-	if (setting) {
-		return;
-	}
-
-	Quaternion p;
-	p.x = spin[0]->get_value();
-	p.y = spin[1]->get_value();
-	p.z = spin[2]->get_value();
-	p.w = spin[3]->get_value();
-
-	emit_changed(get_edited_property(), p, p_name);
-}
-
-bool EditorPropertyQuaternion::is_grabbing_euler() {
-	bool is_grabbing = false;
-	for (int i = 0; i < 3; i++) {
-		is_grabbing |= euler[i]->is_grabbing();
-	}
-	return is_grabbing;
-}
-
-void EditorPropertyQuaternion::update_property() {
-	Quaternion val = get_edited_property_value();
-	setting = true;
-	spin[0]->set_value(val.x);
-	spin[1]->set_value(val.y);
-	spin[2]->set_value(val.z);
-	spin[3]->set_value(val.w);
-	if (!is_grabbing_euler()) {
-		Vector3 v = val.normalized().get_euler();
-		edit_euler.x = Math::rad_to_deg(v.x);
-		edit_euler.y = Math::rad_to_deg(v.y);
-		edit_euler.z = Math::rad_to_deg(v.z);
-		euler[0]->set_value(edit_euler.x);
-		euler[1]->set_value(edit_euler.y);
-		euler[2]->set_value(edit_euler.z);
-	}
-	setting = false;
-}
-
-void EditorPropertyQuaternion::_warning_pressed() {
-	warning_dialog->popup_centered();
-}
-
-void EditorPropertyQuaternion::_notification(int p_what) {
-	switch (p_what) {
-		case NOTIFICATION_ENTER_TREE:
-		case NOTIFICATION_THEME_CHANGED: {
-			const Color *colors = _get_property_colors();
-			for (int i = 0; i < 4; i++) {
-				spin[i]->add_theme_color_override("label_color", colors[i]);
-			}
-			for (int i = 0; i < 3; i++) {
-				euler[i]->add_theme_color_override("label_color", colors[i]);
-			}
-			edit_button->set_icon(get_editor_theme_icon(SNAME("Edit")));
-			euler_label->add_theme_color_override(SNAME("font_color"), get_theme_color(SNAME("property_color"), EditorStringName(Editor)));
-			warning->set_icon(get_editor_theme_icon(SNAME("NodeWarning")));
-			warning->add_theme_color_override(SNAME("font_color"), get_theme_color(SNAME("warning_color"), EditorStringName(Editor)));
-		} break;
-	}
-}
-
-void EditorPropertyQuaternion::_bind_methods() {
-}
-
-void EditorPropertyQuaternion::setup(double p_min, double p_max, double p_step, bool p_hide_slider, const String &p_suffix, bool p_hide_editor) {
-	for (int i = 0; i < 4; i++) {
-		spin[i]->set_min(p_min);
-		spin[i]->set_max(p_max);
-		spin[i]->set_step(p_step);
-		spin[i]->set_hide_slider(p_hide_slider);
-		spin[i]->set_allow_greater(true);
-		spin[i]->set_allow_lesser(true);
-		// Quaternion is inherently unitless, however someone may want to use it as
-		// a generic way to store 4 values, so we'll still respect the suffix.
-		spin[i]->set_suffix(p_suffix);
-	}
-
-	for (int i = 0; i < 3; i++) {
-		euler[i]->set_min(-360);
-		euler[i]->set_max(360);
-		euler[i]->set_step(0.1);
-		euler[i]->set_hide_slider(false);
-		euler[i]->set_allow_greater(true);
-		euler[i]->set_allow_lesser(true);
-		euler[i]->set_suffix(U"\u00B0");
-	}
-
-	if (p_hide_editor) {
-		edit_button->hide();
-	}
-}
-
-EditorPropertyQuaternion::EditorPropertyQuaternion() {
-	bool horizontal = EDITOR_GET("interface/inspector/horizontal_vector_types_editing");
-
-	VBoxContainer *bc = memnew(VBoxContainer);
-	edit_custom_bc = memnew(VBoxContainer);
-	BoxContainer *edit_custom_layout;
-	if (horizontal) {
-		default_layout = memnew(HBoxContainer);
-		edit_custom_layout = memnew(HBoxContainer);
-		set_bottom_editor(bc);
-	} else {
-		default_layout = memnew(VBoxContainer);
-		edit_custom_layout = memnew(VBoxContainer);
-	}
-	edit_custom_bc->hide();
-	add_child(bc);
-	edit_custom_bc->set_h_size_flags(SIZE_EXPAND_FILL);
-	default_layout->set_h_size_flags(SIZE_EXPAND_FILL);
-	edit_custom_layout->set_h_size_flags(SIZE_EXPAND_FILL);
-	bc->add_child(default_layout);
-	bc->add_child(edit_custom_bc);
-
-	static const char *desc[4] = { "x", "y", "z", "w" };
-	for (int i = 0; i < 4; i++) {
-		spin[i] = memnew(EditorSpinSlider);
-		spin[i]->set_flat(true);
-		spin[i]->set_label(desc[i]);
-		default_layout->add_child(spin[i]);
-		add_focusable(spin[i]);
-		spin[i]->connect("value_changed", callable_mp(this, &EditorPropertyQuaternion::_value_changed).bind(desc[i]));
-		if (horizontal) {
-			spin[i]->set_h_size_flags(SIZE_EXPAND_FILL);
-		}
-	}
-
-	warning = memnew(Button);
-	warning->set_text(TTR("Temporary Euler may be changed implicitly!"));
-	warning->set_clip_text(true);
-	warning->connect("pressed", callable_mp(this, &EditorPropertyQuaternion::_warning_pressed));
-	warning_dialog = memnew(AcceptDialog);
-	add_child(warning_dialog);
-	warning_dialog->set_text(TTR("Temporary Euler will not be stored in the object with the original value. Instead, it will be stored as Quaternion with irreversible conversion.\nThis is due to the fact that the result of Euler->Quaternion can be determined uniquely, but the result of Quaternion->Euler can be multi-existent."));
-
-	euler_label = memnew(Label);
-	euler_label->set_text("Temporary Euler");
-
-	edit_custom_bc->add_child(warning);
-	edit_custom_bc->add_child(edit_custom_layout);
-	edit_custom_layout->add_child(euler_label);
-
-	for (int i = 0; i < 3; i++) {
-		euler[i] = memnew(EditorSpinSlider);
-		euler[i]->set_flat(true);
-		euler[i]->set_label(desc[i]);
-		edit_custom_layout->add_child(euler[i]);
-		add_focusable(euler[i]);
-		euler[i]->connect("value_changed", callable_mp(this, &EditorPropertyQuaternion::_custom_value_changed));
-		if (horizontal) {
-			euler[i]->set_h_size_flags(SIZE_EXPAND_FILL);
-		}
-	}
-
-	edit_button = memnew(Button);
-	edit_button->set_flat(true);
-	edit_button->set_toggle_mode(true);
-	default_layout->add_child(edit_button);
-	edit_button->connect("pressed", callable_mp(this, &EditorPropertyQuaternion::_edit_custom_value));
-
-	add_focusable(edit_button);
 
 	if (!horizontal) {
 		set_label_reference(spin[0]); //show text and buttons around this
@@ -3312,16 +3047,8 @@ void EditorPropertyResource::_update_preferred_shader() {
 		const StringName &ed_property = parent_property->get_edited_property();
 
 		// Set preferred shader based on edited parent type.
-		if ((Object::cast_to<GPUParticles2D>(ed_object) || Object::cast_to<GPUParticles3D>(ed_object)) && ed_property == SNAME("process_material")) {
-			shader_picker->set_preferred_mode(Shader::MODE_PARTICLES);
-		} else if (Object::cast_to<FogVolume>(ed_object)) {
-			shader_picker->set_preferred_mode(Shader::MODE_FOG);
-		} else if (Object::cast_to<CanvasItem>(ed_object)) {
+		if (Object::cast_to<CanvasItem>(ed_object)) {
 			shader_picker->set_preferred_mode(Shader::MODE_CANVAS_ITEM);
-		} else if (Object::cast_to<Node3D>(ed_object) || Object::cast_to<Mesh>(ed_object)) {
-			shader_picker->set_preferred_mode(Shader::MODE_SPATIAL);
-		} else if (Object::cast_to<Sky>(ed_object)) {
-			shader_picker->set_preferred_mode(Shader::MODE_SKY);
 		}
 	}
 }
@@ -3567,11 +3294,7 @@ static EditorPropertyRangeHint _parse_range_hint(PropertyHint p_hint, const Stri
 	bool degrees = false;
 	for (int i = 0; i < slices.size(); i++) {
 		String slice = slices[i].strip_edges();
-		if (slice == "radians_as_degrees"
-#ifndef DISABLE_DEPRECATED
-				|| slice == "radians"
-#endif // DISABLE_DEPRECATED
-		) {
+		if (slice == "radians_as_degrees") {
 			hint.radians_as_degrees = true;
 		} else if (slice == "degrees") {
 			degrees = true;
@@ -3616,39 +3339,8 @@ EditorProperty *EditorInspectorDefaultPlugin::get_editor_for_property(Object *p_
 				editor->setup(options);
 				return editor;
 
-			} else if (p_hint == PROPERTY_HINT_LAYERS_2D_PHYSICS ||
-					p_hint == PROPERTY_HINT_LAYERS_2D_RENDER ||
-					p_hint == PROPERTY_HINT_LAYERS_2D_NAVIGATION ||
-					p_hint == PROPERTY_HINT_LAYERS_3D_PHYSICS ||
-					p_hint == PROPERTY_HINT_LAYERS_3D_RENDER ||
-					p_hint == PROPERTY_HINT_LAYERS_3D_NAVIGATION ||
-					p_hint == PROPERTY_HINT_LAYERS_AVOIDANCE) {
+			} else if (p_hint == PROPERTY_HINT_LAYERS_2D_RENDER) {
 				EditorPropertyLayers::LayerType lt = EditorPropertyLayers::LAYER_RENDER_2D;
-				switch (p_hint) {
-					case PROPERTY_HINT_LAYERS_2D_RENDER:
-						lt = EditorPropertyLayers::LAYER_RENDER_2D;
-						break;
-					case PROPERTY_HINT_LAYERS_2D_PHYSICS:
-						lt = EditorPropertyLayers::LAYER_PHYSICS_2D;
-						break;
-					case PROPERTY_HINT_LAYERS_2D_NAVIGATION:
-						lt = EditorPropertyLayers::LAYER_NAVIGATION_2D;
-						break;
-					case PROPERTY_HINT_LAYERS_3D_RENDER:
-						lt = EditorPropertyLayers::LAYER_RENDER_3D;
-						break;
-					case PROPERTY_HINT_LAYERS_3D_PHYSICS:
-						lt = EditorPropertyLayers::LAYER_PHYSICS_3D;
-						break;
-					case PROPERTY_HINT_LAYERS_3D_NAVIGATION:
-						lt = EditorPropertyLayers::LAYER_NAVIGATION_3D;
-						break;
-					case PROPERTY_HINT_LAYERS_AVOIDANCE:
-						lt = EditorPropertyLayers::LAYER_AVOIDANCE;
-						break;
-					default: {
-					} //compiler could be smarter here and realize this can't happen
-				}
 				EditorPropertyLayers *editor = memnew(EditorPropertyLayers);
 				editor->setup(lt);
 				return editor;
@@ -3805,12 +3497,6 @@ EditorProperty *EditorInspectorDefaultPlugin::get_editor_for_property(Object *p_
 			EditorPropertyPlane *editor = memnew(EditorPropertyPlane(p_wide));
 			EditorPropertyRangeHint hint = _parse_range_hint(p_hint, p_hint_text, default_float_step);
 			editor->setup(hint.min, hint.max, hint.step, hint.hide_slider, hint.suffix);
-			return editor;
-		} break;
-		case Variant::QUATERNION: {
-			EditorPropertyQuaternion *editor = memnew(EditorPropertyQuaternion);
-			EditorPropertyRangeHint hint = _parse_range_hint(p_hint, p_hint_text, default_float_step);
-			editor->setup(hint.min, hint.max, hint.step, hint.hide_slider, hint.suffix, p_hint == PROPERTY_HINT_HIDE_QUATERNION_EDIT);
 			return editor;
 		} break;
 		case Variant::AABB: {

@@ -26,35 +26,6 @@
 		    undo_redo.add_undo_property(node, "position", node.position)
 		    undo_redo.commit_action()
 		[/gdscript]
-		[csharp]
-		private UndoRedo _undoRedo;
-
-		public override void _Ready()
-		{
-		    _undoRedo = new UndoRedo();
-		}
-
-		public void DoSomething()
-		{
-		    // Put your code here.
-		}
-
-		public void UndoSomething()
-		{
-		    // Put here the code that reverts what's done by "DoSomething()".
-		}
-
-		private void OnMyButtonPressed()
-		{
-		    var node = GetNode&lt;Node2D&gt;("MyNode2D");
-		    _undoRedo.CreateAction("Move the node");
-		    _undoRedo.AddDoMethod(new Callable(this, MethodName.DoSomething));
-		    _undoRedo.AddUndoMethod(new Callable(this, MethodName.UndoSomething));
-		    _undoRedo.AddDoProperty(node, "position", new Vector2(100, 100));
-		    _undoRedo.AddUndoProperty(node, "position", node.Position);
-		    _undoRedo.CommitAction();
-		}
-		[/csharp]
 		[/codeblocks]
 		Before calling any of the [code]add_(un)do_*[/code] methods, you need to first call [method create_action]. Afterwards you need to call [method commit_action].
 		If you don't need to register a method, you can leave [method add_do_method] and [method add_undo_method] out; the same goes for properties. You can also register more than one method/property.
@@ -74,19 +45,6 @@
 
 		undo_redo.commit_action()
 		[/gdscript]
-		[csharp]
-		_undo_redo.CreateAction("Add object");
-
-		// DO
-		_undo_redo.AddDoMethod(new Callable(this, MethodName.CreateObject));
-		_undo_redo.AddDoMethod(new Callable(this, MethodName.AddObjectToSingleton));
-
-		// UNDO
-		_undo_redo.AddUndoMethod(new Callable(this, MethodName.RemoveObjectFromSingleton));
-		_undo_redo.AddUndoMethod(new Callable(this, MethodName.DestroyThatObject));
-
-		_undo_redo.CommitAction();
-		[/csharp]
 		[/codeblocks]
 	</description>
 	<tutorials>

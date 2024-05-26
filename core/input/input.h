@@ -92,10 +92,6 @@ private:
 	RBSet<JoyButton> joy_buttons_pressed;
 	RBMap<JoyAxis, float> _joy_axis;
 	//RBMap<StringName,int> custom_action_press;
-	Vector3 gravity;
-	Vector3 accelerometer;
-	Vector3 magnetometer;
-	Vector3 gyroscope;
 	Vector2 mouse_pos;
 	int64_t mouse_window = 0;
 	bool legacy_just_pressed_behavior = false;
@@ -295,11 +291,6 @@ public:
 	uint64_t get_joy_vibration_timestamp(int p_device);
 	void joy_connection_changed(int p_idx, bool p_connected, String p_name, String p_guid = "", Dictionary p_joypad_info = Dictionary());
 
-	Vector3 get_gravity() const;
-	Vector3 get_accelerometer() const;
-	Vector3 get_magnetometer() const;
-	Vector3 get_gyroscope() const;
-
 	Point2 get_mouse_position() const;
 	Vector2 get_last_mouse_velocity();
 	BitField<MouseButtonMask> get_mouse_button_mask() const;
@@ -309,10 +300,6 @@ public:
 
 	void parse_input_event(const Ref<InputEvent> &p_event);
 
-	void set_gravity(const Vector3 &p_gravity);
-	void set_accelerometer(const Vector3 &p_accel);
-	void set_magnetometer(const Vector3 &p_magnetometer);
-	void set_gyroscope(const Vector3 &p_gyroscope);
 	void set_joy_axis(int p_device, JoyAxis p_axis, float p_value);
 
 	void start_joy_vibration(int p_device, float p_weak_magnitude, float p_strong_magnitude, float p_duration = 0);

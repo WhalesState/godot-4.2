@@ -29,7 +29,6 @@
 /**************************************************************************/
 
 #include "animation_player.h"
-#include "animation_player.compat.inc"
 
 #include "core/config/engine.h"
 #include "scene/scene_string_names.h"
@@ -52,14 +51,6 @@ bool AnimationPlayer::_set(const StringName &p_name, const Variant &p_value) {
 			float time = array[i * 3 + 2];
 			set_blend_time(from, to, time);
 		}
-#ifndef DISABLE_DEPRECATED
-	} else if (p_name == "method_call_mode") {
-		set_callback_mode_method(static_cast<AnimationCallbackModeMethod>((int)p_value));
-	} else if (p_name == "playback_process_mode") {
-		set_callback_mode_process(static_cast<AnimationCallbackModeProcess>((int)p_value));
-	} else if (p_name == "playback_active") {
-		set_active(p_value);
-#endif // DISABLE_DEPRECATED
 	} else {
 		return false;
 	}
@@ -91,14 +82,6 @@ bool AnimationPlayer::_get(const StringName &p_name, Variant &r_ret) const {
 		}
 
 		r_ret = array;
-#ifndef DISABLE_DEPRECATED
-	} else if (name == "method_call_mode") {
-		r_ret = get_callback_mode_method();
-	} else if (name == "playback_process_mode") {
-		r_ret = get_callback_mode_process();
-	} else if (name == "playback_active") {
-		r_ret = is_active();
-#endif // DISABLE_DEPRECATED
 	} else {
 		return false;
 	}
@@ -328,10 +311,6 @@ void AnimationPlayer::_blend_post_process() {
 				_set_process(false);
 				if (end_notify) {
 					emit_signal(SceneStringNames::get_singleton()->animation_finished, playback.assigned);
-					if (movie_quit_on_finish && OS::get_singleton()->has_feature("movie")) {
-						print_line(vformat("Movie Maker mode is enabled. Quitting on animation finish as requested by: %s", get_path()));
-						get_tree()->quit();
-					}
 				}
 			}
 		}
@@ -584,14 +563,6 @@ String AnimationPlayer::get_autoplay() const {
 	return autoplay;
 }
 
-void AnimationPlayer::set_movie_quit_on_finish_enabled(bool p_enabled) {
-	movie_quit_on_finish = p_enabled;
-}
-
-bool AnimationPlayer::is_movie_quit_on_finish_enabled() const {
-	return movie_quit_on_finish;
-}
-
 void AnimationPlayer::_stop_internal(bool p_reset, bool p_keep_state) {
 	_clear_caches();
 	Playback &c = playback;
@@ -773,9 +744,6 @@ void AnimationPlayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("find_animation", "animation"), &AnimationPlayer::find_animation);
 	ClassDB::bind_method(D_METHOD("find_animation_library", "animation"), &AnimationPlayer::find_animation_library);
 
-	ClassDB::bind_method(D_METHOD("set_movie_quit_on_finish_enabled", "enabled"), &AnimationPlayer::set_movie_quit_on_finish_enabled);
-	ClassDB::bind_method(D_METHOD("is_movie_quit_on_finish_enabled"), &AnimationPlayer::is_movie_quit_on_finish_enabled);
-
 	ClassDB::bind_method(D_METHOD("get_current_animation_position"), &AnimationPlayer::get_current_animation_position);
 	ClassDB::bind_method(D_METHOD("get_current_animation_length"), &AnimationPlayer::get_current_animation_length);
 
@@ -791,7 +759,6 @@ void AnimationPlayer::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "playback_default_blend_time", PROPERTY_HINT_RANGE, "0,4096,0.01,suffix:s"), "set_default_blend_time", "get_default_blend_time");
 
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "speed_scale", PROPERTY_HINT_RANGE, "-4,4,0.001,or_less,or_greater"), "set_speed_scale", "get_speed_scale");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "movie_quit_on_finish"), "set_movie_quit_on_finish_enabled", "is_movie_quit_on_finish_enabled");
 
 	ADD_SIGNAL(MethodInfo(SNAME("current_animation_changed"), PropertyInfo(Variant::STRING, "name")));
 	ADD_SIGNAL(MethodInfo(SNAME("animation_changed"), PropertyInfo(Variant::STRING_NAME, "old_name"), PropertyInfo(Variant::STRING_NAME, "new_name")));

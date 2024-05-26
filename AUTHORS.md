@@ -1,3 +1,8 @@
+# Pixel Engine
+
+Pixel Engine is built and updated from Godot Engine, the main focus is
+to provide support to godot while focusing on 2D game/tool development.
+
 # Godot Engine authors
 
 Godot Engine is developed by a community of voluntary contributors who
@@ -10,20 +15,28 @@ source code. "Significant" is arbitrarily decided, but should be fair :)
 GitHub usernames are indicated in parentheses, or as sole entry when no other
 name is available.
 
-## Project Founders
+## Godot Project Founders
 
     Juan Linietsky (reduz)
     Ariel Manzur (punto-)
 
-## Lead Developer
+## Godot Lead Developer
 
     Juan Linietsky (reduz)
 
-## Project Manager
+## Pixel Engine Lead Developer
+
+    Mounir Tohami (whalesstate)
+
+## Godot Project Manager
 
     Rémi Verschelde (akien-mga)
 
-## Developers
+## Pixel Engine Project Manager
+
+    Soon..
+
+## Godot Developers
 
 (in alphabetical order, with over 10 commits excluding merges)
 
@@ -301,3 +314,7 @@ name is available.
     ZuBsPaCe
     谢天 (jsjtxietian)
     风青山 (Rindbee)
+
+## Pixel Engine Developers
+
+    Mounir Tohami (whalesstate)
